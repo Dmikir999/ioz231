@@ -72,6 +72,57 @@ footer>div{min-width:0;overflow-wrap:anywhere}
  .icon-button{width:34px}
  .today-button{padding:0 8px}
 }
+
+/* Centered desktop layout, matching the wide-screen reference. */
+@media(min-width:851px){
+ main.app-shell{
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:repeat(6,auto);
+  align-content:start;
+  background:radial-gradient(circle at 4% 112%,transparent 0 180px,#fce9ee 181px 265px,transparent 266px),radial-gradient(ellipse at 80% 15%,#fff6f8,transparent 65%),#fffbfc;
+ }
+ .sidebar{display:none}
+ main.app-shell:before{top:-300px;right:-130px;width:1040px;height:1040px;border:120px solid rgba(250,154,174,.11);clip-path:none}
+ main.app-shell:after{content:"";position:absolute;z-index:-1;pointer-events:none;bottom:-575px;right:-500px;width:1000px;height:1000px;border:115px solid rgba(250,154,174,.12);border-radius:50%}
+ header,.calendar-section,.schedule-section,.more,footer{
+  grid-column:1;width:100%;max-width:1040px;justify-self:center;padding-left:24px;padding-right:24px;
+ }
+ header{grid-row:1;padding-top:54px;padding-bottom:24px;column-gap:24px;row-gap:14px;align-items:center}
+ header .eyebrow{display:block;grid-column:1/-1;grid-row:1;color:var(--red);font-size:18px;font-weight:750;letter-spacing:.025em;line-height:1.2;margin:0}
+ header .appname{grid-row:2;font-size:48px;line-height:1.08}
+ header .group{grid-row:2;margin:0;font-size:21px;padding:13px 22px;border-radius:26px}
+ .calendar-section{grid-row:2}
+ .controls{margin-bottom:20px}
+ .controls strong{font-size:26px}
+ .week-nav{gap:23px}
+ .icon-button,.today-button{height:58px;border:1px solid #f0e3e8;border-radius:23px;box-shadow:0 4px 12px #4c10230a}
+ .icon-button{width:67px}
+ .today-button{padding:0 26px;font-size:18px}
+ .days{gap:15px;margin-bottom:30px}
+ .day{min-height:98px;border-radius:23px;padding:12px 2px 9px;gap:7px}
+ .day span{font-size:17px}
+ .day strong{font-size:30px}
+ .day i{height:3px;width:3px}
+ .schedule-section{grid-row:3}
+ .section-top{margin-bottom:18px}
+ .section-top h2{font-size:36px}
+ .section-top small{font-size:22px}
+ .lessons{gap:12px}
+ .lesson{grid-template-columns:126px minmax(0,1fr);gap:34px;padding:14px 32px;border-radius:24px;box-shadow:0 4px 12px #4c102308}
+ .lesson>div:first-child{padding:8px 25px 3px 0;border-right:2px solid #e7e0e3}
+ .lesson>div:nth-child(2){padding:0}
+ .time-start{font-size:27px}
+ .time-end{font-size:20px;margin-top:5px}
+ .subject{font-size:24px;line-height:1.15}
+ .details{margin-top:7px;gap:16px}
+ .chip{font-size:17px;padding:6px 15px;border-radius:22px;line-height:1.3}
+ .teacher{font-size:18px;line-height:1.2;margin-top:8px}
+ .verification{grid-column:1;grid-row:4;justify-self:center;justify-content:center;align-self:start;width:100%;max-width:1040px;margin:0;padding:48px 24px 30px;gap:40px}
+ .source-tag{font-size:20px;padding:13px 26px;border-radius:30px}
+ .source-tag.good:before{font-size:27px}
+ .more{grid-row:5;margin-top:0}
+ footer{grid-row:6;margin-top:24px}
+}
 </style>
 </head>
 <body><main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
