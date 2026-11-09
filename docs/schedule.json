@@ -9,7 +9,7 @@
   "semester_break_end": "2026-11-02",
   "status": "ok",
   "source_ok": true,
-  "source_live": false,
+  "source_live": true,
   "vk_ok": true,
   "entries": [
     {
@@ -2251,7 +2251,5 @@
   "notices": [],
   "applied_change_links": [],
   "warnings": [],
-  "errors": [
-    "Источник Excel: Публичное облако Mail не предоставило прямой файл через dispatcher"
-  ]
+  "errors": []
 }
