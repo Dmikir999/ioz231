@@ -44,22 +44,40 @@ def _download(url):
     return blob
 
 
+def _mail_download_hosts(dispatcher):
+    """Extract ephemeral download endpoints from Mail's dispatcher response."""
+    raw=(dispatcher.get('body') or {}).get('weblink_get') or []
+    if isinstance(raw,(str,dict)):
+        raw=[raw]
+    hosts=[]
+    for item in raw:
+        host=item.get('url','') if isinstance(item,dict) else item
+        if isinstance(host,str) and host.startswith('https://'):
+            hosts.append(host.rstrip('/'))
+    return hosts
+
+
 def fetch_mail_xlsx():
+    # Manual override is useful for diagnostics, but Cloud Mail links expire:
+    # the normal path must resolve a new URL on *every* check.
     direct=os.getenv('XLSX_DIRECT_URL','').strip()
-    if direct:return _download(direct)
-    # Cloud Mail uses an undocumented public link dispatcher. Failure is expected
-    # occasionally; the verified bundled group-only baseline remains available.
-    result=_json_get('https://cloud.mail.ru/api/v2/dispatcher',{'api':'2','build':'cloudweb-1'})
-    hosts=(result.get('body') or {}).get('weblink_get') or []
-    if isinstance(hosts,str):hosts=[hosts]
-    if isinstance(hosts,dict):hosts=list(hosts.values())
-    for host in hosts:
-        if not isinstance(host,str) or not host.startswith('https://'):continue
+    if direct:
         try:
-            return _download(host.rstrip('/')+'/TKBt/bHWaZqMQA')
+            return _download(direct)
+        except Exception as exc:
+            LOG.warning('XLSX_DIRECT_URL is unavailable; trying public link: %s',exc)
+    # Mail returns weblink_get as a LIST OF DICTS containing "url", not
+    # merely strings. Previously every valid dispatcher host was discarded.
+    result=_json_get('https://cloud.mail.ru/api/v2/dispatcher',{'api':'2','build':'cloudweb-1'})
+    hosts=_mail_download_hosts(result)
+    if not hosts:
+        raise RuntimeError('Mail Cloud dispatcher returned no HTTPS weblink_get endpoint')
+    for host in hosts:
+        try:
+            return _download(host+'/TKBt/bHWaZqMQA')
         except Exception as exc:
             LOG.warning('Mail download endpoint failed: %s',exc)
-    raise RuntimeError('Публичное облако Mail не предоставило прямой файл через dispatcher')
+    raise RuntimeError('Не удалось скачать XLSX ни с одного адреса Mail Cloud')
 
 
 def _norm(v):return ' '.join(str(v or '').split())
