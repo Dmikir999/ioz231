@@ -1,0 +1,69 @@
+name: Обновление и публикация ИОЗ-231
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: io231-schedule
+  cancel-in-progress: false
+
+jobs:
+  update_and_publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Загрузить исходники
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Подготовить Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Проверить алгоритм на тестах
+        run: python -m unittest discover -s tests -q
+
+      - name: Проверить таблицу и публикации VK
+        env:
+          VK_TOKEN: ${{ secrets.VK_TOKEN }}
+          XLSX_DIRECT_URL: ${{ secrets.XLSX_DIRECT_URL }}
+        run: python -m scripts.engine
+
+      - name: Сохранить актуальные данные в репозитории
+        run: |
+          git config user.name "ioz231-bot"
+          git config user.email "ioz231-bot@users.noreply.github.com"
+          git add docs/schedule.json data/base.json data/posts.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Автообновление расписания ИОЗ-231"
+            git push
+          fi
+
+      # An automatic commit using GITHUB_TOKEN does NOT trigger a new Pages build.
+      # Explicit deployment below ensures the updated JSON becomes visible online.
+      - name: Подготовить GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Загрузить сайт для публикации
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
+      - name: Опубликовать обновлённый сайт
+        id: deployment
+        uses: actions/deploy-pages@v4
