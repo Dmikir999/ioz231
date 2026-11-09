@@ -39,16 +39,50 @@ footer{grid-row:5;border-top:1px solid #eee4e6;margin:32px auto 0;padding-top:19
 @media(max-width:850px){main.app-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto auto auto;min-height:100vh;padding:0 0 calc(14px + env(safe-area-inset-bottom))}main.app-shell:before{top:-340px;right:-390px;width:750px;height:750px;border-width:100px}.sidebar{display:none}header{grid-column:1;grid-row:1;padding:60px 32px 24px;align-items:center;gap:10px}.eyebrow{display:block;font-size:12px;letter-spacing:.08em;margin:0 0 12px}.appname{font-size:39px}header p{font-size:15px;margin-top:13px;max-width:340px}.group{font-size:17px;padding:13px 18px;border-radius:25px;margin:25px 0 0}.calendar-section,.schedule-section,.more,footer{grid-column:1;padding-left:30px;padding-right:30px}.calendar-section{grid-row:2}.controls{align-items:center;flex-wrap:wrap;margin-bottom:17px}.controls strong{font-size:22px}.week-nav{gap:8px}.icon-button,.today-button{height:51px;border-radius:22px}.icon-button{width:51px;font-size:30px}.today-button{padding:0 18px;font-size:16px}.days{gap:8px;margin-bottom:36px}.day{min-height:95px;padding:14px 2px 10px;border-radius:23px}.day span{font-size:15px}.day strong{font-size:27px}.schedule-section{grid-row:3}.section-top h2{font-size:29px}.section-top small{font-size:16px}.lesson{grid-template-columns:112px minmax(0,1fr);gap:22px;padding:22px 20px;border-radius:27px}.lesson>div:first-child{padding-right:19px}.time-start{font-size:25px}.time-end{font-size:16px}.subject{font-size:20px}.chip{font-size:14px;padding:8px 13px}.teacher{font-size:16px;margin-top:14px}.verification{grid-column:1;grid-row:4;padding:16px 32px 25px;margin:0;gap:12px}.source-tag{font-size:15px;padding:12px 17px}.more{grid-row:5;margin-top:0}footer{grid-row:6;margin-top:20px}}
 @media(max-width:520px){main.app-shell:before{top:-300px;right:-440px;width:680px;height:680px;border-width:90px}header{padding:66px 18px 20px;gap:8px;align-items:flex-start}.eyebrow{font-size:11px;margin-bottom:14px}.appname{font-size:36px}header p{font-size:14px;line-height:1.4;margin-top:13px;max-width:260px}.group{font-size:16px;padding:13px 16px;margin-top:48px}.calendar-section,.schedule-section,.more,footer{padding-left:16px;padding-right:16px}.controls{flex-wrap:nowrap;gap:8px;margin-bottom:17px}.controls strong{font-size:18px;white-space:nowrap}.week-nav{gap:6px}.icon-button,.today-button{height:43px;border-radius:18px}.icon-button{width:43px;font-size:28px}.today-button{padding:0 13px;font-size:14px}.days{gap:5px;margin-bottom:35px}.day{min-height:86px;border-radius:20px;padding:13px 1px 9px;gap:5px}.day span{font-size:13px}.day strong{font-size:24px}.day i{height:3px;width:3px}.section-top{margin-bottom:18px}.section-top h2{font-size:27px}.section-top small{font-size:15px}.lessons{gap:12px}.lesson{grid-template-columns:77px minmax(0,1fr);gap:13px;padding:18px 14px;border-radius:24px}.lesson>div:first-child{padding:2px 12px 2px 0}.time-start{font-size:20px}.time-end{font-size:14px;margin-top:7px}.subject{font-size:16px;line-height:1.3}.details{gap:7px;margin-top:12px}.chip{font-size:12px;padding:7px 11px}.teacher{font-size:14px;margin-top:12px}.change-badge{font-size:12px}.verification{grid-row:4;padding:16px 18px 25px;gap:9px}.source-tag{font-size:13px;padding:10px 13px}}
 @media(max-width:375px){header{padding-left:15px;padding-right:15px}.appname{font-size:32px}.group{font-size:14px;padding:12px 13px}.calendar-section,.schedule-section,.more,footer{padding-left:12px;padding-right:12px}.controls strong{font-size:16px}.week-nav{gap:4px}.icon-button,.today-button{height:40px}.icon-button{width:39px}.today-button{padding:0 10px;font-size:12px}.days{gap:3px}.day{min-height:77px;border-radius:17px}.day span{font-size:11px}.day strong{font-size:21px}.lesson{grid-template-columns:68px minmax(0,1fr);gap:10px;padding:15px 10px}.lesson>div:first-child{padding-right:9px}.time-start{font-size:18px}.time-end{font-size:12px}.subject{font-size:14px}.chip{font-size:11px;padding:6px 8px}.teacher{font-size:12px}}
+
+/* Keep decorative artwork inside the page, including Safari's visual viewport. */
+html{width:100%;overflow-x:hidden;overscroll-behavior-x:none;overscroll-behavior-y:contain}
+body{width:100%;min-width:0;max-width:100%;overflow-x:hidden;overscroll-behavior-x:none;overscroll-behavior-y:contain}
+main.app-shell{width:100%;min-width:0;overflow:hidden;overflow:clip}
+.app-shell>*{min-width:0}.page-content>*{min-width:0}
+header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+header .appname{grid-column:1;grid-row:1;min-width:0}
+header .group{grid-column:2;grid-row:1;margin:0}
+header .eyebrow{grid-column:1/-1}
+.week-nav{flex-shrink:0}.controls strong{min-width:0}
+footer>div{min-width:0;overflow-wrap:anywhere}
+.pull-refresh{position:fixed;z-index:10;top:max(8px,env(safe-area-inset-top));left:50%;max-width:calc(100% - 24px);padding:12px 18px;border-radius:24px;background:#fff;color:var(--red);box-shadow:0 4px 22px #35101420;font-size:14px;font-weight:700;pointer-events:none;opacity:0;transform:translate(-50%,-150%);transition:transform .15s,opacity .15s;white-space:nowrap}
+.pull-refresh.is-visible{opacity:1;transform:translate(-50%,0)}
+@media(max-width:850px){
+ header{align-items:center;row-gap:14px}
+ header .eyebrow{grid-row:1;margin:0}
+ header .appname,header .group{grid-row:2}
+ header .appname{font-size:clamp(28px,8.3vw,39px)}
+ header .group{margin:0}
+}
+@media(max-width:520px){
+ header{column-gap:8px}
+ header .group{font-size:15px;padding:11px 13px}
+ .controls{flex-wrap:wrap;row-gap:12px}
+}
+@media(max-width:375px){
+ header .group{font-size:13px;padding:10px 11px}
+ .controls strong{font-size:15px}
+ .week-nav{gap:4px}
+ .icon-button{width:34px}
+ .today-button{padding:0 8px}
+}
 </style>
 </head>
 <body><main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
-  <header><div><div class="eyebrow">Институт гуманитарных наук</div><h1 class="appname">Расписание</h1><p>Проверенные данные и понятные предупреждения.</p></div><div class="group">ИОЗ-231</div></header>
+  <header><div class="eyebrow">Институт гуманитарных наук</div><h1 class="appname">Расписание</h1><div class="group">ИОЗ-231</div></header>
   <div class="verification" id="verification" aria-label="Проверка источников"><span class="source-tag warn">Проверяем источники…</span></div>
   <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><strong id="weekLabel">Загрузка…</strong><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя">‹</button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя">›</button></div></div><nav class="days" id="days" aria-label="Дни недели"></nav></section>
   <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessons" class="lessons"></div></section>
   <details id="reviewSection" class="more" hidden><summary id="reviewLabel">Непроверенные изменения</summary><div id="reviews"></div></details>
   <footer><div><div id="updated">Источник данных загружается…</div><div>Неофициальное расписание. При сомнениях сверяй данные с деканатом.</div><div><a href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener">Таблица МГПУ</a> · <a href="https://vk.ru/dekanat_ign" target="_blank" rel="noopener">Изменения ВК</a></div></div><button class="refresh" id="refresh" title="Перезагрузить расписание">Обновить ↻</button></footer>
 </div></main>
+<div id="pullRefresh" class="pull-refresh" role="status" aria-live="polite" aria-atomic="true"></div>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -130,5 +164,52 @@ $('prev').onclick=()=>{selected=daysFrom(selected,-7);render()};
 $('next').onclick=()=>{selected=daysFrom(selected,7);render()};
 $('today').onclick=()=>{selected=todayMoscow();render()};
 $('refresh').onclick=load;load();
+
+/* Pull down at the top to reload both the page and its schedule. */
+(function setupPullToRefresh(){
+ const indicator=$('pullRefresh');
+ const threshold=80;
+ let gesture=null,reloading=false,ready=false;
+ function reset(){
+  gesture=null;ready=false;
+  indicator.classList.remove('is-visible');
+  indicator.textContent='';
+ }
+ document.addEventListener('touchstart',event=>{
+  if(reloading)return;
+  reset();
+  if(event.touches.length!==1||window.scrollY>0)return;
+  if(event.target.closest('input,textarea,select,[contenteditable]'))return;
+  const touch=event.touches[0];
+  gesture={x:touch.clientX,y:touch.clientY,distance:0,active:false};
+ },{passive:true});
+ document.addEventListener('touchmove',event=>{
+  if(!gesture||reloading)return;
+  if(event.touches.length!==1){reset();return;}
+  const touch=event.touches[0],dx=touch.clientX-gesture.x,dy=touch.clientY-gesture.y;
+  if(!gesture.active){
+   if(window.scrollY>0||dy<0||Math.abs(dx)>12&&Math.abs(dx)>dy){reset();return;}
+   if(dy<12||dy<=Math.abs(dx))return;
+   gesture.active=true;
+  }
+  if(event.cancelable)event.preventDefault();
+  gesture.distance=Math.max(0,dy);
+  const nextReady=gesture.distance>=threshold;
+  indicator.classList.toggle('is-visible',gesture.distance>12);
+  if(indicator.textContent===''||ready!==nextReady){
+   ready=nextReady;
+   indicator.textContent=ready?'Отпустите для обновления ↻':'Потяните вниз для обновления ↓';
+  }
+ },{passive:false});
+ document.addEventListener('touchend',event=>{
+  if(event.touches.length)return;
+  if(!gesture||!gesture.active||!ready){reset();return;}
+  gesture=null;reloading=true;
+  indicator.textContent='Обновляем страницу…';
+  window.location.reload();
+ },{passive:true});
+ document.addEventListener('touchcancel',reset,{passive:true});
+})();
+
 </script>
 </body></html>
