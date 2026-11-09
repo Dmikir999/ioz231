@@ -10,7 +10,7 @@
   "status": "ok",
   "source_ok": true,
   "source_live": false,
-  "vk_ok": false,
+  "vk_ok": true,
   "entries": [
     {
       "group": "ИОЗ-231",
@@ -2252,7 +2252,6 @@
   "applied_change_links": [],
   "warnings": [],
   "errors": [
-    "Источник Excel: Публичное облако Mail не предоставило прямой файл через dispatcher",
-    "VK: Не задан VK_TOKEN: посты ВКонтакте автоматически не проверяются"
+    "Источник Excel: Публичное облако Mail не предоставило прямой файл через dispatcher"
   ]
 }
