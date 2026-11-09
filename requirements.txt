@@ -1,0 +1,2 @@
+# Runtime uses only Python's standard library; GitHub Actions needs no pip install.
+# Optional local test: python -m pip install pytest

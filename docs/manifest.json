@@ -1,0 +1,11 @@
+{
+  "name": "Расписание ИОЗ-231 · МГПУ",
+  "short_name": "ИОЗ-231",
+  "description": "Расписание учебной группы ИОЗ-231",
+  "display": "standalone",
+  "start_url": "./index.html",
+  "scope": "./",
+  "lang": "ru",
+  "theme_color": "#F7F8F5",
+  "background_color": "#F7F8F5"
+}
