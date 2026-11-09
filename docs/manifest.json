@@ -6,8 +6,8 @@
   "start_url": "./index.html",
   "scope": "./",
   "lang": "ru",
-  "theme_color": "#F7F8F5",
-  "background_color": "#F7F8F5",
+  "theme_color": "#fffdfd",
+  "background_color": "#fffdfd",
   "icons": [
     {
       "src": "./icon-192.png",
