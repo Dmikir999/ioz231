@@ -82,7 +82,7 @@ def _segments(text):
     return [part.strip() for part in re.split(r'\s+/\s+',_norm(text)) if part.strip()]
 
 
-def _expand_segment(segment, day_number, start, end, source_row, warnings):
+def _expand_segment(segment, day_number, start, end, source_row, warnings, periods):
     types=list(TYPE_RX.finditer(segment))
     if not types:
         if DATE_RX.search(segment):warnings.append(f'Строка {source_row}: не определён тип пары; пропущено')
@@ -104,16 +104,19 @@ def _expand_segment(segment, day_number, start, end, source_row, warnings):
             continue
         for m in DATE_RX.finditer(section):
             dd,mm=map(int,m.groups())
-            try:when=date(2026,mm,dd)
-            except ValueError:
-                warnings.append(f'Строка {source_row}: неверная дата {m.group(0)}');continue
-            if when.weekday()!=day_number:
-                warnings.append(f'Строка {source_row}: {when.isoformat()} не совпадает с днём недели; пропущено');continue
-            if not (date(2026,9,1)<=when<=date(2026,12,30)):
-                warnings.append(f'Строка {source_row}: дата вне семестра: {when.isoformat()}');continue
-            # 06 Oct to 02 Nov is an excluded block in this specific sheet's header.
-            if date(2026,10,6)<=when<=date(2026,11,2):
-                warnings.append(f'Строка {source_row}: дата вне учебного периода: {when.isoformat()}');continue
+            candidates = []
+            for first, last in periods:
+                for year in range(first.year, last.year + 1):
+                    try:
+                        candidate = date(year, mm, dd)
+                    except ValueError:
+                        continue
+                    if first <= candidate <= last:
+                        candidates.append(candidate)
+            if len(candidates) != 1 or candidates[0].weekday() != day_number:
+                warnings.append(f'Строка {source_row}: проверьте дату {m.group(0)}, учебный период и день недели')
+                continue
+            when = candidates[0]
             item={'group':GROUP,'date':when.isoformat(),'weekday':day_number,'time':start,'end':end,
                   'subject':subject,'kind':kind[t.group(1).lower()],
                   'teacher':_norm(teacher.group(0)) if teacher else '',
@@ -125,8 +128,8 @@ def _expand_segment(segment, day_number, start, end, source_row, warnings):
     return result
 
 
-def parse_xlsx(blob:bytes):
-    rows=_sheet_rows(blob)
+def parse_xlsx(blob:bytes, sheet, periods):
+    rows=_sheet_rows(blob, sheet)
     if _norm(rows.get(7,{}).get('C','')).upper().replace(' ','') != GROUP:
         raise ValueError('Ожидаемая группа ИОЗ-231 не обнаружена в колонке C листа 4иоз')
     if _norm(rows.get(7,{}).get('D','')).upper()!='ИОЗ-232':
@@ -134,7 +137,7 @@ def parse_xlsx(blob:bytes):
     day=None;start=end=''
     lessons=[];warnings=[]
     for rowno in sorted(rows):
-        if rowno<8 or rowno>77:continue
+        if rowno<8:continue
         row=rows[rowno]
         day_text=_norm(row.get('A','')).rstrip('.')
         if day_text in DAYS:
@@ -152,7 +155,10 @@ def parse_xlsx(blob:bytes):
             warnings.append(f'Строка {rowno}: заполненная ячейка без дня/времени; пропущено')
             continue
         for seg in _segments(content):
-            lessons.extend(_expand_segment(seg,day,start,end,rowno,warnings))
+            items = _expand_segment(seg, day, start, end, rowno, warnings, periods)
+            for item in items:
+                item['source_sheet'] = sheet
+            lessons.extend(items)
     unique={}
     for e in lessons:
         # An identical lesson can be repeated in the XLSX only because of technical overlap;

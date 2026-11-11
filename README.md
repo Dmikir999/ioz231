@@ -1,5 +1,10 @@
 # Расписание ИОЗ-231 — МГПУ
 
+## Подключение следующего семестра
+
+Откройте `semester.json` на GitHub и нажмите карандаш. В `source` вставьте публичную ссылку Облака Mail на новый XLSX, в `sheet` — название листа. В `periods` укажите по порядку интервалы занятий в формате `["ГГГГ-ММ-ДД", "ГГГГ-ММ-ДД"]`, оставляя перерывы между ними. Сохраните через **Commit changes**. В разделе **Actions** откройте запуск «Обновление и публикация ИОЗ-231»: зелёная галочка означает успешную публикацию, при ошибке откройте красный шаг для пояснения. Предыдущая публикация доступна, пока импорт нового семестра не пройдёт проверки. Поддерживается текущий шаблон института (группы в C7/D7, дни и время в A/B, даты занятий в тексте). Если для нового файла используется та же публичная ссылка, обновите или удалите устаревший секрет XLSX_DIRECT_URL.
+
+
 Минимальное мобильное веб-приложение **строго для ИОЗ-231** с реальным расписанием из файла «Расписание 1 полугодия 2026–2027. Историки.xlsx». Источник — [Облако Mail](https://cloud.mail.ru/public/TKBt/bHWaZqMQA), сообщения об изменениях — [деканат ИГН VK](https://vk.ru/dekanat_ign).
 
 ## Новая цель проекта (обновлено 9 ноября 2026 года)
@@ -90,7 +95,11 @@ python -m http.server 8000 --directory docs
 
 ```python
 from scripts.xlsx_reader import parse_xlsx
-lessons, warnings = parse_xlsx(open("Расписание 1 полугодия 2026-2027. Историки.xlsx", "rb").read())
+import json
+from datetime import date
+config = json.load(open("semester.json", encoding="utf-8"))
+periods = [(date.fromisoformat(a), date.fromisoformat(b)) for a, b in config["periods"]]
+lessons, warnings = parse_xlsx(open("Расписание 1 полугодия 2026-2027. Историки.xlsx", "rb").read(), config["sheet"], periods)
 print(len(lessons), warnings)
 ```
 

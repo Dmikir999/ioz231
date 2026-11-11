@@ -6,7 +6,7 @@ from scripts.engine import detect_change, apply_changes, parse_dates
 from scripts.xlsx_reader import _expand_segment
 
 ROOT=Path(__file__).resolve().parent.parent
-DATA=json.loads((ROOT/'data'/'base.json').read_text(encoding='utf-8'))
+DATA=json.loads((ROOT/'tests'/'autumn_2026.json').read_text(encoding='utf-8'))
 LESSONS=DATA['entries']
 
 class ScheduleTests(unittest.TestCase):
@@ -29,7 +29,9 @@ class ScheduleTests(unittest.TestCase):
     def test_specific_group_notes(self):
         warnings=[]
         text='Политология (пр.) 14.09 для группы ИОЗ-232 (лк.) 28.09 Доц. А.В. Ткаченко Ауд. 3205'
-        items=_expand_segment(text,0,'18:40','20:00',14,warnings)
+        from datetime import date
+        periods=[(date(2026,9,1),date(2026,12,30))]
+        items=_expand_segment(text,0,'18:40','20:00',14,warnings,periods)
         self.assertEqual([(x['date'],x['kind']) for x in items],[('2026-09-28','Лекция')])
         self.assertEqual(warnings,[])
 

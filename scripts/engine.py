@@ -57,11 +57,11 @@ def _mail_download_hosts(dispatcher):
     return hosts
 
 
-def fetch_mail_xlsx():
+def fetch_mail_xlsx(source):
     # Manual override is useful for diagnostics, but Cloud Mail links expire:
     # the normal path must resolve a new URL on *every* check.
     direct=os.getenv('XLSX_DIRECT_URL','').strip()
-    if direct:
+    if direct and source == MAIL:
         try:
             return _download(direct)
         except Exception as exc:
@@ -74,7 +74,7 @@ def fetch_mail_xlsx():
         raise RuntimeError('Mail Cloud dispatcher returned no HTTPS weblink_get endpoint')
     for host in hosts:
         try:
-            return _download(host+'/TKBt/bHWaZqMQA')
+            return _download(host+'/'+source.split('/public/', 1)[1])
         except Exception as exc:
             LOG.warning('Mail download endpoint failed: %s',exc)
     raise RuntimeError('Не удалось скачать XLSX ни с одного адреса Mail Cloud')
@@ -194,22 +194,36 @@ def run():
     DATA.mkdir(parents=True,exist_ok=True);DOCS.mkdir(parents=True,exist_ok=True)
     now=datetime.now(TZ)
     base=read_json(DATA/'base.json',{})
+    config = json.loads((ROOT/'semester.json').read_text(encoding='utf-8'))
+    source = config['source'].strip().rstrip('/')
+    if not re.fullmatch(r'https://cloud\.mail\.ru/public/[\w-]+/[\w-]+', source):
+        raise ValueError('Укажите публичную ссылку Облака Mail на файл XLSX')
+    periods = [(date.fromisoformat(a), date.fromisoformat(b)) for a, b in config['periods']]
+    if not periods or any(a > b for a, b in periods) or any(
+        previous[1] >= current[0] for previous, current in zip(periods, periods[1:])
+    ) or (periods[-1][1] - periods[0][0]).days >= 365:
+        raise ValueError('Проверьте порядок и границы учебных периодов')
+    switching = config != base.get('semester')
     entries=base.get('entries',[])
     if base.get('group')!=GROUP:entries=[]
     warnings=[];errors=[];source_live=False
     try:
-        blob=fetch_mail_xlsx()
-        live,parse_warnings=parse_xlsx(blob)
+        blob=fetch_mail_xlsx(source)
+        live,parse_warnings=parse_xlsx(blob, config['sheet'], periods)
         if not live:raise ValueError('Новый файл не содержит занятий')
+        if switching and parse_warnings:
+            raise ValueError('Проверьте новую таблицу: ' + '; '.join(parse_warnings[:3]))
         entries=live;warnings.extend(parse_warnings);source_live=True
         checksum=hashlib.sha256(blob).hexdigest()
         # Save a GROUP-ONLY cached version, never the entire XLSX of other students.
-        new_base={'group':GROUP,'source':MAIL,'source_sheet':'4иоз','sha256':checksum,
+        new_base={'group':GROUP,'source':source,'source_sheet':config['sheet'],'semester':config,'sha256':checksum,
                   'imported_at':now.isoformat(),'entries':entries,'warnings':warnings}
-        if base.get('sha256')!=checksum:
+        if switching or base.get('sha256')!=checksum:
             (DATA/'base.json').write_text(json.dumps(new_base,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
             LOG.info('Updated source XLSX from Cloud Mail: %d lessons',len(entries))
     except Exception as exc:
+        if switching:
+            raise RuntimeError('Семестр не подключён. Сохранена предыдущая публикация: ' + str(exc)) from exc
         errors.append('Источник Excel: '+str(exc))
         if not entries:LOG.error('No verified baseline and Mail unavailable: %s',exc)
         else:LOG.warning('Using saved verified baseline: %s',exc)
@@ -242,9 +256,9 @@ def run():
     day=now.date().isoformat()
     stamp=old.get('updated_at') or now.isoformat()
     if not stamp.startswith(day):stamp=now.isoformat()
-    payload={'group':GROUP,'updated_at':stamp,'source':MAIL,'vk':VK,
-             'semester_start':'2026-09-01','semester_end':'2026-12-30',
-             'semester_break_start':'2026-10-06','semester_break_end':'2026-11-02',
+    payload={'group':GROUP,'updated_at':stamp,'source':source,'vk':VK,
+             'semester_start':periods[0][0].isoformat(),'semester_end':periods[-1][1].isoformat(),
+             'periods':config['periods'],
              'status':'ok' if entries else 'unavailable',
              'source_ok':bool(entries),'source_live':source_live,'vk_ok':vk_ok,
              'entries':processed,'notices':notices,

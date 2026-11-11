@@ -126,13 +126,13 @@ footer>div{min-width:0;overflow-wrap:anywhere}
 }
 </style>
 </head>
-<body><main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
+<body><main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
   <header><div class="eyebrow">Институт гуманитарных наук</div><h1 class="appname">Расписание</h1><div class="group">ИОЗ-231</div></header>
   <div class="verification" id="verification" aria-label="Проверка источников"><span class="source-tag warn">Проверяем источники…</span></div>
   <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><strong id="weekLabel">Загрузка…</strong><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя">‹</button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя">›</button></div></div><nav class="days" id="days" aria-label="Дни недели"></nav></section>
   <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessons" class="lessons"></div></section>
   <details id="reviewSection" class="more" hidden><summary id="reviewLabel">Непроверенные изменения</summary><div id="reviews"></div></details>
-  <footer><div><div id="updated">Источник данных загружается…</div><div>Неофициальное расписание. При сомнениях сверяй данные с деканатом.</div><div><a href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener">Таблица МГПУ</a> · <a href="https://vk.ru/dekanat_ign" target="_blank" rel="noopener">Изменения ВК</a></div></div><button class="refresh" id="refresh" title="Перезагрузить расписание">Обновить ↻</button></footer>
+  <footer><div><div id="updated">Источник данных загружается…</div><div>Неофициальное расписание. При сомнениях сверяй данные с деканатом.</div><div><a data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener">Таблица МГПУ</a> · <a href="https://vk.ru/dekanat_ign" target="_blank" rel="noopener">Изменения ВК</a></div></div><button class="refresh" id="refresh" title="Перезагрузить расписание">Обновить ↻</button></footer>
 </div></main>
 <div id="pullRefresh" class="pull-refresh" role="status" aria-live="polite" aria-atomic="true"></div>
 <script>
@@ -151,6 +151,9 @@ const h=s=>String(s??'').replace(/[&<>"']/g,a=>({'&':'&amp;','<':'&lt;','>':'&gt
 let selected=todayMoscow(),schedule=null;
 function plural(n){const a=n%10,b=n%100;return b>=11&&b<=14||a===0||a>=5?'занятий':a===1?'занятие':'занятия'}
 function render(){
+ if (/^https:\/\/cloud\.mail\.ru\/public\/[\w-]+\/[\w-]+$/.test(schedule?.source)) {
+  document.querySelectorAll('[data-source-link]').forEach(link=>{link.href=schedule.source});
+ }
  const start=monday(selected),finish=daysFrom(start,6);
  $('weekLabel').textContent=`${shortFmt.format(date(start))} — ${shortFmt.format(date(finish))}`;
  const week=$('days');week.replaceChildren();const dateSet=new Set((schedule?.entries||[]).filter(x=>!x.cancelled).map(x=>x.date));
@@ -192,8 +195,8 @@ function render(){
  if(!lessons.length){
   let msg='На выбранную дату пар нет в исходной таблице.';
   if(!schedule?.entries?.length)msg='Данные ещё не загружены.';
-  else if(selected<'2026-09-01'||selected>'2026-12-30')msg='В загруженном файле есть только расписание первого полугодия 2026–2027.';
-  else if(selected>='2026-10-06'&&selected<='2026-11-02')msg='Этот период не включён в расписание занятий данного листа.';
+  else if(selected<semesterStart||selected>semesterEnd)msg='Эта дата за пределами загруженного семестра.';
+  else if(schedule.periods && !schedule.periods.some(([a,b])=>a<=selected && selected<=b))msg='Перерыв в занятиях по учебному календарю.';
   const empty=document.createElement('div');empty.className='empty';
   empty.innerHTML=`<div class="symbol" aria-hidden="true">☕</div><strong>Пар не найдено</strong><p>${h(msg)}</p>`;list.append(empty);
  }else for(const e of lessons){
