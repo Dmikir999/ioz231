@@ -218,7 +218,7 @@ def run():
         # Save a GROUP-ONLY cached version, never the entire XLSX of other students.
         new_base={'group':GROUP,'source':source,'source_sheet':config['sheet'],'semester':config,'sha256':checksum,
                   'imported_at':now.isoformat(),'entries':entries,'warnings':warnings}
-        if switching or base.get('sha256')!=checksum:
+        if switching or base.get('sha256')!=checksum or base.get('entries') != entries:
             (DATA/'base.json').write_text(json.dumps(new_base,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
             LOG.info('Updated source XLSX from Cloud Mail: %d lessons',len(entries))
     except Exception as exc:

@@ -154,11 +154,27 @@ def parse_xlsx(blob:bytes, sheet, periods):
         if day is None or not start:
             warnings.append(f'Строка {rowno}: заполненная ячейка без дня/времени; пропущено')
             continue
+        row_lessons = []
         for seg in _segments(content):
             items = _expand_segment(seg, day, start, end, rowno, warnings, periods)
             for item in items:
                 item['source_sheet'] = sheet
-            lessons.extend(items)
+            row_lessons.extend(items)
+        lessons.extend(row_lessons)
+        # Only this confirmed elective is shared with the neighbouring column.
+        shared = {(e['date'], e['kind']): e for e in row_lessons
+                  if e['subject'].casefold() == 'кв образовательное пространство столичного мегаполиса'}
+        if shared:
+            for seg in _segments(row.get('D', '')):
+                title = TYPE_RX.split(seg, maxsplit=1)[0].strip(' ,.;')
+                if title.casefold() != 'кв организация проектной деятельности обучающихся при изучении обществознания':
+                    continue
+                for other in _expand_segment(seg, day, start, end, rowno, warnings, periods):
+                    first = shared.get((other['date'], other['kind']))
+                    if first:
+                        other['source_sheet'] = sheet
+                        other['parallel_id'] = first['parallel_id'] = first['id']
+                        lessons.append(other)
     unique={}
     for e in lessons:
         # An identical lesson can be repeated in the XLSX only because of technical overlap;

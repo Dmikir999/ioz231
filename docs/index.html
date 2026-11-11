@@ -124,6 +124,7 @@ footer>div{min-width:0;overflow-wrap:anywhere}
  .more{grid-row:5;margin-top:0}
  footer{grid-row:6;margin-top:24px}
 }
+.lesson-option + .lesson-option{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 </style>
 </head>
 <body><main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
@@ -177,7 +178,19 @@ function render(){
   const previous=finalBySubject.get(key);
   if(!previous||entry.date>previous.date||(entry.date===previous.date&&String(entry.time||'')>String(previous.time||'')))finalBySubject.set(key,entry);
  }
- $('count').textContent=lessons.length?`${lessons.length} ${plural(lessons.length)}`:'';
+ const groups=new Map();
+ const cards=[];
+ for(const e of lessons){
+  const key=e.parallel_id && JSON.stringify([e.parallel_id,e.time,e.end]);
+  if(key && groups.has(key)){
+   groups.get(key).push(e);
+  }else{
+   const variants=[e];
+   cards.push(variants);
+   if(key)groups.set(key,variants);
+  }
+ }
+ $('count').textContent=cards.length?`${cards.length} ${plural(cards.length)}`:'';
  let banner='';
  if(!schedule||schedule.status==='unavailable'){
   banner='<div class="alert danger"><strong>Не удалось загрузить расписание</strong>Проверь интернет и обнови страницу.</div>';
@@ -199,13 +212,18 @@ function render(){
   else if(schedule.periods && !schedule.periods.some(([a,b])=>a<=selected && selected<=b))msg='Перерыв в занятиях по учебному календарю.';
   const empty=document.createElement('div');empty.className='empty';
   empty.innerHTML=`<div class="symbol" aria-hidden="true">☕</div><strong>Пар не найдено</strong><p>${h(msg)}</p>`;list.append(empty);
- }else for(const e of lessons){
-  const el=document.createElement('article');el.className='lesson'+(e.cancelled?' cancelled':'');
+ }else for(const variants of cards){
+  const e=variants[0];
+  const el=document.createElement('article');
+  el.className='lesson'+(variants.every(v=>v.cancelled)?' cancelled':'');
+  const sections=variants.map(e=>{
   const subjectKey=String(e.subject||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('ru-RU');
   const finalBadge=!e.cancelled&&finalBySubject.get(subjectKey)===e?'<div class="final-semester-badge">Заключительная пара в семестре</div>':'';
   const flag=e.cancelled?'Отменена':e.changed?(e.previous_time?`Перенос с ${h(e.previous_time)}`:'Изменено'):'';
   const flagContent=flag?(e.change_url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(e.change_url)?`<a href="${e.change_url}" class="change-badge" target="_blank" rel="noopener">${flag} ↗</a>`:`<span class="change-badge">${flag}</span>`):'';
-  el.innerHTML=`<div><div class="time-start">${h(e.time)}</div><div class="time-end">${e.end?h(e.end):'время уточняется'}</div></div><div><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${h(e.teacher)}</div>`:''}${flagContent}${finalBadge}</div>`;
+  return `<section class="lesson-option"><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${h(e.teacher)}</div>`:''}${flagContent}${finalBadge}</section>`;
+  }).join('');
+  el.innerHTML=`<div><div class="time-start">${h(e.time)}</div><div class="time-end">${e.end?h(e.end):'время уточняется'}</div></div><div>${sections}</div>`;
   list.append(el);
  }
  const tags=[];

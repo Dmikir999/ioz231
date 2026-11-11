@@ -168,7 +168,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 50,
-      "id": "929c72e7e46529"
+      "id": "929c72e7e46529",
+      "parallel_id": "929c72e7e46529"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-09-03",
+      "weekday": 3,
+      "time": "18:40",
+      "end": "20:00",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Лекция",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 50,
+      "id": "9e079299cb62e6",
+      "parallel_id": "929c72e7e46529"
     },
     {
       "group": "ИОЗ-231",
@@ -183,7 +200,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 52,
-      "id": "9946fc767cf522"
+      "id": "9946fc767cf522",
+      "parallel_id": "9946fc767cf522"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-09-03",
+      "weekday": 3,
+      "time": "20:10",
+      "end": "21:30",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Практика",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 52,
+      "id": "4d3d208f7bc810",
+      "parallel_id": "9946fc767cf522"
     },
     {
       "group": "ИОЗ-231",
@@ -513,7 +547,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 50,
-      "id": "c1f4769759585b"
+      "id": "c1f4769759585b",
+      "parallel_id": "c1f4769759585b"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-09-17",
+      "weekday": 3,
+      "time": "18:40",
+      "end": "20:00",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Лекция",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 50,
+      "id": "cc04622ea79d3d",
+      "parallel_id": "c1f4769759585b"
     },
     {
       "group": "ИОЗ-231",
@@ -528,7 +579,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 52,
-      "id": "0de334f9e6c4f9"
+      "id": "0de334f9e6c4f9",
+      "parallel_id": "0de334f9e6c4f9"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-09-17",
+      "weekday": 3,
+      "time": "20:10",
+      "end": "21:30",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Практика",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 52,
+      "id": "9eed4480fd6e7e",
+      "parallel_id": "0de334f9e6c4f9"
     },
     {
       "group": "ИОЗ-231",
@@ -933,7 +1001,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 50,
-      "id": "ba5dae7c59ac23"
+      "id": "ba5dae7c59ac23",
+      "parallel_id": "ba5dae7c59ac23"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-10-01",
+      "weekday": 3,
+      "time": "18:40",
+      "end": "20:00",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Лекция",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 50,
+      "id": "e5a3b7572e58af",
+      "parallel_id": "ba5dae7c59ac23"
     },
     {
       "group": "ИОЗ-231",
@@ -948,7 +1033,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 52,
-      "id": "160db98611c14a"
+      "id": "160db98611c14a",
+      "parallel_id": "160db98611c14a"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-10-01",
+      "weekday": 3,
+      "time": "20:10",
+      "end": "21:30",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Практика",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 52,
+      "id": "7f80387086e65c",
+      "parallel_id": "160db98611c14a"
     },
     {
       "group": "ИОЗ-231",
@@ -1263,7 +1365,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 50,
-      "id": "2d1deff45bbfd6"
+      "id": "2d1deff45bbfd6",
+      "parallel_id": "2d1deff45bbfd6"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-11-12",
+      "weekday": 3,
+      "time": "18:40",
+      "end": "20:00",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Лекция",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 50,
+      "id": "def67befc43cac",
+      "parallel_id": "2d1deff45bbfd6"
     },
     {
       "group": "ИОЗ-231",
@@ -1278,7 +1397,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 52,
-      "id": "89009e588f4116"
+      "id": "89009e588f4116",
+      "parallel_id": "89009e588f4116"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-11-12",
+      "weekday": 3,
+      "time": "20:10",
+      "end": "21:30",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Практика",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 52,
+      "id": "72c2b7ad2556e4",
+      "parallel_id": "89009e588f4116"
     },
     {
       "group": "ИОЗ-231",
@@ -1578,7 +1714,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 50,
-      "id": "8bd93e7e104051"
+      "id": "8bd93e7e104051",
+      "parallel_id": "8bd93e7e104051"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-11-26",
+      "weekday": 3,
+      "time": "18:40",
+      "end": "20:00",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Лекция",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 50,
+      "id": "d5f08a55d0ea32",
+      "parallel_id": "8bd93e7e104051"
     },
     {
       "group": "ИОЗ-231",
@@ -1593,7 +1746,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 52,
-      "id": "f19a2fa3bd102d"
+      "id": "f19a2fa3bd102d",
+      "parallel_id": "f19a2fa3bd102d"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-11-26",
+      "weekday": 3,
+      "time": "20:10",
+      "end": "21:30",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Практика",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 52,
+      "id": "96e35f92699152",
+      "parallel_id": "f19a2fa3bd102d"
     },
     {
       "group": "ИОЗ-231",
@@ -1893,7 +2063,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 50,
-      "id": "ae0c9d50befe2f"
+      "id": "ae0c9d50befe2f",
+      "parallel_id": "ae0c9d50befe2f"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-12-10",
+      "weekday": 3,
+      "time": "18:40",
+      "end": "20:00",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Лекция",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 50,
+      "id": "acf2e41f9c9000",
+      "parallel_id": "ae0c9d50befe2f"
     },
     {
       "group": "ИОЗ-231",
@@ -1908,7 +2095,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 52,
-      "id": "060b081cc39224"
+      "id": "060b081cc39224",
+      "parallel_id": "060b081cc39224"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-12-10",
+      "weekday": 3,
+      "time": "20:10",
+      "end": "21:30",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Практика",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 52,
+      "id": "2269c4d4259542",
+      "parallel_id": "060b081cc39224"
     },
     {
       "group": "ИОЗ-231",
@@ -2178,7 +2382,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 50,
-      "id": "673e8daf180746"
+      "id": "673e8daf180746",
+      "parallel_id": "673e8daf180746"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-12-24",
+      "weekday": 3,
+      "time": "18:40",
+      "end": "20:00",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Лекция",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 50,
+      "id": "17471fca148584",
+      "parallel_id": "673e8daf180746"
     },
     {
       "group": "ИОЗ-231",
@@ -2193,7 +2414,24 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 52,
-      "id": "109fad525ab83d"
+      "id": "109fad525ab83d",
+      "parallel_id": "109fad525ab83d"
+    },
+    {
+      "group": "ИОЗ-231",
+      "date": "2026-12-24",
+      "weekday": 3,
+      "time": "20:10",
+      "end": "21:30",
+      "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
+      "kind": "Практика",
+      "teacher": "Доц. М.В. Шенер",
+      "room": "3503",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 52,
+      "id": "9376bf0f1a8dc1",
+      "parallel_id": "109fad525ab83d"
     },
     {
       "group": "ИОЗ-231",
