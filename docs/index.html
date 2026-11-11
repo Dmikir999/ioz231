@@ -31,6 +31,7 @@ header{grid-column:2;grid-row:1;display:flex;align-items:flex-start;justify-cont
 .schedule-section{grid-row:3}.section-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:20px}.section-top h2{font-size:31px;font-weight:820;letter-spacing:-.045em;margin:0;line-height:1.2}.section-top small{font-size:17px;color:#6f6469;white-space:nowrap}.lessons{display:flex;flex-direction:column;gap:14px}
 .lesson{background:rgba(255,255,255,.94);border:1px solid #f0e6e8;border-radius:27px;padding:25px 26px;display:grid;grid-template-columns:145px minmax(0,1fr);gap:29px;box-shadow:0 8px 24px #2910150d}.lesson>div:first-child{border-right:2px solid #f0e5e7;padding:3px 24px 3px 2px}.lesson>div:nth-child(2){padding:2px 0}.time-start{font-size:27px;font-weight:850;letter-spacing:-.05em;color:var(--red)}.time-end{font-size:16px;font-weight:560;color:#81767b;margin-top:6px}.subject{font-size:21px;font-weight:800;line-height:1.34;letter-spacing:-.03em;overflow-wrap:anywhere}
 .details{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.chip{font-size:15px;font-weight:700;line-height:1.35;padding:7px 12px;border-radius:20px;background:#f4eff0;color:#51474b}.chip.room{background:var(--pink);color:var(--red-dark)}.teacher{font-size:16px;color:#70666a;line-height:1.5;margin-top:15px}.change-badge{margin-top:13px;display:inline-block;font-size:13px;font-weight:750;color:#8c5816;background:#fff2dc;padding:8px 10px;border-radius:9px}
+.final-semester-badge{margin-top:12px;display:inline-flex;align-items:center;gap:9px;max-width:100%;font-size:14px;font-weight:750;line-height:1.35;color:#b94a13;background:linear-gradient(100deg,#fff0e4,#ffe8db);padding:9px 12px;border-radius:18px}.final-semester-badge:before{content:"!";display:grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;background:#f36b16;color:#fff;font-size:14px;font-weight:900;line-height:1}@media(max-width:520px){.final-semester-badge{font-size:12px;gap:7px;padding:8px 9px}}
 .lesson.cancelled{background:#faf8f8;opacity:.8}.cancelled .subject{text-decoration:line-through;text-decoration-color:#a4a6a2}.cancelled .time-start{text-decoration:line-through}.cancelled .change-badge{background:#fce6e4;color:#9f4840}
 .alert{font-size:14px;line-height:1.55;padding:15px 17px;border-radius:15px;margin:0 0 22px;color:#75521e;background:#fff2df}.alert strong{display:block;margin-bottom:3px}.alert.danger{background:#fceae7;color:#97463c}
 .empty{background:#fff;border:1px dashed #eadfe1;border-radius:22px;padding:38px 22px;text-align:center}.empty .symbol{width:55px;height:55px;display:grid;place-items:center;font-size:24px;background:#fff3f4;border-radius:17px;margin:auto auto 14px}.empty strong{display:block;font-size:18px}.empty p{color:#7b7074;font-size:14px;line-height:1.6;margin:8px auto 0;max-width:310px}
@@ -163,6 +164,16 @@ function render(){
  const d=date(selected),wd=longNames[d.getUTCDay()];
  $('dateTitle').textContent=`${fmt.format(d)}`;
  const lessons=(schedule?.entries||[]).filter(x=>x.date===selected).sort((a,b)=>a.time.localeCompare(b.time));
+ const semesterStart=schedule?.semester_start||'';
+ const semesterEnd=schedule?.semester_end||'';
+ const finalBySubject=new Map();
+ for(const entry of schedule?.entries||[]){
+  if(entry.cancelled||!entry.subject||!entry.date)continue;
+  if((semesterStart&&entry.date<semesterStart)||(semesterEnd&&entry.date>semesterEnd))continue;
+  const key=String(entry.subject).trim().replace(/\s+/g,' ').toLocaleLowerCase('ru-RU');
+  const previous=finalBySubject.get(key);
+  if(!previous||entry.date>previous.date||(entry.date===previous.date&&String(entry.time||'')>String(previous.time||'')))finalBySubject.set(key,entry);
+ }
  $('count').textContent=lessons.length?`${lessons.length} ${plural(lessons.length)}`:'';
  let banner='';
  if(!schedule||schedule.status==='unavailable'){
@@ -187,9 +198,11 @@ function render(){
   empty.innerHTML=`<div class="symbol" aria-hidden="true">☕</div><strong>Пар не найдено</strong><p>${h(msg)}</p>`;list.append(empty);
  }else for(const e of lessons){
   const el=document.createElement('article');el.className='lesson'+(e.cancelled?' cancelled':'');
+  const subjectKey=String(e.subject||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('ru-RU');
+  const finalBadge=!e.cancelled&&finalBySubject.get(subjectKey)===e?'<div class="final-semester-badge">Заключительная пара в семестре</div>':'';
   const flag=e.cancelled?'Отменена':e.changed?(e.previous_time?`Перенос с ${h(e.previous_time)}`:'Изменено'):'';
   const flagContent=flag?(e.change_url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(e.change_url)?`<a href="${e.change_url}" class="change-badge" target="_blank" rel="noopener">${flag} ↗</a>`:`<span class="change-badge">${flag}</span>`):'';
-  el.innerHTML=`<div><div class="time-start">${h(e.time)}</div><div class="time-end">${e.end?h(e.end):'время уточняется'}</div></div><div><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${h(e.teacher)}</div>`:''}${flagContent}</div>`;
+  el.innerHTML=`<div><div class="time-start">${h(e.time)}</div><div class="time-end">${e.end?h(e.end):'время уточняется'}</div></div><div><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${h(e.teacher)}</div>`:''}${flagContent}${finalBadge}</div>`;
   list.append(el);
  }
  const tags=[];
