@@ -1383,7 +1383,8 @@
       "source_row": 50,
       "id": "def67befc43cac",
       "parallel_id": "2d1deff45bbfd6",
-      "changed": true
+      "changed": true,
+      "change_url": "https://vk.com/wall-70091881_20417"
     },
     {
       "group": "ИОЗ-231",
@@ -1416,7 +1417,8 @@
       "source_row": 52,
       "id": "72c2b7ad2556e4",
       "parallel_id": "89009e588f4116",
-      "changed": true
+      "changed": true,
+      "change_url": "https://vk.com/wall-70091881_20417"
     },
     {
       "group": "ИОЗ-231",
@@ -2496,8 +2498,31 @@
       "id": "da4d0d207ca876"
     }
   ],
-  "notices": [],
-  "applied_change_links": [],
+  "notices": [
+    {
+      "post_id": 20383,
+      "post_owner": -70091881,
+      "text": "‼ #ИОЗ_231, #ИОЗ_232, #ИЯЗ_231 — лекция доц. Челноковой перенесена с вторника 03.11 на VI пару в понедельник 09.11, ауд. 3207.",
+      "timestamp": 1793628786,
+      "edited": 0,
+      "url": "https://vk.com/wall-70091881_20383",
+      "status": "review",
+      "reason": "В публикации несколько групп"
+    },
+    {
+      "post_id": 20384,
+      "post_owner": -70091881,
+      "text": "‼ #ИОЗ_231, #ИОЗ_232 — практ. занятия доц. Челноковой перенесены с вторника 03.11 на VII-VIII пары в понедельник 09.11, ауд. 3509. Практ. занятия проф. Черненькой так же перенесены с вторника 03.11 на VII-VIII пары в понедельник 09.11, ауд. 3506.",
+      "timestamp": 1793628831,
+      "edited": 0,
+      "url": "https://vk.com/wall-70091881_20384",
+      "status": "review",
+      "reason": "В публикации несколько групп"
+    }
+  ],
+  "applied_change_links": [
+    "https://vk.com/wall-70091881_20417"
+  ],
   "warnings": [],
   "errors": []
 }
