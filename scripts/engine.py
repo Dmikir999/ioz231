@@ -19,8 +19,8 @@ DOCS=ROOT/'docs'
 TZ=ZoneInfo('Europe/Moscow')
 MAIL='https://cloud.mail.ru/public/TKBt/bHWaZqMQA'
 VK='https://vk.com/dekanat_ign'
-GROUP_RE=re.compile(r'(?<![А-ЯA-Z0-9])И\s*[ОO0]\s*[З3]\s*[-–— ]?\s*231(?!\d)',re.I)
-ANY_GROUP_RE=re.compile(r'(?<![А-ЯA-Z0-9])И\s*[ОO0]\s*[З3]\s*[-–— ]?\s*(\d{3})(?!\d)',re.I)
+GROUP_RE=re.compile(r'(?<![А-ЯA-Z0-9])И\s*[ОO0]\s*[З3]\s*[-–—_ ]?\s*231(?!\d)',re.I)
+ANY_GROUP_RE=re.compile(r'(?<![А-ЯA-Z0-9])И\s*[ОO0]\s*[З3]\s*[-–—_ ]?\s*(\d{3})(?!\d)',re.I)
 DATE_RE=re.compile(r'(?<!\d)(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?(?!\d)')
 TIME_RE=re.compile(r'(?<!\d)([012]?\d)[:.]([0-5]\d)(?!\d)')
 MONTHS={'января':1,'февраля':2,'марта':3,'апреля':4,'мая':5,'июня':6,'июля':7,'августа':8,'сентября':9,'октября':10,'ноября':11,'декабря':12}
@@ -155,11 +155,50 @@ def fetch_vk_posts():
     return js.get('response',{}).get('items',[])
 
 
+def teacher_room_change(post, schedule):
+    """Apply a dated room bulletin only to the target group's own line."""
+    lines = [line.strip() for line in post.get('text', '').splitlines() if line.strip()]
+    if not lines or post.get('attachments') or not re.search(
+        r'изменени[ея]\s+аудиторий', lines[0], re.I
+    ):
+        return None
+    year = datetime.fromtimestamp(post.get('date') or datetime.now(TZ).timestamp(), TZ).year
+    dates = parse_dates(lines[0], year)
+    target_lines = [line for line in lines[1:] if _target(line)]
+    if len(dates) != 1 or len(target_lines) != 1:
+        return None
+    match = re.fullmatch(
+        r'(?P<groups>#[\w-]+(?:\s*,\s*#[\w-]+)*)\s*[—–-]\s*'
+        r'занятия\s+(?:доц\.|проф\.|ст\.\s*пр\.)\s+'
+        r'(?P<name>[А-ЯЁа-яё-]+)\s+(?:пройдут\s+)?в\s+ауд\.\s*'
+        r'(?P<room>\d{3,5}[А-Яа-я]?)\.?', target_lines[0], re.I)
+    if not match or not _target(match['groups']):
+        return None
+    matches = [entry for entry in schedule if entry['date'] == dates[0]
+               and entry.get('teacher', '').casefold().endswith(' ' + match['name'].casefold())]
+    if not matches or len({entry['teacher'] for entry in matches}) != 1:
+        return None
+    url = f"https://vk.com/wall{post['owner_id']}_{post['id']}"
+    for entry in matches:
+        entry.update(room=match['room'], changed=True, change_url=url)
+    return url
+
+
 def apply_changes(entries,posts):
     schedule=[dict(e) for e in entries]
+    # Confirmed bulletin supplied by the group before the hashtag parser was fixed.
+    for entry in schedule:
+        if (entry['date'] == '2026-11-12' and entry.get('teacher') == 'Доц. М.В. Шенер'
+                and entry.get('room') == '3503'):
+            entry.update(room='3407', changed=True)
     notices=[];applied=[]
     ordered=sorted(posts,key=lambda post:(post.get('date',0),post.get('edited',0),post.get('id',0)))
     for post in ordered:
+        if post.get('owner_id') and isinstance(post.get('id'), int):
+            url = teacher_room_change(post, schedule)
+            if url:
+                applied.append(url)
+                continue
         change=detect_change(post)
         if not change:continue
         if change['status']!='candidate':notices.append(change);continue

@@ -1377,12 +1377,13 @@
       "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
       "kind": "Лекция",
       "teacher": "Доц. М.В. Шенер",
-      "room": "3503",
+      "room": "3407",
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 50,
       "id": "def67befc43cac",
-      "parallel_id": "2d1deff45bbfd6"
+      "parallel_id": "2d1deff45bbfd6",
+      "changed": true
     },
     {
       "group": "ИОЗ-231",
@@ -1409,12 +1410,13 @@
       "subject": "КВ Организация проектной деятельности обучающихся при изучении обществознания",
       "kind": "Практика",
       "teacher": "Доц. М.В. Шенер",
-      "room": "3503",
+      "room": "3407",
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 52,
       "id": "72c2b7ad2556e4",
-      "parallel_id": "89009e588f4116"
+      "parallel_id": "89009e588f4116",
+      "changed": true
     },
     {
       "group": "ИОЗ-231",
