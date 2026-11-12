@@ -1,4 +1,7 @@
 {
+  "group": "ИОЗ-231",
+  "source": "https://cloud.mail.ru/public/TKBt/bHWaZqMQA",
+  "source_sheet": "4иоз",
   "semester": {
     "source": "https://cloud.mail.ru/public/TKBt/bHWaZqMQA",
     "sheet": "4иоз",
@@ -13,11 +16,8 @@
       ]
     ]
   },
-  "group": "ИОЗ-231",
-  "source": "https://cloud.mail.ru/public/TKBt/bHWaZqMQA",
-  "source_sheet": "4иоз",
-  "sha256": "1cb8e8169ef6aa6248ff9f2fd2e5bca25c8acf50211290ce74210b6238b75712",
-  "imported_at": "2026-11-11T14:00:00.378190+03:00",
+  "sha256": "e4e552a9891988e47d4db4ad31856ab2f8997252f40da301760ca84590fa1b80",
+  "imported_at": "2026-11-12T10:26:20.874499+03:00",
   "entries": [
     {
       "group": "ИОЗ-231",
