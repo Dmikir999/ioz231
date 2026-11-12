@@ -113,11 +113,11 @@ def detect_change(post):
     base={'post_id':id,'post_owner':post.get('owner_id',0),'text':txt[:600],
           'timestamp':post.get('date',0),'edited':post.get('edited',0),
           'url':f'https://vk.com/wall{post.get("owner_id", "")}_{id}'}
-    def review(reason):return {**base,'status':'review','reason':reason}
-    groups=set(ANY_GROUP_RE.findall(txt))
-    if groups-{'231'}:return review('В публикации несколько групп')
     post_year=datetime.fromtimestamp(post.get('date') or datetime.now(TZ).timestamp(),TZ).year
     dates=parse_dates(txt,post_year)
+    def review(reason):return {**base,'status':'review','reason':reason,'lesson_dates':dates}
+    groups=set(ANY_GROUP_RE.findall(txt))
+    if groups-{'231'}:return review('В публикации несколько групп')
     if len(dates)!=1:return review('Нет одной однозначной даты')
     if post.get('attachments'):
         # Images and PDFs require OCR; cannot reliably infer the change from an attachment.

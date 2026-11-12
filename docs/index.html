@@ -125,13 +125,14 @@ footer>div{min-width:0;overflow-wrap:anywhere}
  footer{grid-row:6;margin-top:24px}
 }
 .lesson-option + .lesson-option{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+#dayChanges{margin-top:14px}
 </style>
 </head>
 <body><main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
   <header><div class="eyebrow">Институт гуманитарных наук</div><h1 class="appname">Расписание</h1><div class="group">ИОЗ-231</div></header>
   <div class="verification" id="verification" aria-label="Проверка источников"><span class="source-tag warn">Проверяем источники…</span></div>
   <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><strong id="weekLabel">Загрузка…</strong><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя">‹</button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя">›</button></div></div><nav class="days" id="days" aria-label="Дни недели"></nav></section>
-  <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessons" class="lessons"></div></section>
+  <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessons" class="lessons"></div><div id="dayChanges" hidden><span id="dayChangeCount" class="source-tag"></span></div></section>
   <details id="reviewSection" class="more" hidden><summary id="reviewLabel">Непроверенные изменения</summary><div id="reviews"></div></details>
   <footer><div><div id="updated">Источник данных загружается…</div><div>Неофициальное расписание. При сомнениях сверяй данные с деканатом.</div><div><a data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener">Таблица МГПУ</a> · <a href="https://vk.ru/dekanat_ign" target="_blank" rel="noopener">Изменения ВК</a></div></div><button class="refresh" id="refresh" title="Перезагрузить расписание">Обновить ↻</button></footer>
 </div></main>
@@ -168,6 +169,18 @@ function render(){
  const d=date(selected),wd=longNames[d.getUTCDay()];
  $('dateTitle').textContent=`${fmt.format(d)}`;
  const lessons=(schedule?.entries||[]).filter(x=>x.date===selected).sort((a,b)=>a.time.localeCompare(b.time));
+ const changes = new Set();
+ const normalize = value => (value || '').trim().toLocaleLowerCase('ru-RU').replace(/\s+/g, ' ');
+ for (const lesson of lessons) {
+  if (!lesson.changed && !lesson.cancelled) continue;
+  const roomOnly = lesson.room && lesson.teacher && lesson.subject && !lesson.cancelled && !lesson.previous_time;
+  const key = roomOnly
+   ? ['room', normalize(lesson.teacher), normalize(lesson.subject), normalize(lesson.room)]
+   : ['lesson', lesson.id || [lesson.time, lesson.subject, lesson.teacher]];
+  changes.add(JSON.stringify(key));
+ }
+ $('dayChanges').hidden = changes.size === 0;
+ $('dayChangeCount').textContent = changes.size ? `Изменений сегодня: ${changes.size}` : '';
  const semesterStart=schedule?.semester_start||'';
  const semesterEnd=schedule?.semester_end||'';
  const finalBySubject=new Map();
@@ -232,10 +245,9 @@ function render(){
  }else{
   tags.push(schedule.source_live===true?'<span class="source-tag good">Excel: получен</span>':'<span class="source-tag warn">Excel: сохранённая версия</span>');
   tags.push(schedule.vk_ok===true?'<span class="source-tag good">VK: проверен</span>':'<span class="source-tag bad">VK: не проверен</span>');
-  if((schedule.notices||[]).length)tags.push(`<span class="source-tag warn">Спорных изменений: ${schedule.notices.length}</span>`);
  }
  $('verification').innerHTML=tags.join('');
- const review=schedule?.notices||[];$('reviewSection').hidden=!review.length;$('reviewLabel').textContent=`Требуют проверки (${review.length})`;
+ const review=(schedule?.notices||[]).filter(n=>n.date===selected || n.lesson_dates?.includes(selected));$('reviewSection').hidden=!review.length;$('reviewLabel').textContent=`Требуют проверки (${review.length})`;
  $('reviews').innerHTML=review.slice(0,30).map(x=>`<div class="review"><strong>${h(x.reason||'Изменение требует проверки')}</strong><p>${h(x.text||'')}</p>${x.url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(x.url)?`<a target="_blank" rel="noopener" href="${x.url}">Посмотреть пост ↗</a>`:''}</div>`).join('');
  $('updated').textContent=schedule?.updated_at?`Версия расписания: ${new Date(schedule.updated_at).toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow',day:'numeric',month:'short',year:'numeric'})}`:'Расписание ещё не проверялось';
 }
