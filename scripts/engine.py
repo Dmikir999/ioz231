@@ -57,28 +57,68 @@ def _mail_download_hosts(dispatcher):
     return hosts
 
 
+def _mail_share_download_hosts(source):
+    """Read the download endpoints assigned to this public share page."""
+    request = Request(source, headers={
+        'User-Agent': 'Mozilla/5.0 IOZ231Schedule/2.0',
+        'Accept': 'text/html',
+    })
+    with urlopen(request, timeout=28) as response:
+        html = response.read(2_000_000).decode('utf-8', errors='replace')
+    settings = re.search(r'window\.cloudSettings\s*=\s*\{', html)
+    if not settings:
+        raise ValueError('Cloud Mail share page did not expose its settings')
+    dispatcher = re.search(r'"dispatcher"\s*:\s*', html[settings.end():])
+    if not dispatcher:
+        raise ValueError('Cloud Mail share page did not expose its dispatcher')
+    offset = settings.end() + dispatcher.end()
+    body, _ = json.JSONDecoder().raw_decode(html, offset)
+    return _mail_download_hosts({'body': body})
+
+
 def fetch_mail_xlsx(source):
-    # Manual override is useful for diagnostics, but Cloud Mail links expire:
-    # the normal path must resolve a new URL on *every* check.
+    # Cloud Mail download URLs expire, so resolve a fresh URL on every check.
     direct=os.getenv('XLSX_DIRECT_URL','').strip()
     if direct and source == MAIL:
         try:
             return _download(direct)
         except Exception as exc:
             LOG.warning('XLSX_DIRECT_URL is unavailable; trying public link: %s',exc)
-    # Mail returns weblink_get as a LIST OF DICTS containing "url", not
-    # merely strings. Previously every valid dispatcher host was discarded.
-    result=_json_get('https://cloud.mail.ru/api/v2/dispatcher',{'api':'2','build':'cloudweb-1'})
-    hosts=_mail_download_hosts(result)
-    if not hosts:
-        raise RuntimeError('Mail Cloud dispatcher returned no HTTPS weblink_get endpoint')
-    for host in hosts:
-        try:
-            return _download(host+'/'+source.split('/public/', 1)[1])
-        except Exception as exc:
-            LOG.warning('Mail download endpoint failed: %s',exc)
-    raise RuntimeError('Не удалось скачать XLSX ни с одного адреса Mail Cloud')
 
+    share_id = source.split('/public/', 1)[1]
+    try:
+        result = _json_get('https://cloud.mail.ru/api/v2/dispatcher', {'api': '2', 'build': 'cloudweb-1'})
+        hosts = _mail_download_hosts(result)
+        if not hosts:
+            LOG.warning('Mail Cloud dispatcher returned no HTTPS weblink_get endpoint')
+    except Exception as exc:
+        LOG.warning('Mail Cloud dispatcher is unavailable: %s', exc)
+        hosts = []
+
+    tried = set()
+    for host in hosts:
+        tried.add(host)
+        try:
+            return _download(f'{host}/{share_id}')
+        except Exception as exc:
+            LOG.warning('Mail download endpoint failed: %s', exc)
+
+    # The share page may be assigned a different host or download token.
+    try:
+        share_hosts = _mail_share_download_hosts(source)
+    except Exception as exc:
+        LOG.warning('Mail Cloud share page endpoints are unavailable: %s', exc)
+        share_hosts = []
+    for host in share_hosts:
+        if host in tried:
+            continue
+        tried.add(host)
+        try:
+            return _download(f'{host}/{share_id}')
+        except Exception as exc:
+            LOG.warning('Mail share page download endpoint failed: %s', exc)
+
+    raise RuntimeError('Не удалось скачать XLSX ни с одного адреса Mail Cloud')
 
 def _norm(v):return ' '.join(str(v or '').split())
 def _target(v):return bool(GROUP_RE.search(_norm(v)))
