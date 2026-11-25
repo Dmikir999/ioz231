@@ -1383,6 +1383,7 @@
       "source_row": 50,
       "id": "def67befc43cac",
       "parallel_id": "2d1deff45bbfd6",
+      "previous_room": "3503",
       "changed": true,
       "change_url": "https://vk.com/wall-70091881_20417"
     },
@@ -1417,6 +1418,7 @@
       "source_row": 52,
       "id": "72c2b7ad2556e4",
       "parallel_id": "89009e588f4116",
+      "previous_room": "3503",
       "changed": true,
       "change_url": "https://vk.com/wall-70091881_20417"
     },
