@@ -1801,6 +1801,21 @@
     },
     {
       "group": "ИОЗ-231",
+      "date": "2026-11-27",
+      "weekday": 4,
+      "time": "20:10",
+      "end": "21:30",
+      "subject": "Методика обучения истории",
+      "kind": "Практика",
+      "teacher": "Доц. И.А. Нидерман",
+      "room": "3406",
+      "source": "base",
+      "source_sheet": "4иоз",
+      "source_row": 64,
+      "id": "b455e7bb0775e0"
+    },
+    {
+      "group": "ИОЗ-231",
       "date": "2026-12-01",
       "weekday": 1,
       "time": "17:10",
@@ -2147,21 +2162,6 @@
       "source_sheet": "4иоз",
       "source_row": 62,
       "id": "fe40efa2652b42"
-    },
-    {
-      "group": "ИОЗ-231",
-      "date": "2026-12-11",
-      "weekday": 4,
-      "time": "20:10",
-      "end": "21:30",
-      "subject": "Методика обучения истории",
-      "kind": "Практика",
-      "teacher": "Доц. И.А. Нидерман",
-      "room": "3406",
-      "source": "base",
-      "source_sheet": "4иоз",
-      "source_row": 64,
-      "id": "02bfd3a29bd8f2"
     },
     {
       "group": "ИОЗ-231",
