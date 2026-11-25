@@ -103,6 +103,28 @@ class ScheduleTests(unittest.TestCase):
         self.assertEqual(applied, [])
         self.assertEqual(notices[0]['lesson_dates'], ['2026-11-27', '2026-12-11'])
 
+    def test_room_bulletin_keeps_the_previous_room_and_link(self):
+        entries = [{'date': '2026-11-12', 'time': time, 'subject': 'КВ Организация проектной деятельности',
+                    'teacher': 'Доц. М.В. Шенер', 'room': '3503'} for time in ('18:40', '20:10')]
+        post = {'id': 20417, 'owner_id': -70091881, 'date': 1794326400,
+                'text': 'Изменение аудиторий на четверг, 12 ноября:\n'
+                        '#ИОЗ_231, #ИОЗ_232 — занятия доц. Шенер в ауд. 3407.'}
+        result, notices, applied = apply_changes(entries, [post])
+        for lesson in result:
+            self.assertEqual((lesson['previous_room'], lesson['room']), ('3503', '3407'))
+            self.assertEqual(lesson['change_url'], 'https://vk.com/wall-70091881_20417')
+        self.assertEqual((notices, applied), ([], ['https://vk.com/wall-70091881_20417']))
+
+    def test_room_bulletin_with_no_previous_room(self):
+        lesson = next(e for e in LESSONS if e['date'] == '2026-11-11' and e['time'] == '15:40')
+        post = {'id': 23, 'owner_id': -2, 'date': 1794326400,
+                'text': 'ИОЗ-231 11.11.2026 в 15:40 занятие будет в ауд. 3407'}
+        for original_room in ('', '3407'):
+            with self.subTest(original_room=original_room):
+                result, notices, applied = apply_changes([dict(lesson, room=original_room)], [post])
+                self.assertEqual((result[0]['previous_room'], result[0]['room']), ('', '3407'))
+                self.assertEqual((notices, applied), ([], ['https://vk.com/wall-2_23']))
+
     def test_no_broad_cancellation(self):
         post={'id':18,'owner_id':-2,'date':1794326400,'text':'ИОЗ-231 11.11.2026 пары отменены'}
         candidate=detect_change(post)

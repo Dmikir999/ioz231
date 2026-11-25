@@ -235,8 +235,13 @@ function render(){
   const finalBadge=!e.cancelled&&finalBySubject.get(subjectKey)===e?'<div class="final-semester-badge">Заключительная пара в семестре</div>':'';
   const previousSlot=e.previous_date&&e.previous_date!==e.date
    ?`${shortFmt.format(date(e.previous_date))}, ${e.previous_time}`:e.previous_time;
-  const flag=e.cancelled?'Отменена':e.changed?(previousSlot?`Перенос с ${h(previousSlot)}`:'Изменено'):'';
-  const flagContent=flag?(e.change_url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(e.change_url)?`<a href="${e.change_url}" class="change-badge" target="_blank" rel="noopener">${flag} ↗</a>`:`<span class="change-badge">${flag}</span>`):'';
+  let flag='';
+  if(e.cancelled)flag='Отменена';
+  else if(previousSlot)flag=`Перенос с ${previousSlot}`;
+  else if(e.previous_room)flag=`Смена аудитории: ${e.previous_room} → ${e.room}`;
+  else if(e.previous_room===''&&e.room)flag=`Новая аудитория: ${e.room}`;
+  else if(e.changed)flag='Изменено';
+  const flagContent=flag?(e.change_url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(e.change_url)?`<a href="${e.change_url}" class="change-badge" target="_blank" rel="noopener">${h(flag)} ↗</a>`:`<span class="change-badge">${h(flag)}</span>`):'';
   return `<section class="lesson-option"><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${h(e.teacher)}</div>`:''}${flagContent}${finalBadge}</section>`;
   }).join('');
   el.innerHTML=`<div><div class="time-start">${h(e.time)}</div><div class="time-end">${e.end?h(e.end):'время уточняется'}</div></div><div>${sections}</div>`;

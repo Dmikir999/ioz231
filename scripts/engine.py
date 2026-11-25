@@ -195,6 +195,16 @@ def fetch_vk_posts():
     return js.get('response',{}).get('items',[])
 
 
+def _set_room(entry, room):
+    current = entry.get('room') or ''
+    if current != room:
+        entry['previous_room'] = current
+    else:
+        # Reapplying the same bulletin must retain the old room, if known.
+        entry.setdefault('previous_room', '')
+    entry.update(room=room, changed=True)
+
+
 def teacher_room_change(post, schedule):
     """Apply a dated room bulletin only to the target group's own line."""
     lines = [line.strip() for line in post.get('text', '').splitlines() if line.strip()]
@@ -220,7 +230,8 @@ def teacher_room_change(post, schedule):
         return None
     url = f"https://vk.com/wall{post['owner_id']}_{post['id']}"
     for entry in matches:
-        entry.update(room=match['room'], changed=True, change_url=url)
+        _set_room(entry, match['room'])
+        entry['change_url'] = url
     return url
 
 
@@ -277,7 +288,7 @@ def apply_changes(entries,posts,periods=None):
     for entry in schedule:
         if (entry['date'] == '2026-11-12' and entry.get('teacher') == 'Доц. М.В. Шенер'
                 and entry.get('room') == '3503'):
-            entry.update(room='3407', changed=True)
+            _set_room(entry, '3407')
     notices=[];applied=[]
     ordered=sorted(posts,key=lambda post:(post.get('date',0),post.get('edited',0),post.get('id',0)))
     for post in ordered:
@@ -310,7 +321,8 @@ def apply_changes(entries,posts,periods=None):
                 schedule[idx]['time']=change['new_time']
                 # Do not guess new end time; keep the original duration as text, if necessary.
                 schedule[idx]['end']=''
-            if change['room']:schedule[idx]['room']=change['room']
+            if change['room']:
+                _set_room(schedule[idx], change['room'])
             schedule[idx].pop('cancelled',None)
         schedule[idx]['changed']=True
         schedule[idx]['change_url']=change['url']
