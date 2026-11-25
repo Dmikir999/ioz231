@@ -1812,7 +1812,11 @@
       "source": "base",
       "source_sheet": "4иоз",
       "source_row": 64,
-      "id": "b455e7bb0775e0"
+      "id": "b455e7bb0775e0",
+      "previous_date": "2026-12-11",
+      "previous_time": "20:10",
+      "changed": true,
+      "change_url": "https://vk.com/wall-70091881_20465"
     },
     {
       "group": "ИОЗ-231",
@@ -2526,24 +2530,11 @@
         "2026-11-03",
         "2026-11-09"
       ]
-    },
-    {
-      "post_id": 20465,
-      "post_owner": -70091881,
-      "text": "❗#ИОЗ_231 — занятие доц. Нидерман перенесено с VIII пары в пятницу 11.12 на VIII пару в пятницу 27.11. ❗#ИОЗ_232 — занятие ст.пр. Водолазова перенесено с VIII пары в пятницу 11.12 на VIII пару в пятницу 27.11.",
-      "timestamp": 1795593124,
-      "edited": 0,
-      "url": "https://vk.com/wall-70091881_20465",
-      "status": "review",
-      "reason": "В публикации несколько групп",
-      "lesson_dates": [
-        "2026-11-27",
-        "2026-12-11"
-      ]
     }
   ],
   "applied_change_links": [
-    "https://vk.com/wall-70091881_20417"
+    "https://vk.com/wall-70091881_20417",
+    "https://vk.com/wall-70091881_20465"
   ],
   "warnings": [],
   "errors": []
