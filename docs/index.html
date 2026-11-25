@@ -233,7 +233,9 @@ function render(){
   const sections=variants.map(e=>{
   const subjectKey=String(e.subject||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('ru-RU');
   const finalBadge=!e.cancelled&&finalBySubject.get(subjectKey)===e?'<div class="final-semester-badge">Заключительная пара в семестре</div>':'';
-  const flag=e.cancelled?'Отменена':e.changed?(e.previous_time?`Перенос с ${h(e.previous_time)}`:'Изменено'):'';
+  const previousSlot=e.previous_date&&e.previous_date!==e.date
+   ?`${shortFmt.format(date(e.previous_date))}, ${e.previous_time}`:e.previous_time;
+  const flag=e.cancelled?'Отменена':e.changed?(previousSlot?`Перенос с ${h(previousSlot)}`:'Изменено'):'';
   const flagContent=flag?(e.change_url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(e.change_url)?`<a href="${e.change_url}" class="change-badge" target="_blank" rel="noopener">${flag} ↗</a>`:`<span class="change-badge">${flag}</span>`):'';
   return `<section class="lesson-option"><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${h(e.teacher)}</div>`:''}${flagContent}${finalBadge}</section>`;
   }).join('');

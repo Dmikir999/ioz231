@@ -1,6 +1,7 @@
 """Run without third-party dependencies: python -m unittest discover -s tests -v"""
 import json
 import unittest
+from datetime import date
 from pathlib import Path
 from scripts.engine import detect_change, apply_changes, parse_dates
 from scripts.xlsx_reader import _expand_segment
@@ -8,6 +9,11 @@ from scripts.xlsx_reader import _expand_segment
 ROOT=Path(__file__).resolve().parent.parent
 DATA=json.loads((ROOT/'tests'/'autumn_2026.json').read_text(encoding='utf-8'))
 LESSONS=DATA['entries']
+NIEDERMAN_POST = {
+    'id': 22, 'owner_id': -2, 'date': 1795593180,
+    'text': '❗ #ИОЗ_231 — занятие доц. Нидерман перенесено с VIII пары в пятницу 11.12 на VIII пару в пятницу 27.11.\n\n'
+            '❗ #ИОЗ_232 — занятие ст.пр. Водолазова перенесено с VIII пары в пятницу 11.12 на VIII пару в пятницу 27.11.',
+}
 
 class ScheduleTests(unittest.TestCase):
     def test_only_group_231(self):
@@ -53,6 +59,49 @@ class ScheduleTests(unittest.TestCase):
         self.assertEqual(lesson[0]['time'],'16:00')
         self.assertEqual(len(applied),1)
         self.assertEqual(notices,[])
+
+    def test_numbered_vk_transfer_with_two_groups(self):
+        result, notices, applied = apply_changes(LESSONS, [NIEDERMAN_POST])
+        moved = [e for e in result if e.get('change_url') == 'https://vk.com/wall-2_22']
+        self.assertEqual(len(moved), 1)
+        self.assertEqual((moved[0]['date'], moved[0]['time'], moved[0]['end'], moved[0]['teacher']),
+                         ('2026-11-27', '20:10', '21:30', 'Доц. И.А. Нидерман'))
+        self.assertEqual(moved[0]['previous_date'], '2026-12-11')
+        self.assertFalse(any(e['date'] == '2026-12-11' and e['time'] == '20:10' for e in result))
+        self.assertEqual([e for e in result if 'Водолазов' in e['teacher']],
+                         [e for e in LESSONS if 'Водолазов' in e['teacher']])
+        self.assertEqual(len(result), len(LESSONS))
+        self.assertEqual((notices, applied), ([], ['https://vk.com/wall-2_22']))
+
+    def test_numbered_vk_transfer_already_in_excel(self):
+        excel = [dict(e, date='2026-11-27') if e['date'] == '2026-12-11' and e['time'] == '20:10'
+                 else e for e in LESSONS]
+        result, notices, applied = apply_changes(excel, [NIEDERMAN_POST])
+        destination = [e for e in result if e['date'] == '2026-11-27' and e['time'] == '20:10']
+        self.assertEqual(len(destination), 1)
+        self.assertEqual(destination[0]['change_url'], 'https://vk.com/wall-2_22')
+        self.assertEqual(len(excel), len(result))
+        self.assertEqual((notices, applied), ([], ['https://vk.com/wall-2_22']))
+
+    def test_numbered_vk_transfer_with_different_day_and_time(self):
+        post = dict(NIEDERMAN_POST, text='#ИОЗ_231 — занятие ст. пр. Водолазова перенесено '
+                    'с VII пары 11 декабря на V пару в субботу 12.12.')
+        entries = [e for e in LESSONS if e['date'] == '2026-12-11']
+        result, notices, _ = apply_changes(entries, [post], [(date(2026, 11, 3), date(2026, 12, 30))])
+        moved = [e for e in result if e.get('changed')]
+        self.assertEqual(len(moved), 1)
+        self.assertEqual((moved[0]['date'], moved[0]['weekday'], moved[0]['time'], moved[0]['end']),
+                         ('2026-12-12', 5, '15:40', '17:00'))
+        self.assertEqual(notices, [])
+
+    def test_numbered_vk_transfer_for_occupied_slot_needs_review(self):
+        post = dict(NIEDERMAN_POST, text='#ИОЗ_231 — занятие доц. Нидерман перенесено '
+                    'с VIII пары 11.12 на VI пару 27.11.')
+        before, _, _ = apply_changes(LESSONS, [])
+        result, notices, applied = apply_changes(LESSONS, [post])
+        self.assertEqual(result, before)
+        self.assertEqual(applied, [])
+        self.assertEqual(notices[0]['lesson_dates'], ['2026-11-27', '2026-12-11'])
 
     def test_no_broad_cancellation(self):
         post={'id':18,'owner_id':-2,'date':1794326400,'text':'ИОЗ-231 11.11.2026 пары отменены'}
