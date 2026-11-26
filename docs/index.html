@@ -718,6 +718,13 @@ header .group{flex:0 0 auto;font-size:clamp(14px,3.9vw,19px);font-weight:450;lin
  .calendar-section .week-nav .today-button{padding-inline:14px}
  .calendar-section :is(#days,.week-swipe-preview) .day strong{width:50px;font-size:26px}
 }
+
+/* Align schedule-change icon and text with the other lesson metadata. */
+.lesson .change-badge{--badge-inset:9px;margin-inline-start:calc(-1 * var(--badge-inset));padding-inline-start:var(--badge-inset);max-width:calc(100% + var(--badge-inset));gap:var(--metadata-icon-gap)}
+.lesson .change-badge svg{width:16px;height:16px;flex:0 0 16px}
+@media(max-width:520px){.lesson .change-badge svg{width:15px;height:15px;flex-basis:15px}}
+@media(max-width:360px){.lesson .change-badge{--badge-inset:8px}}
+@media(min-width:851px){.lesson .change-badge svg{width:19px;height:19px;flex-basis:19px}}
 </style>
 </head>
 <body>
