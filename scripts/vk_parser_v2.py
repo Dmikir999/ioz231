@@ -123,6 +123,7 @@ def parse_clause(header,text,post,entries):
     op=dict(teacher=teacher,subject=subject,kind=kind,room=room_value(text),text=text)
     sub=SUBSTITUTE.search(text);ts=TEACHER_SUB.search(text)
     if sub or ts:
+        op['kind']=None
         if len(all_dates)!=1:raise ValueError('Нет одной даты замены')
         op.update(type='replace',date=all_dates[0],times=times(text))
         if sub:op.update(subject=sub[1],new_subject=sub[2])
@@ -190,6 +191,7 @@ def apply_operation(entries,op,url,periods):
                     e.update(previous_date=when,previous_time=t,changed=True,change_url=url)
                 return len(already)
         if len(found)!=len(dest) or not found:raise ValueError('Число исходных и новых пар не совпадает')
+        if op['times'] and {e['time'] for e in found}!=set(op['times']):raise ValueError('Не найдены все исходные пары')
         if len({e['time'] for e in found})!=len(found):raise ValueError('Исходные пары неоднозначны')
         found.sort(key=lambda e:e['time'])
         # Validate all destinations before mutating any record.
