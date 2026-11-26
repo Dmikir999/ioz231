@@ -1120,7 +1120,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){updateCal
 window.addEventListener('pageshow',updateCalendarToday);
 setInterval(()=>{if(!document.hidden)updateCalendarToday()},60000);
 
-/* Native-feeling pull to refresh, without reloading the document. */
+/* Pull to refresh reloads the document and its schedule; the footer refreshes data only. */
 const refreshIndicator=$('pullRefresh'),refreshArc=refreshIndicator.querySelector('.ring-progress');
 const REFRESH_THRESHOLD=80,REFRESH_HOLD=46,REFRESH_CIRC=2*Math.PI*12;
 let refreshBusy=false,pullGesture=null,pullSuppressUntil=0,refreshCollapseTimer=0;
@@ -1142,7 +1142,7 @@ function resetPull(settle=true){
  setRefreshSpace(0,settle);setRefreshProgress(0);
  refreshCollapseTimer=setTimeout(()=>{refreshIndicator.classList.remove('is-finishing');document.documentElement.classList.remove('refresh-settling')},settle&&!reducedMotion()?250:0);
 }
-async function startRefresh(showRing=true){
+async function startRefresh(showRing=true,reloadPage=false){
  if(refreshBusy)return;
  refreshBusy=true;pullGesture=null;clearTimeout(refreshCollapseTimer);
  const began=performance.now();
@@ -1152,6 +1152,17 @@ async function startRefresh(showRing=true){
   setRefreshProgress(1);setRefreshSpace(REFRESH_HOLD,true);
  }else resetPull(false);
  try{
+  if(reloadPage&&navigator.onLine!==false){
+   saveSelectedDate();
+   $('refreshStatus').textContent='Обновление приложения';
+   if(!reducedMotion())await waitRefresh(180);
+   const url=new URL(window.location.href);
+   if(url.protocol==='http:'||url.protocol==='https:'){
+    url.searchParams.set('v',String(Date.now()));
+    window.location.replace(url.href);
+   }else window.location.reload();
+   return;
+  }
   const ok=await load();
   if(showRing){
    if(!reducedMotion())await waitRefresh(Math.max(0,300-(performance.now()-began)));
@@ -1169,7 +1180,7 @@ function canPull(target){
  return window.scrollY<=1&&!target.closest('input,textarea,select,[contenteditable],#monthScroll');
 }
 document.addEventListener('touchstart',event=>{
- if(refreshBusy||loadFlight)return;
+ if(refreshBusy)return;
  if(event.touches.length!==1){if(pullGesture?.active)resetPull();pullGesture=null;return}
  pullSuppressUntil=0;pullGesture=null;
  if(!canPull(event.target))return;
@@ -1196,7 +1207,7 @@ document.addEventListener('touchend',event=>{
  if(event.touches.length||!pullGesture)return;
  const g=pullGesture;pullGesture=null;if(!g.active)return;
  pullSuppressUntil=Date.now()+350;
- if(g.distance>=REFRESH_THRESHOLD)startRefresh(true);else resetPull();
+ if(g.distance>=REFRESH_THRESHOLD)startRefresh(true,true);else resetPull();
 },{passive:true});
 document.addEventListener('touchcancel',()=>{if(pullGesture?.active)resetPull();pullGesture=null},{passive:true});
 document.addEventListener('click',event=>{
