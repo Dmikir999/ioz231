@@ -96,8 +96,10 @@ def scopes(post):
     return out
 
 def clauses(body):
-    # Periods within dates and titles must not split a statement.
-    return [x.strip() for x in re.split(r';|\n+|(?<=\.)\s+(?=(?:Практ|Лекц|Заняти|Пара|Все\s+заняти|Вместо|Отмена|Перенос))',body,flags=re.I) if x.strip()]
+    # Split actual sentences, not abbreviations like "практ. занятия".
+    return [x.strip() for x in re.split(
+        r';|\n+|(?<!практ)(?<!лекц)(?<!доц)(?<!проф)(?<!ст\.пр)(?<!ст\. пр)(?<!ауд)(?<!каб)(?<=\.)\s+(?=(?:Практ|Лекц|Заняти|Пара|Все\s+заняти|Вместо|Отмена|Перенос))',
+        body,flags=re.I) if x.strip()]
 
 def known_teachers(entries,text):
     return {e.get('teacher','') for e in entries if e.get('teacher') and mentions(text,e['teacher'])}
