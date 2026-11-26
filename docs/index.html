@@ -1280,7 +1280,7 @@ function setMonthExpanded(value){
 }
 const monthButton=$('monthToggle');
 monthButton.onclick=()=>setMonthExpanded(!expanded);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&expanded){setMonthExpanded(false);monthButton.focus()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&expanded&&!document.querySelector('.m5-dialog[open]')){setMonthExpanded(false);monthButton.focus()}});
 function calendarKeydown(e){
  if(expanded&&(e.key==='PageUp'||e.key==='PageDown')){
   e.preventDefault();navigateMonth(e.key==='PageUp'?-1:1);
@@ -1408,6 +1408,7 @@ async function startRefresh(showRing=true,reloadPage=false){
  }
 }
 function canPull(target){
+ if(document.querySelector('.m5-dialog[open]')||target.closest('.m5-dialog'))return false;
  return window.scrollY<=1&&!target.closest('input,textarea,select,[contenteditable],#monthScroll');
 }
 document.addEventListener('touchstart',event=>{
@@ -1449,4 +1450,5 @@ if(cachedSchedule){schedule=cachedSchedule;render()}
 load();
 
 </script>
+<script src="./mgpu-install.js?v=12" defer></script>
 </body></html>
