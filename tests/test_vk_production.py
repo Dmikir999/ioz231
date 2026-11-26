@@ -85,6 +85,18 @@ class ProductionSafetyTests(unittest.TestCase):
         self.assertEqual(len(applied),1)
         self.assertEqual({e['id'] for e in result if e.get('cancelled')},{'a','b'})
 
+    def test_exception_not_broad_cancel(self):
+        entries=[row('2026-11-27','18:40','a'),row('2026-11-27','20:10','b')]
+        self.assert_rejected(entries,bulletin('#ИОЗ_231 — все занятия 27.11 отменены, кроме VIII пары.'))
+
+    def test_singular_cancel_not_multiple(self):
+        entries=[row('2026-11-27','18:40','a'),row('2026-11-27','20:10','b')]
+        self.assert_rejected(entries,bulletin('#ИОЗ_231 — занятие доц. Нидерман 27.11 отменено.'))
+
+    def test_inline_other_group_not_merged(self):
+        entries=[row('2026-11-27','18:40','a')]
+        self.assert_rejected(entries,bulletin('#ИОЗ_231 — занятие доц. Нидерман 27.11 отменено #ИОЗ_232 — все занятия отменены.'))
+
     def test_unverified_time(self):
         self.assert_rejected([row('2026-12-11','20:10','a')],bulletin('#ИОЗ_231 — занятие доц. Нидерман перенесено с VIII пары 11.12 на 03:00 27.11.'))
 
