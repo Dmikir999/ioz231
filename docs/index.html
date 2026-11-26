@@ -601,6 +601,9 @@ footer{margin-top:var(--space-4);padding-top:var(--space-4);padding-bottom:var(-
  .month-toggle:active,.week-nav button:active,.day:active,footer .refresh:active{transform:none!important}
  .pull-refresh.is-visible{transform:translate(-50%,0)}
 }
+
+/* Disable the native WebKit tap rectangle; retain custom press feedback and keyboard focus. */
+html,body,button,a,summary{-webkit-tap-highlight-color:transparent}
 </style>
 </head>
 <body>
