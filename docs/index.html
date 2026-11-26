@@ -14,7 +14,7 @@
     ym(114487182, 'init', {accurateTrackBounce:true});
 </script>
 <!-- /Yandex.Metrika counter -->
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#fffdfd">
 <meta name="description" content="Расписание ИОЗ-231: подтверждённые занятия, изменения и честный статус источников.">
 <title>Расписание ИОЗ-231 · МГПУ</title>
@@ -131,6 +131,124 @@ footer>div{min-width:0;overflow-wrap:anywhere}
  footer{grid-row:6;margin-top:24px}
 }
 .lesson-option + .lesson-option{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+
+/* Refined schedule UI: flat canvas, accessible controls and compact agenda. */
+html,body,main.app-shell{background:#fffdfd}
+main.app-shell:before,main.app-shell:after{content:none;display:none}
+header .eyebrow{color:#70666a;font-weight:650;letter-spacing:.065em;line-height:1.35}
+header .appname{font-weight:780;letter-spacing:-.045em}
+header .group{background:#ffe5e8;border-radius:14px;font-weight:700}
+.controls strong{font-weight:700;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.week-nav{gap:6px}
+.icon-button,.today-button{background:#fff;border:1px solid #eee3e5;border-radius:13px;box-shadow:none;min-height:44px}
+.icon-button{font-weight:500;line-height:1}
+.today-button{font-weight:650}
+.days{gap:5px}
+.day{background:#f7f2f3;border:1px solid transparent;border-radius:15px;min-height:76px;justify-content:center;gap:4px;color:#51494c}
+.day span{font-weight:600}
+.day strong{font-weight:730;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.day i{width:4px;height:4px;background:#a69a9e}
+.day.active{background:var(--red);border-color:var(--red);box-shadow:none;color:#fff}
+.day.active i{background:#fff}
+.day.today:not(.active){border-color:#c70d1b;color:var(--red-dark)}
+.section-top{align-items:baseline}
+.section-top h2{font-weight:760;letter-spacing:-.04em}
+.section-top small{color:#70666a;font-weight:500}
+.lessons{gap:10px}
+.lesson{background:#fff;border:1px solid #eee3e5;border-radius:18px;box-shadow:0 2px 8px #35101405;align-items:start}
+.lesson>div:first-child{align-self:stretch;border-right:1px solid #eee3e5}
+.time-start,.time-end{font-variant-numeric:tabular-nums;letter-spacing:-.025em}
+.time-start{font-weight:750}
+.time-end{color:#70666a;font-weight:500}
+.subject{font-weight:700;letter-spacing:-.018em;line-height:1.32;overflow-wrap:anywhere}
+.details{gap:6px;margin-top:8px}
+.chip{font-weight:600;border-radius:8px;line-height:1.35;background:#f5f0f1;color:#51474b}
+.chip.room{background:#ffe5e8;color:var(--red-dark)}
+.teacher{margin-top:8px;line-height:1.4}
+.lesson.cancelled{background:#faf8f8}
+.source-tag{border-radius:10px}
+.refresh{border-radius:12px;min-height:44px}
+.empty{border-radius:18px}
+@media(max-width:850px){
+ main.app-shell{padding-top:env(safe-area-inset-top,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+ header{padding:20px 20px 20px;row-gap:7px;column-gap:8px}
+ header .eyebrow{font-size:11px}
+ header .appname{font-size:clamp(25px,7.7vw,36px)}
+ header .group{padding:9px 12px;font-size:14px}
+ .calendar-section,.schedule-section,.more,footer{padding-left:20px;padding-right:20px}
+ .controls{margin-bottom:12px;gap:8px}
+ .controls strong{font-size:clamp(14px,4vw,19px)}
+ .icon-button,.today-button{height:44px}
+ .icon-button{width:44px;font-size:27px}
+ .today-button{padding:0 12px;font-size:14px}
+ .days{margin-bottom:24px}
+ .day{min-height:74px;padding:8px 1px;gap:4px}
+ .day span{font-size:12px}
+ .day strong{font-size:23px}
+ .section-top{margin-bottom:12px;gap:8px}
+ .section-top h2{font-size:25px}
+ .section-top small{font-size:14px}
+ .lesson{grid-template-columns:72px minmax(0,1fr);gap:12px;padding:15px 13px}
+ .lesson>div:first-child{padding:1px 10px 1px 0}
+ .lesson>div:nth-child(2){padding:0}
+ .time-start{font-size:20px}
+ .time-end{font-size:13px;margin-top:4px}
+ .subject{font-size:16px}
+ .chip{font-size:12px;padding:5px 9px}
+ .teacher{font-size:14px}
+ .verification{padding:20px 20px 15px;gap:8px}
+ .source-tag{font-size:12px;padding:8px 10px}
+}
+@media(max-width:375px){
+ header,.calendar-section,.schedule-section,.more,footer{padding-left:12px;padding-right:12px}
+ header .group{font-size:12px;padding:9px 9px}
+ header .appname{font-size:clamp(24px,7.5vw,29px)}
+ .week-nav{gap:3px}
+ .today-button{padding:0 8px;font-size:12px}
+ .days{gap:3px}
+ .day{border-radius:12px;min-height:69px}
+ .day strong{font-size:21px}
+ .day span{font-size:11px}
+ .lesson{grid-template-columns:64px minmax(0,1fr);gap:9px;padding:13px 10px}
+ .lesson>div:first-child{padding-right:7px}
+ .time-start{font-size:18px}
+ .subject{font-size:15px}
+ .teacher{font-size:13px}
+}
+@media(min-width:851px){
+ header{padding-top:36px;padding-bottom:22px;row-gap:8px}
+ header .eyebrow{font-size:13px}
+ header .appname{font-size:42px}
+ header .group{font-size:18px;padding:11px 18px}
+ .controls strong{font-size:22px}
+ .controls{margin-bottom:14px}
+ .week-nav{gap:8px}
+ .icon-button,.today-button{height:46px}
+ .icon-button{width:48px;font-size:29px}
+ .today-button{font-size:15px;padding:0 18px}
+ .days{gap:10px;margin-bottom:26px}
+ .day{min-height:78px;padding:9px 2px}
+ .day span{font-size:14px}
+ .day strong{font-size:26px}
+ .section-top h2{font-size:30px}
+ .section-top small{font-size:16px}
+ .lesson{grid-template-columns:108px minmax(0,1fr);gap:24px;padding:16px 22px}
+ .lesson>div:first-child{padding:2px 18px 2px 0;border-right:1px solid #eee3e5}
+ .time-start{font-size:24px}
+ .time-end{font-size:15px}
+ .subject{font-size:20px}
+ .chip{font-size:13px;padding:5px 10px}
+ .teacher{font-size:15px}
+ .verification{padding:26px 24px 20px;gap:12px}
+ .source-tag{font-size:14px;padding:9px 14px}
+ .source-tag.good:before{font-size:18px}
+}
+@media(prefers-reduced-motion:no-preference){
+ .day,.icon-button,.today-button,.refresh{transition:background-color .15s ease,border-color .15s ease,transform .12s ease}
+ .day:active,.icon-button:active,.today-button:active,.refresh:active{transform:scale(.97)}
+}
+@media(prefers-reduced-motion:reduce){.pull-refresh{transition:none}}
+
 </style>
 </head>
 <body>
