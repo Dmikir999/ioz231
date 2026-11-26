@@ -125,6 +125,15 @@ def parse_statement(text,header,stamp):
     result['subject_evidence']=re.findall(r'(?:дисциплин[аеуы]|предмет[ау]?)\s*[«"]([^»"]+)[»"]',text,re.I)
     def source(fragment):
         result.update(source_date=date_one(fragment,stamp,flags),source_dates=date_values(fragment,stamp),source_pairs=pair_numbers(fragment),source_times=time_values(fragment))
+        # Multiple source dates with their own explicit pair numbers.
+        if len(result['source_dates'])>1:
+            parts=re.split(r'\s+и\s+|,\s*(?=\d{1,2}[./]\d{1,2})',fragment)
+            assigned=[]
+            for part in parts:
+                ds=date_values(part,stamp);ps=pair_numbers(part)
+                if len(ds)==1 and ps:assigned.append({'date':ds[0],'pairs':ps})
+            if len(assigned)==len(parts) and {x['date'] for x in assigned}==set(result['source_dates']):
+                result['source_assignments']=assigned
     def destination(fragment):
         result.update(destination_date=date_one(fragment,stamp,flags),destination_dates=date_values(fragment,stamp),destination_pairs=pair_numbers(fragment),destination_times=time_values(fragment))
     if CANCEL.search(text):
@@ -248,7 +257,7 @@ def parse_post(post):
                             for fragment in fragments:
                                 ds=date_values(fragment,post['date']);ps=pair_numbers(fragment)
                                 if len(ds)==1 and ps:mapped.append({'date':ds[0],'pairs':ps})
-                            if len(mapped)==len(fragments):op['destination_assignments']=mapped
+                            if len(mapped)==len(fragments) and {x['date'] for x in mapped}==set(op['destination_dates']):op['destination_assignments']=mapped
                 if op['type']=='scheduled' and len(op['destination_dates'])>1 and len(list(PAIR_RX.finditer(clause)))==1:
                     # Common pair range explicitly applies to a list of dates.
                     for when in op['destination_dates']:
@@ -256,6 +265,8 @@ def parse_post(post):
                         for i,words in enumerate(DAY_NAMES):
                             if any(re.search(r'\b'+w+r'\b',clause,re.I) for w in words) and date.fromisoformat(when).weekday()!=i:
                                 item['flags'].append('День недели противоречит дате: '+when)
+                        item['context_needed']=[f for f in item['flags'] if f in op['context_needed']]
+                        item['text_issues']=[f for f in item['flags'] if f not in item['context_needed']]
                         operations.append(item)
                 else:operations.append(op)
             except ValueError as exc:
