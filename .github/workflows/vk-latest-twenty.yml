@@ -74,7 +74,8 @@ jobs:
           def language_row(p):
               parsed=parse_post(p)
               return dict(id=p['id'],date=p['date'],owner_id=p['owner_id'],text=p.get('text',''),attachments=[a.get('type') for a in p.get('attachments',[])],status=parsed['status'],requires_review=parsed['requires_review'],operations=len(parsed['operations']),details=parsed['operations'],unparsed=parsed['unparsed'],flags=[flag for op in parsed['operations'] for flag in op['flags']])
-          holdout=[language_row(p) for p in candidates if p['id'] not in trained_ids]
+          trained_ids.update(p['id'] for p in json.loads(Path('tests/vk_holdout_twenty.json').read_text(encoding='utf-8'))['posts'])
+          holdout=[language_row(p) for p in candidates if p['id'] not in trained_ids][:20]
           current=[language_row(p) for p in unseen]
           print('VK_LANGUAGE_RESULT_BEGIN')
           print(json.dumps({'current_unseen':current,'holdout':holdout,'note':'Structured extraction is not a correctness score; held-out fields have not been manually labeled.'},ensure_ascii=False))
