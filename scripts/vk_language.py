@@ -38,6 +38,8 @@ def normalize(text):
     text=re.sub(r'\bдоцю\s+', 'доц. ',text,flags=re.I)
     text=re.sub(r'('+PAIR+r')\s+парад\b',r'\1 пара',text,flags=re.I)
     text=re.sub(r'(?<=\.)\s*(?=#)', '\n', text)
+    # Repeated predicates and explicit teacher/room clauses are independent.
+    text=re.sub(r'(?<=\.)\s+(?=Так\s+же\s+заняти)', '\n', text,flags=re.I)
     return text
 
 def group_id(value):
@@ -109,10 +111,11 @@ def parse_statement(text,header,stamp):
     if len(rooms)>1 or (len(names)>1 and not (len(rooms)==1 and re.search(r'изменени[ея]\s+аудиторий',header,re.I))):flags.append('Распределение преподавателей, пар и аудиторий требует сверки')
     kind='lecture' if re.search(r'\bлекц',text,re.I) else 'practice' if re.search(r'\bпракт|семинар',text,re.I) else None
     result=dict(teachers=names,rooms=rooms,kind=kind,source_date=None,source_pairs=[],source_times=[],destination_date=None,destination_pairs=[],destination_times=[],flags=flags)
+    result['source_dates']=[];result['destination_dates']=[]
     def source(fragment):
-        result.update(source_date=date_one(fragment,stamp,flags),source_pairs=pair_numbers(fragment),source_times=time_values(fragment))
+        result.update(source_date=date_one(fragment,stamp,flags),source_dates=date_values(fragment,stamp),source_pairs=pair_numbers(fragment),source_times=time_values(fragment))
     def destination(fragment):
-        result.update(destination_date=date_one(fragment,stamp,flags),destination_pairs=pair_numbers(fragment),destination_times=time_values(fragment))
+        result.update(destination_date=date_one(fragment,stamp,flags),destination_dates=date_values(fragment,stamp),destination_pairs=pair_numbers(fragment),destination_times=time_values(fragment))
     if CANCEL.search(text):
         result['type']='cancel';source(text)
         if not result['source_date']:result['source_date']=date_one(header,stamp,flags)
@@ -157,16 +160,21 @@ def parse_statement(text,header,stamp):
     elif SCHEDULED.search(text) and re.search(r'\bтолько\b',text,re.I):
         result['type']='restriction';destination(text)
         flags.append('Указано только оставшееся занятие; отменяемые пары нужно сверить')
-    elif re.search(r'изменени[ея]\s+аудиторий',header,re.I) or (rooms and not pair_numbers(text) and re.search(r'в\s+ауд|аудитор',text,re.I)):
+    elif re.search(r'изменени[ея]\s+аудиторий',header,re.I) or (rooms and not pair_numbers(text) and not re.search(r'\bвпредь\b',text,re.I) and re.search(r'в\s+ауд|аудитор',text,re.I)):
         result['type']='room';source(text)
         if not result['source_date']:result['source_date']=date_one(header,stamp,flags)
         if not rooms:flags.append('Не указана аудитория')
+    elif re.search(r'\bвпредь\b',text,re.I) and rooms:
+        result['type']='room_from';result['source_date']=datetime.fromtimestamp(stamp,old.TZ).date().isoformat()
+        flags.append('Постоянная смена аудитории: проверить учебный период и все будущие занятия')
     elif SCHEDULED.search(text) and (pair_numbers(text) or time_values(text) or (names and date_values(text,stamp))):
         result['type']='scheduled';destination(text)
         flags.append('Не указано, является ли занятие новым или перенесённым')
         if not result['destination_pairs'] and not result['destination_times']:flags.append('Новый номер пары не указан')
     else:
         raise ValueError('Не определён тип изменения')
+    if result['source_date'] and not result['source_dates']:result['source_dates']=[result['source_date']]
+    if result['destination_date'] and not result['destination_dates']:result['destination_dates']=[result['destination_date']]
     if result['type']=='transfer':
         if not result['source_date']:flags.append('Исходная дата не указана')
         if not result['source_pairs'] and not result['source_times']:flags.append('Исходный номер пары не указан')
@@ -180,16 +188,34 @@ def parse_statement(text,header,stamp):
     result['flags']=list(dict.fromkeys(flags))
     return result
 
+def split_clauses(body,header):
+    # Split an explicit room list only when each side has its own named lesson.
+    chunks=[]
+    for part in SENTENCE.split(body):
+        if re.search(r'изменени[ея]\s+аудиторий',header,re.I):
+            chunks.extend(re.split(r',\s*(?=(?:практ\.\s*)?(?:занятия?|лекци[яи])\s+)',part,flags=re.I))
+        else:
+            chunks.append(part)
+    return chunks
+
 def parse_post(post):
     operations=[];unparsed=[]
     for groups,sub,header,body in sections(post.get('text','')):
-        for clause in SENTENCE.split(body):
+        for clause in split_clauses(body,header):
             clause=clause.strip()
             if not clause:continue
             try:
                 op=parse_statement(clause,header,post['date'])
                 op.update(groups=groups,subgroup=sub,text=clause)
-                operations.append(op)
+                if op['type']=='scheduled' and len(op['destination_dates'])>1 and len(list(PAIR_RX.finditer(clause)))==1:
+                    # Common pair range explicitly applies to a list of dates.
+                    for when in op['destination_dates']:
+                        item=dict(op,destination_date=when,destination_dates=[when],flags=[f for f in op['flags'] if f not in ('Несколько дат без однозначного назначения','Дата не указана')])
+                        for i,words in enumerate(DAY_NAMES):
+                            if any(re.search(r'\b'+w+r'\b',clause,re.I) for w in words) and date.fromisoformat(when).weekday()!=i:
+                                item['flags'].append('День недели противоречит дате: '+when)
+                        operations.append(item)
+                else:operations.append(op)
             except ValueError as exc:
                 unparsed.append({'groups':groups,'text':clause,'reason':str(exc)})
     # Preserve attachments as an explicit unresolved source.
