@@ -77,6 +77,15 @@ class ShadowParserTests(unittest.TestCase):
         result,report=evaluate(base,'#ИОЗ_231 — отмена V пары 27.11; VI пара 27.11 будет в ауд. 3210')
         self.assertEqual(report[0]['status'],'applicable',report)
         self.assertTrue(result[0]['cancelled']);self.assertEqual(result[1]['room'],'3210')
+    def test_abbreviations_in_compound_bulletin(self):
+        from scripts.vk_parser_v2 import clauses
+        self.assertEqual(clauses('практ. занятия доц. Челноковой перенесены с 03.11 на VII пару 09.11, ауд. 3509. Практ. занятия проф. Черненькой перенесены с 03.11 на VIII пару 09.11, ауд. 3506.'),
+                         ['практ. занятия доц. Челноковой перенесены с 03.11 на VII пару 09.11, ауд. 3509.', 'Практ. занятия проф. Черненькой перенесены с 03.11 на VIII пару 09.11, ауд. 3506.'])
+    def test_teacher_replacement(self):
+        base=[lesson('2026-11-27','15:40'),lesson('2026-11-26','17:10',teacher='Доц. А.Ю. Челнокова')]
+        result,report=evaluate(base,'#ИОЗ_231 — 27.11 V пара вместо доц. Нидерман занятие проведёт доц. Челнокова')
+        self.assertEqual(report[0]['status'],'applicable',report)
+        self.assertEqual(next(e for e in result if e['date']=='2026-11-27')['teacher'],'Доц. А.Ю. Челнокова')
     def test_relative_date(self):
         self.assertEqual(dates('завтра',STAMP),['2026-11-26'])
     def test_weekday_mismatch(self):
