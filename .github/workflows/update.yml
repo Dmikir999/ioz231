@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
   pages: write
   id-token: write
 
@@ -20,7 +21,9 @@ concurrency:
 jobs:
   update_and_publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    env:
+      PAGES_ARTIFACT: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -63,7 +66,27 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: docs
+          name: ${{ env.PAGES_ARTIFACT }}
+
+      - name: Дождаться доступности архива GitHub Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          for attempt in {1..20}; do
+            if count=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?name=$PAGES_ARTIFACT" --jq '[.artifacts[] | select(.expired == false)] | length'); then
+              if [ "$count" = 1 ]; then
+                echo "Архив $PAGES_ARTIFACT доступен для публикации"
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo '::error::Архив GitHub Pages недоступен после загрузки'
+          exit 1
 
       - name: Опубликовать обновлённый сайт
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: ${{ env.PAGES_ARTIFACT }}
