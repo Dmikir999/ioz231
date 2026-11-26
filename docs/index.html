@@ -455,6 +455,49 @@ html,body,button,a,summary{touch-action:manipulation}
 .week-nav .month-step svg{width:21px;height:21px}
 @media(min-width:851px){.month-scroll{max-height:min(450px,55vh)}.month-panel .day strong{font-size:22px}}
 @media(max-width:360px){.month-scroll{max-height:min(350px,48vh)}}
+
+/* Interaction hierarchy: only date controls use elevated white capsules. */
+:root{--control-fill:#fff;--control-shadow:0 5px 18px rgba(42,25,34,.065),0 1px 3px rgba(42,25,34,.035)}
+header{display:flex;align-items:baseline;justify-content:flex-start;gap:8px}
+header .appname{flex:0 1 auto}
+header .group{flex:0 0 auto;background:none;border:0;border-radius:0;box-shadow:none;padding:0;margin:0;color:var(--red-dark)}
+.controls{gap:8px}
+.month-toggle{flex:0 1 auto;min-width:0;min-height:44px;padding:0 12px;gap:5px;background:var(--control-fill);border:0;border-radius:999px;box-shadow:var(--control-shadow);justify-content:center}
+.month-toggle svg:last-child{flex:none}
+.month-toggle:active{transform:scale(.98)}
+.week-nav{flex:0 0 auto;gap:0;min-height:44px;padding:0 3px;align-items:center;background:var(--control-fill);border-radius:999px;box-shadow:var(--control-shadow)}
+.week-nav .icon-button,.week-nav .month-step,.week-nav .today-button{background:transparent;border:0;box-shadow:none;border-radius:999px}
+.week-nav .icon-button,.week-nav .month-step{width:44px;min-width:44px;height:44px}
+.week-nav .today-button{min-width:44px;padding:0 9px;font-weight:500}
+.week-nav button:active{background:#cf10250d;transform:scale(.96)}
+@media(hover:hover) and (pointer:fine){.week-nav button:hover,.month-toggle:hover{background:#fdf5f7}}
+/* Read-only information is not styled as a button. */
+.lesson .chip,.lesson .chip.room{background:none;border:0;border-radius:0;box-shadow:none;padding:0}
+.lesson .chip.room{color:var(--red-dark)}
+.lesson .details{gap:6px 14px}
+.lesson .teacher svg{margin-left:0}
+.verification .source-tag,.verification .source-tag.good,.verification .source-tag.warn,.verification .source-tag.bad{background:none;border:0;border-radius:0;box-shadow:none;padding:0}
+.verification{gap:9px 16px}
+@media(max-width:520px){
+ .month-toggle{padding:0 10px;gap:4px}
+ .month-toggle strong{font-size:clamp(14px,4vw,19px)}
+ .week-nav .today-button{padding:0 6px}
+ .controls{gap:6px}
+ .lesson .details{gap:6px 12px}
+}
+@media(max-width:360px){
+ .controls{gap:4px}
+ .month-toggle{padding:0 7px;gap:3px}
+ .month-toggle strong{font-size:13px}
+ .week-nav{padding:0}
+ .week-nav .today-button{padding:0 4px}
+}
+@media(min-width:851px){
+ .month-toggle{padding:0 16px}
+ .week-nav{padding:0 5px}
+ .week-nav .today-button{padding:0 15px}
+}
+@media(prefers-reduced-motion:reduce){.month-toggle,.week-nav button{transition:none!important;transform:none!important}}
 </style>
 </head>
 <body>
