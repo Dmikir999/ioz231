@@ -26,6 +26,7 @@ jobs:
           from pathlib import Path
           from scripts import engine as old
           from scripts import vk_parser_v2 as new
+          from scripts.vk_language import parse_post
 
           try:
               feed = old.fetch_vk_posts()
@@ -66,4 +67,15 @@ jobs:
           print('VK_AUDIT_RESULT_BEGIN')
           print(json.dumps(result,ensure_ascii=False))
           print('VK_AUDIT_RESULT_END')
+          # Separate recognition of the original public text from hypothetical application.
+          fixture=json.loads(Path('tests/vk_real_bulletins.json').read_text(encoding='utf-8'))
+          trained_ids={p['id'] for p in fixture['posts']}
+          def language_row(p):
+              parsed=parse_post(p)
+              return dict(id=p['id'],status=parsed['status'],requires_review=parsed['requires_review'],operations=len(parsed['operations']),unparsed=parsed['unparsed'],flags=[flag for op in parsed['operations'] for flag in op['flags']])
+          holdout=[language_row(p) for p in candidates if p['id'] not in trained_ids]
+          current=[language_row(p) for p in unseen]
+          print('VK_LANGUAGE_RESULT_BEGIN')
+          print(json.dumps({'current_unseen':current,'holdout':holdout,'note':'Structured extraction is not a correctness score; held-out fields have not been manually labeled.'},ensure_ascii=False))
+          print('VK_LANGUAGE_RESULT_END')
           PY
