@@ -581,6 +581,26 @@ footer{margin-top:var(--space-4);padding-top:var(--space-4);padding-bottom:var(-
  .section-top{margin-bottom:var(--space-5)}
  .lesson>div:first-child{padding-right:var(--space-4)}
 }
+
+/* Motion system: consistent timings without changing resting layout. */
+:root{--motion-press:100ms;--motion-ease:cubic-bezier(.2,.75,.25,1)}
+.month-toggle,.week-nav .icon-button,.week-nav .month-step,.week-nav .today-button,.day,footer .refresh{transition:transform var(--motion-press) var(--motion-ease),background-color var(--motion-press) ease}
+.month-toggle::before,.week-nav button::before{transition:background-color var(--motion-press) ease}
+@media(prefers-reduced-motion:no-preference){
+ .month-toggle:active,.week-nav button:active,.day:active,footer .refresh:active{transform:scale(.98)}
+}
+#days{position:relative;isolation:isolate}
+#days .day{position:relative;z-index:1}
+#days .day.selection-moving strong{background:transparent}
+#days .date-motion-disc{position:absolute;z-index:0;pointer-events:none;border-radius:50%;background:var(--red)}
+.calendar-body.is-week-moving{overflow:hidden}
+.pull-refresh.is-visible{transform:translate(-50%,var(--pull-shift,0px))}
+.pull-refresh.is-tracking{transition:none}
+@media(prefers-reduced-motion:reduce){
+ .month-toggle,.week-nav button,.day,footer .refresh,.pull-refresh{transition:none!important}
+ .month-toggle:active,.week-nav button:active,.day:active,footer .refresh:active{transform:none!important}
+ .pull-refresh.is-visible{transform:translate(-50%,0)}
+}
 </style>
 </head>
 <body>
@@ -649,6 +669,13 @@ function makeDateButton(dt,dateSet,month=null){
  btn.onclick=e=>selectDate(dt,e.detail===0);
  return btn;
 }
+function updateDateButton(btn,dateSet){
+ const dt=btn.dataset.date,active=dt===selected,now=dt===todayMoscow();
+ btn.classList.toggle('active',active);btn.classList.toggle('today',now);
+ btn.setAttribute('aria-pressed',String(active));if(now)btn.setAttribute('aria-current','date');else btn.removeAttribute('aria-current');
+ btn.setAttribute('aria-label',fmt.format(date(dt))+' '+date(dt).getUTCFullYear()+(dateSet.has(dt)?', есть занятия':''));
+ btn.querySelector('i').style.visibility=dateSet.has(dt)?'visible':'hidden';
+}
 function calendarDateSet(){return new Set((schedule?.entries||[]).filter(x=>!x.cancelled).map(x=>x.date))}
 function makeMonthPanel(month,dateSet){
  const panel=document.createElement('section');panel.className='month-panel';panel.dataset.month=month;
@@ -667,38 +694,63 @@ function makeMonthPanel(month,dateSet){
 }
 function monthOffset(panel){return panel.offsetTop}
 function findMonthPanel(month){return $('monthScroll').querySelector('[data-month="'+month+'"]')}
-function scrollToMonth(month){
+const MOTION={press:100,selection:180,week:230,open:280,close:240,month:280,lessons:150,ease:'cubic-bezier(.2,.75,.25,1)'};
+const reducedMotion=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let monthMotion=0,monthScrollFrame=0;
+function cancelMonthMotion(){
+ if(monthMotion)cancelAnimationFrame(monthMotion);monthMotion=0;
+}
+function scrollToMonth(month,animated=false){
  const panel=findMonthPanel(month);if(!panel)return;
- $('monthScroll').scrollTop=monthOffset(panel);
+ cancelMonthMotion();
+ const scroller=$('monthScroll'),from=scroller.scrollTop,to=Math.max(0,Math.min(monthOffset(panel),scroller.scrollHeight-scroller.clientHeight));
+ if(!animated||reducedMotion()||Math.abs(to-from)<2){scroller.scrollTop=to;return}
+ const start=performance.now();
+ function step(now){
+  const p=Math.min(1,(now-start)/MOTION.month),ease=1-Math.pow(1-p,3);
+  scroller.scrollTop=from+(to-from)*ease;
+  if(p<1&&expanded)monthMotion=requestAnimationFrame(step);
+  else{monthMotion=0;syncMonthFromScroll()}
+ }
+ monthMotion=requestAnimationFrame(step);
 }
 function renderCalendar(){
  const week=$('days'),scroller=$('monthScroll'),dateSet=calendarDateSet();
- const wasOpen=!scroller.hidden,oldPanel=wasOpen?findMonthPanel(viewMonth):null;
- const offset=oldPanel?scroller.scrollTop-monthOffset(oldPanel):0;
+ const wasOpen=!scroller.hidden;
+ if(!expanded){cancelMonthMotion();if(monthScrollFrame)cancelAnimationFrame(monthScrollFrame);monthScrollFrame=0}
  week.hidden=expanded;scroller.hidden=!expanded;
  updateCalendarControls();
  if(!expanded){
-  week.replaceChildren();
   const start=monday(selected);
-  for(let i=0;i<7;i++)week.append(makeDateButton(daysFrom(start,i),dateSet));
+  if(week.querySelector('.day')?.dataset.date===start){
+   week.querySelectorAll('.day').forEach(btn=>updateDateButton(btn,dateSet));
+  }else{
+   clearSelectionMotion();
+   const fragment=document.createDocumentFragment();
+   for(let i=0;i<7;i++)fragment.append(makeDateButton(daysFrom(start,i),dateSet));
+   week.replaceChildren(fragment);
+  }
   scroller.replaceChildren();return;
  }
+ if(wasOpen&&scroller.children.length&&findMonthPanel(viewMonth)){
+  scroller.querySelectorAll('.day').forEach(btn=>updateDateButton(btn,dateSet));return;
+ }
+ cancelMonthMotion();
  const fragment=document.createDocumentFragment();
- for(let i=-6;i<=6;i++)fragment.append(makeMonthPanel(monthShift(viewMonth,i),dateSet));
+ for(let i=-2;i<=2;i++)fragment.append(makeMonthPanel(monthShift(viewMonth,i),dateSet));
  scroller.replaceChildren(fragment);
- const target=findMonthPanel(viewMonth);
- if(target)scroller.scrollTop=monthOffset(target)+offset;
+ scrollToMonth(viewMonth);
 }
 function extendMonths(before){
  const scroller=$('monthScroll'),edge=before?scroller.firstElementChild:scroller.lastElementChild;
  if(!edge)return;
  const dateSet=calendarDateSet(),fragment=document.createDocumentFragment(),edgeMonth=edge.dataset.month;
- for(let i=0;i<6;i++)fragment.append(makeMonthPanel(monthShift(edgeMonth,before?i-6:i+1),dateSet));
+ for(let i=0;i<4;i++)fragment.append(makeMonthPanel(monthShift(edgeMonth,before?i-4:i+1),dateSet));
  if(before){const top=scroller.scrollTop,oldHeight=scroller.scrollHeight;scroller.prepend(fragment);scroller.scrollTop=top+scroller.scrollHeight-oldHeight}
  else scroller.append(fragment);
 }
 function syncMonthFromScroll(){
- if(!expanded)return;
+ if(!expanded||monthMotion)return;
  const scroller=$('monthScroll');if(!scroller.children.length)return;
  if(scroller.scrollTop<140)extendMonths(true);
  if(scroller.scrollHeight-scroller.scrollTop-scroller.clientHeight<180)extendMonths(false);
@@ -708,7 +760,11 @@ function syncMonthFromScroll(){
  const month=visible.dataset.month;
  if(month!==viewMonth){viewMonth=month;updateCalendarControls()}
 }
-$('monthScroll').addEventListener('scroll',syncMonthFromScroll,{passive:true});
+$('monthScroll').addEventListener('scroll',()=>{
+ if(monthScrollFrame||monthMotion)return;
+ monthScrollFrame=requestAnimationFrame(()=>{monthScrollFrame=0;syncMonthFromScroll()});
+},{passive:true});
+for(const event of ['touchstart','wheel','pointerdown'])$('monthScroll').addEventListener(event,()=>{if(monthMotion){cancelMonthMotion();syncMonthFromScroll()}},{passive:true});
 
 function render(){
  if (/^https:\/\/cloud\.mail\.ru\/public\/[\w-]+\/[\w-]+$/.test(schedule?.source)) {
@@ -754,14 +810,14 @@ function render(){
   banner='<div class="alert"><strong>Данные давно не обновлялись</strong>Проверка источников могла остановиться. Сверь изменения в паблике.</div>';
  }
  $('banner').innerHTML=banner;
- const list=$('lessons');list.replaceChildren();
+ const list=$('lessons'),nextList=document.createElement('div');
  if(!lessons.length){
   let msg='На выбранную дату пар нет в исходной таблице.';
   if(!schedule?.entries?.length)msg='Данные ещё не загружены.';
   else if(selected<semesterStart||selected>semesterEnd)msg='Эта дата за пределами загруженного семестра.';
   else if(schedule.periods && !schedule.periods.some(([a,b])=>a<=selected && selected<=b))msg='Перерыв в занятиях по учебному календарю.';
   const empty=document.createElement('div');empty.className='empty';
-  empty.innerHTML=`<div class="symbol" aria-hidden="true">☕</div><strong>Пар не найдено</strong><p>${h(msg)}</p>`;list.append(empty);
+  empty.innerHTML=`<div class="symbol" aria-hidden="true">☕</div><strong>Пар не найдено</strong><p>${h(msg)}</p>`;nextList.append(empty);
  }else for(const variants of cards){
   const e=variants[0];
   const el=document.createElement('article');
@@ -781,8 +837,10 @@ function render(){
   return `<section class="lesson-option"><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${kindIcon(e.kind)}${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">${uiIcons.room}Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${uiIcons.teacher}<span>${h(e.teacher)}</span></div>`:''}${flagContent}${finalBadge}</section>`;
   }).join('');
   el.innerHTML=`<div><div class="time-start">${h(e.time)}</div><div class="time-end">${e.end?h(e.end):'время уточняется'}</div></div><div>${sections}</div>`;
-  list.append(el);
+  nextList.append(el);
  }
+ const lessonsChanged=list.innerHTML!==nextList.innerHTML;
+ if(lessonsChanged){cancelLessonMotion();list.replaceChildren(...nextList.childNodes)}
  const tags=[];
  if(!schedule||schedule.status==='unavailable'){
   tags.push('<span class="source-tag bad">Расписание недоступно</span>');
@@ -794,60 +852,106 @@ function render(){
  const review=(schedule?.notices||[]).filter(n=>n.date===selected || n.lesson_dates?.includes(selected));$('reviewSection').hidden=!review.length;$('reviewLabel').textContent=`Требуют проверки (${review.length})`;
  $('reviews').innerHTML=review.slice(0,30).map(x=>`<div class="review"><strong>${h(x.reason||'Изменение требует проверки')}</strong><p>${h(x.text||'')}</p>${x.url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(x.url)?`<a target="_blank" rel="noopener" href="${x.url}">Посмотреть пост ↗</a>`:''}</div>`).join('');
  $('updated').textContent=schedule?.updated_at?`Версия расписания: ${new Date(schedule.updated_at).toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow',day:'numeric',month:'short',year:'numeric'})}`:'Расписание ещё не проверялось';
+ return lessonsChanged;
 }
 async function load(){try{
  const embedded=$('embedded-data');
  if(location.protocol==='file:'&&embedded){schedule=JSON.parse(embedded.textContent)}
  else {let response=await fetch('./schedule.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);schedule=await response.json()}
  if(schedule.group!=='ИОЗ-231')throw Error('Загружена неверная группа');
-}catch(err){console.error(err);schedule={group:'ИОЗ-231',status:'unavailable',entries:[],notices:[]};}render()}
+}catch(err){console.error(err);schedule={group:'ИОЗ-231',status:'unavailable',entries:[],notices:[]};}const hadContent=$('lessons').childElementCount>0,changed=render();if(hadContent&&changed)animateLessons()}
 
 
 
 function haptic(){try{if(typeof navigator.vibrate==='function')navigator.vibrate(8)}catch{}}
-function cancelCalendarAnimations(){
- for(const el of [$('calendarBody'),$('days')]){
-  if(typeof el.getAnimations==='function')for(const a of el.getAnimations())if(a.id==='calendar-height'||a.id==='calendar-slide')a.cancel();
- }
+let selectionMotion=null,weekMotion=null,lastLessonMotion=-Infinity;
+function clearSelectionMotion(){
+ if(!selectionMotion)return;
+ const current=selectionMotion;selectionMotion=null;
+ current.animation?.cancel();current.colors.forEach(a=>a.cancel());
+ current.target.classList.remove('selection-moving');current.disc.remove();
 }
-function animateCalendar(direction,oldHeight){
- const days=$('days'),body=$('calendarBody');
- if(typeof days.animate!=='function'||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+function selectionOrigin(){
+ const week=$('days'),el=selectionMotion?.disc||week.querySelector('.day.active strong');
+ return el?.getBoundingClientRect()||null;
+}
+function animateSelection(origin,adjacent){
+ if(reducedMotion())return;
+ const week=$('days'),target=week.querySelector('.day.active'),number=target?.querySelector('strong');
+ if(!number||typeof number.animate!=='function')return;
+ const rect=number.getBoundingClientRect(),base=week.getBoundingClientRect();
+ if(!adjacent||!origin){
+  number.animate([{transform:'scale(.90)'},{transform:'scale(1)'}],{duration:MOTION.selection,easing:MOTION.ease});return;
+ }
+ const dx=origin.left-rect.left,dy=origin.top-rect.top;
+ if(Math.abs(dx)+Math.abs(dy)<1)return;
+ const disc=document.createElement('span');disc.className='date-motion-disc';disc.setAttribute('aria-hidden','true');
+ Object.assign(disc.style,{left:(rect.left-base.left)+'px',top:(rect.top-base.top)+'px',width:rect.width+'px',height:rect.height+'px'});
+ target.classList.add('selection-moving');week.append(disc);
+ const animation=disc.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:MOTION.selection,easing:MOTION.ease});
+ const colors=[];const old=Array.from(week.querySelectorAll('.day:not(.active) strong')).find(el=>{const r=el.getBoundingClientRect();return Math.abs(r.left-origin.left)<2&&Math.abs(r.top-origin.top)<2});
+ if(old)colors.push(old.animate([{color:'#fff'},{color:old.closest('.day').classList.contains('today')?'var(--red)':'var(--ink)'}],{duration:100,easing:'ease-out'}));
+ colors.push(number.animate([{color:'var(--ink)'},{color:'#fff'}],{duration:MOTION.selection,easing:'ease-in'}));
+ selectionMotion={disc,target,animation,colors};
+ animation.onfinish=()=>{if(selectionMotion?.animation===animation)clearSelectionMotion()};
+}
+function clearWeekMotion(){
+ const days=$('days');if(weekMotion){const a=weekMotion;weekMotion=null;a.cancel()}
+ days.style.transform='';$('calendarBody').classList.remove('is-week-moving');
+}
+function cancelCalendarAnimations(){
+ clearWeekMotion();clearSelectionMotion();
+ const body=$('calendarBody');
+ for(const a of body.getAnimations?.()||[])if(a.id==='calendar-height')a.cancel();
+}
+function animateWeekFrom(offset,duration=MOTION.week){
+ const days=$('days');clearWeekMotion();
+ if(reducedMotion()||typeof days.animate!=='function'||Math.abs(offset)<1)return;
+ $('calendarBody').classList.add('is-week-moving');
+ const a=days.animate([{transform:'translateX('+offset+'px)'},{transform:'translateX(0)'}],{duration,easing:MOTION.ease});weekMotion=a;
+ a.onfinish=()=>{if(weekMotion===a){weekMotion=null;$('calendarBody').classList.remove('is-week-moving')}};
+}
+function animateCalendar(direction,oldHeight,travel=32){
+ const body=$('calendarBody');
+ if(typeof body.animate!=='function'||reducedMotion())return;
  const end=body.getBoundingClientRect().height;
  if(Number.isFinite(oldHeight)&&Math.abs(end-oldHeight)>1){
-  const a=body.animate([{height:oldHeight+'px',overflow:'hidden'},{height:end+'px',overflow:'hidden'}],{duration:end>oldHeight?280:240,easing:'cubic-bezier(.2,.7,.2,1)'});a.id='calendar-height';
+  const a=body.animate([{height:oldHeight+'px',overflow:'hidden'},{height:end+'px',overflow:'hidden'}],{duration:end>oldHeight?MOTION.open:MOTION.close,easing:MOTION.ease});a.id='calendar-height';
  }
- if(direction){
-  const a=days.animate([{transform:'translateX('+(direction*18)+'px)',opacity:.72},{transform:'translateX(0)',opacity:1}],{duration:200,easing:'cubic-bezier(.2,.7,.2,1)'});a.id='calendar-slide';
- }
+ if(direction)animateWeekFrom(direction*travel);
 }
 function prepareCalendarAnimation(){const height=$('calendarBody').getBoundingClientRect().height;cancelCalendarAnimations();return height}
+function cancelLessonMotion(){
+ for(const a of $('lessons').getAnimations?.()||[])if(a.id==='lesson-change')a.cancel();
+}
 function animateLessons(){
- const list=$('lessons');
- if(typeof list.animate==='function'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-  for(const a of list.getAnimations?.()||[])if(a.id==='lesson-change')a.cancel();
-  const a=list.animate([{opacity:.8},{opacity:1}],{duration:150,easing:'ease-out'});a.id='lesson-change';
- }
+ const list=$('lessons'),now=performance.now(),rapid=now-lastLessonMotion<220;lastLessonMotion=now;
+ cancelLessonMotion();
+ if(rapid||reducedMotion()||typeof list.animate!=='function')return;
+ const a=list.animate([{opacity:.94},{opacity:1}],{duration:MOTION.lessons,easing:'ease-out'});a.id='lesson-change';
 }
 function selectDate(dt,restoreFocus=false){
  if(dt===selected&&!expanded)return;
- const height=prepareCalendarAnimation(),wasExpanded=expanded,changed=dt!==selected;
- selected=dt;expanded=false;viewMonth=selected.slice(0,7)+'-01';saveSelectedDate();if(changed)haptic();render();
+ const wasExpanded=expanded,changed=dt!==selected,previous=selected,origin=!expanded?selectionOrigin():null;
+ const adjacent=!expanded&&monday(dt)===monday(previous)&&Math.abs((date(dt)-date(previous))/86400000)===1;
+ const height=prepareCalendarAnimation();
+ selected=dt;expanded=false;viewMonth=selected.slice(0,7)+'-01';saveSelectedDate();if(changed)haptic();const contentChanged=render();
  if(wasExpanded)animateCalendar(0,height);
- if(changed)animateLessons();
+ if(changed){animateSelection(origin,adjacent);if(contentChanged)animateLessons()}
  if(restoreFocus)$('days').querySelector('[data-date="'+selected+'"]')?.focus({preventScroll:true});
 }
-function navigateWeek(delta){
+function navigateWeek(delta,drag=0){
  if(expanded)return;
  const height=prepareCalendarAnimation();
  selected=daysFrom(selected,7*delta);
- viewMonth=selected.slice(0,7)+'-01';saveSelectedDate();haptic();render();animateCalendar(delta,height);animateLessons();
+ viewMonth=selected.slice(0,7)+'-01';saveSelectedDate();haptic();const changed=render();
+ animateCalendar(delta,height,drag?Math.min(72,32+Math.abs(drag)*.35):32);if(changed)animateLessons();
 }
 function navigateMonth(delta){
  if(!expanded)return;
  const target=monthShift(viewMonth,delta);
  if(!findMonthPanel(target))extendMonths(delta<0);
- viewMonth=target;scrollToMonth(target);updateCalendarControls();
+ viewMonth=target;scrollToMonth(target,true);updateCalendarControls();
 }
 $('prev').onclick=()=>navigateWeek(-1);
 $('next').onclick=()=>navigateWeek(1);
@@ -882,16 +986,43 @@ function calendarKeydown(e){
 $('days').addEventListener('keydown',calendarKeydown);
 $('monthScroll').addEventListener('keydown',calendarKeydown);
 let swipe=null,suppressTapUntil=0;
-$('days').addEventListener('touchstart',e=>{suppressTapUntil=0;swipe=e.touches.length===1?{x:e.touches[0].clientX,y:e.touches[0].clientY,axis:null}:null},{passive:true});
-$('days').addEventListener('touchmove',e=>{
- if(!swipe||e.touches.length!==1){swipe=null;return}
- if(swipe.axis)return;
- const dx=Math.abs(e.touches[0].clientX-swipe.x),dy=Math.abs(e.touches[0].clientY-swipe.y);
- if(dy>12&&dy>=dx)swipe.axis='vertical';
- else if(dx>12&&dx>dy*1.5)swipe.axis='horizontal';
+function dragWeek(dx){
+ const limit=Math.min(96,$('days').clientWidth*.30),abs=Math.abs(dx);
+ return Math.sign(dx)*(abs<=limit?abs:limit+Math.min(24,(abs-limit)*.15));
+}
+function endWeekDrag(commit=false,dx=0){
+ const current=swipe;swipe=null;
+ if(!current||current.axis!=='horizontal')return;
+ const offset=current.offset||0;
+ suppressTapUntil=Date.now()+350;
+ if(commit)navigateWeek(dx<0?1:-1,offset);
+ else if(offset)animateWeekFrom(offset,180);
+ else clearWeekMotion();
+}
+$('days').addEventListener('touchstart',e=>{
+ if(swipe)endWeekDrag();suppressTapUntil=0;
+ swipe=e.touches.length===1?{x:e.touches[0].clientX,y:e.touches[0].clientY,axis:null,offset:0,start:performance.now()}:null;
 },{passive:true});
-$('days').addEventListener('touchend',e=>{if(!swipe||e.changedTouches.length!==1){swipe=null;return}const t=e.changedTouches[0],dx=t.clientX-swipe.x,dy=t.clientY-swipe.y,axis=swipe.axis;swipe=null;if(axis!=='vertical'&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){suppressTapUntil=Date.now()+350;navigateWeek(dx<0?1:-1)}},{passive:true});
-$('days').addEventListener('touchcancel',()=>{swipe=null},{passive:true});
+$('days').addEventListener('touchmove',e=>{
+ if(!swipe)return;
+ if(e.touches.length!==1){endWeekDrag();swipe=null;return}
+ const dx=e.touches[0].clientX-swipe.x,dy=e.touches[0].clientY-swipe.y;
+ if(!swipe.axis){
+  if(Math.abs(dy)>12&&Math.abs(dy)>=Math.abs(dx))swipe.axis='vertical';
+  else if(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)*1.5){swipe.axis='horizontal';clearWeekMotion();clearSelectionMotion()}
+ }
+ if(swipe.axis==='horizontal'&&!reducedMotion()){
+  swipe.offset=dragWeek(dx);
+  $('calendarBody').classList.add('is-week-moving');$('days').style.transform='translateX('+swipe.offset+'px)';
+ }
+},{passive:true});
+$('days').addEventListener('touchend',e=>{
+ if(!swipe||e.changedTouches.length!==1){endWeekDrag();swipe=null;return}
+ const t=e.changedTouches[0],dx=t.clientX-swipe.x,dy=t.clientY-swipe.y,elapsed=Math.max(1,performance.now()-swipe.start);
+ const commit=swipe.axis==='horizontal'&&Math.abs(dx)>Math.abs(dy)*1.5&&(Math.abs(dx)>45||(Math.abs(dx)>25&&Math.abs(dx)/elapsed>.45));
+ endWeekDrag(commit,dx);swipe=null;
+},{passive:true});
+$('days').addEventListener('touchcancel',()=>{endWeekDrag();swipe=null},{passive:true});
 $('days').addEventListener('click',e=>{if(e.detail!==0&&Date.now()<suppressTapUntil){e.preventDefault();e.stopPropagation()}},true);
 $('refresh').onclick=load;load();
 let lastCalendarToday=todayMoscow();
@@ -912,7 +1043,8 @@ setInterval(()=>{if(!document.hidden)updateCalendarToday()},60000);
  let gesture=null,reloading=false,ready=false;
  function reset(){
   gesture=null;ready=false;
-  indicator.classList.remove('is-visible');
+  indicator.classList.remove('is-visible','is-tracking');
+  indicator.style.removeProperty('--pull-shift');
   indicator.textContent='';
  }
  document.addEventListener('touchstart',event=>{
@@ -935,6 +1067,8 @@ setInterval(()=>{if(!document.hidden)updateCalendarToday()},60000);
   if(event.cancelable)event.preventDefault();
   gesture.distance=Math.max(0,dy);
   const nextReady=gesture.distance>=threshold;
+  indicator.classList.add('is-tracking');
+  if(!reducedMotion())indicator.style.setProperty('--pull-shift',Math.min(20,Math.max(-45,gesture.distance*.65-45))+'px');
   indicator.classList.toggle('is-visible',gesture.distance>12);
   if(indicator.textContent===''||ready!==nextReady){
    ready=nextReady;
@@ -945,6 +1079,7 @@ setInterval(()=>{if(!document.hidden)updateCalendarToday()},60000);
   if(event.touches.length)return;
   if(!gesture||!gesture.active||!ready){reset();return;}
   gesture=null;reloading=true;
+  indicator.classList.remove('is-tracking');indicator.style.removeProperty('--pull-shift');
   indicator.textContent='Обновляем страницу…';
   window.location.reload();
  },{passive:true});
