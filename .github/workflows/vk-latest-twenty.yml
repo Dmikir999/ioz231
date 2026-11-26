@@ -84,4 +84,21 @@ jobs:
           print('VK_CONTEXT_RESULT_BEGIN')
           print(json.dumps([{'id':p['id'],'result':reconcile(entries,p,periods)[1]} for p in cached],ensure_ascii=False))
           print('VK_CONTEXT_RESULT_END')
+          # Final integration check: replay the same live VK cache that production
+          # will use, against the full latest verified Excel baseline in memory.
+          from scripts.vk_production import apply_verified_changes
+          history={p['id']:p for p in cached}
+          for p in feed:
+              if old._target(p.get('text','')):
+                  history[p['id']]=p
+          actual=list(history.values())
+          before=copy.deepcopy(entries)
+          prior,prior_notices,prior_links=old.apply_changes(entries,actual,periods)
+          candidate,review,links=apply_verified_changes(entries,actual,periods)
+          assert entries==before, 'Baseline was mutated'
+          assert sorted(e['id'] for e in candidate)==sorted(e['id'] for e in before), 'Lesson identity changed'
+          assert len({e['id'] for e in candidate})==len(candidate), 'Duplicate lesson IDs'
+          again=apply_verified_changes(entries,actual,periods)
+          assert again==(candidate,review,links), 'Replay is not deterministic'
+          print('VK_DEPLOYMENT_CHECK '+json.dumps({'baseline_lessons':len(before),'candidate_lessons':len(candidate),'live_relevant_posts':len(actual),'applied':links,'review':[{'id':n['post_id'],'reason':n['reason']} for n in review],'same_as_old':candidate==prior,'old_applied':prior_links,'input_unchanged':True,'deterministic':True},ensure_ascii=False))
           PY
