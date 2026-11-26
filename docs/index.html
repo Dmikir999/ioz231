@@ -502,6 +502,42 @@ footer .refresh:active{background:#cf10250b}
  .week-nav .today-button{padding:0 14px}
 }
 @media(prefers-reduced-motion:reduce){.month-toggle,.week-nav button,footer .refresh{transition:none!important;transform:none!important}}
+
+/* Compact individual calendar controls: smaller visible surfaces, full touch targets. */
+:root{--control-surface-height:34px;--control-circle-size:34px}
+.controls{justify-content:space-between;align-items:center;gap:6px}
+.month-toggle{flex:0 1 auto;justify-content:flex-start;padding:0 10px;min-width:0}
+.week-nav{gap:0;padding:0;background:transparent;box-shadow:none;border-radius:0;flex:0 0 auto}
+.month-toggle,.week-nav .icon-button,.week-nav .month-step,.week-nav .today-button{
+ position:relative;isolation:isolate;height:44px;min-height:44px;background:transparent;box-shadow:none;border:0;
+}
+.month-toggle::before,.week-nav button::before{
+ content:"";position:absolute;z-index:-1;pointer-events:none;top:50%;left:0;right:0;height:var(--control-surface-height);transform:translateY(-50%);border-radius:999px;background:var(--control-fill);box-shadow:var(--control-shadow);transition:background-color .12s ease;
+}
+.week-nav .icon-button,.week-nav .month-step{width:44px;min-width:44px;padding:0;border-radius:50%}
+.week-nav .icon-button::before,.week-nav .month-step::before{width:var(--control-circle-size);height:var(--control-circle-size);left:50%;right:auto;transform:translate(-50%,-50%);border-radius:50%}
+.week-nav .today-button{padding:0 9px}
+.month-toggle:active,.week-nav button:active{background:transparent}
+.month-toggle:active::before,.week-nav button:active::before{background:#f9e9ed}
+@media(hover:hover) and (pointer:fine){
+ .month-toggle:hover,.week-nav button:hover{background:transparent}
+ .month-toggle:hover::before,.week-nav button:hover::before{background:#fdf5f7}
+}
+@media(max-width:520px){
+ .controls{gap:4px}
+ .month-toggle{padding:0 8px;gap:4px}
+ .week-nav .today-button{padding:0 7px}
+}
+@media(max-width:360px){
+ .month-toggle{padding:0 6px;gap:3px}
+ .week-nav .today-button{padding:0 4px}
+}
+@media(min-width:851px){
+ .week-nav{gap:10px}
+ .month-toggle{padding:0 12px}
+ .week-nav .today-button{padding:0 12px}
+}
+@media(prefers-reduced-motion:reduce){.month-toggle::before,.week-nav button::before{transition:none}}
 </style>
 </head>
 <body>
