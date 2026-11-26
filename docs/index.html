@@ -15,7 +15,7 @@
 </script>
 <!-- /Yandex.Metrika counter -->
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#fffdfd">
+<meta name="theme-color" content="#faf8f9">
 <meta name="description" content="Расписание ИОЗ-231: подтверждённые занятия, изменения и честный статус источников.">
 <title>Расписание ИОЗ-231 · МГПУ</title>
 <link rel="manifest" href="./manifest.webmanifest?v=raspi-sanie-20261110">
@@ -249,6 +249,124 @@ header .group{background:#ffe5e8;border-radius:14px;font-weight:700}
 }
 @media(prefers-reduced-motion:reduce){.pull-refresh{transition:none}}
 
+
+/* Calendar reference design: circular dates, unboxed navigation and soft agenda cards. */
+:root{--red:#cf1025;--red-dark:#c20b20;--ink:#111114;--muted:#666368;--line:#e8e3e7;background:#faf8f9}
+html,body{background:#faf8f9;color:var(--ink)}
+main.app-shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(6,auto);align-content:start;background:radial-gradient(ellipse at 100% 17%,#f8e9ee 0%,transparent 49%),linear-gradient(160deg,#fcfafb 0%,#f6f4f6 100%);min-height:100vh;min-height:100dvh;padding:calc(env(safe-area-inset-top,0px) + 10px) env(safe-area-inset-right,0px) calc(14px + env(safe-area-inset-bottom,0px)) env(safe-area-inset-left,0px)}
+main.app-shell:before,main.app-shell:after{display:none;content:none}
+.calendar-section,.schedule-section,header,.more,footer,.verification{grid-column:1;width:100%;max-width:960px;justify-self:center;padding-left:24px;padding-right:24px}
+.calendar-section{grid-row:1;position:relative}
+.schedule-section{grid-row:2}
+header{grid-row:3;display:flex;align-items:center;justify-content:space-between;padding-top:28px;padding-bottom:0;gap:12px}
+header .eyebrow{display:none}
+header .appname{font-size:17px;letter-spacing:-.02em;font-weight:650;color:var(--muted)}
+header .group{margin:0;font-size:13px;font-weight:650;padding:7px 12px;border-radius:999px}
+.verification{grid-row:4;justify-content:flex-start;gap:8px;padding-top:14px;padding-bottom:14px}
+.more{grid-row:5;margin-top:0}
+footer{grid-row:6;margin-top:16px}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:18px}
+.month-toggle{display:inline-flex;align-items:center;gap:9px;background:none;border:0;padding:0 2px;color:var(--ink);min-height:44px;white-space:nowrap;text-align:left;min-width:0}
+.month-toggle strong{font-size:clamp(18px,4.4vw,25px);font-weight:760;letter-spacing:-.035em;text-transform:none}
+.month-toggle svg{width:23px;height:23px;flex:none;color:var(--red)}
+.month-toggle svg:last-child{width:15px;height:15px;color:var(--ink)}
+.week-nav{display:flex;align-items:center;gap:4px;flex:none}
+.icon-button,.today-button{height:44px;min-height:44px;background:transparent;border:0;box-shadow:none;border-radius:10px;color:var(--red);font-weight:500}
+.icon-button{width:38px}
+.icon-button svg{width:23px;height:23px}
+.today-button{padding:0 6px;font-size:17px}
+.icon-button:hover,.today-button:hover{background:#d10e2510}
+.month-picker{position:absolute;z-index:4;top:54px;left:24px;max-width:calc(100% - 48px);padding:14px;background:#fff;border:1px solid #e8e3e7;border-radius:18px;box-shadow:0 9px 30px #30202a20}
+.month-picker[hidden]{display:none}
+.month-picker form{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.month-picker select,.month-picker input,.month-picker button{font:inherit;min-height:44px;border:1px solid #ded8dc;border-radius:10px;padding:8px;background:white;color:var(--ink)}
+.month-picker input{width:82px}
+.month-picker button{background:var(--red);border-color:var(--red);color:#fff}
+.days{gap:2px;margin:0 0 46px}
+.day,.day.active,.day.today:not(.active){min-height:0;background:transparent;border:0;border-radius:0;box-shadow:none;color:var(--ink);padding:0 0 2px;gap:5px;justify-content:flex-start}
+.day span{font-size:14px;color:var(--muted);font-weight:450;line-height:1.3}
+.day strong{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;font-size:22px;font-weight:730;letter-spacing:-.03em;line-height:1}
+.day.active strong{background:var(--red);color:#fff}
+.day.today:not(.active) strong{color:var(--red)}
+.day i,.day.active i{width:5px;height:5px;border-radius:50%;background:var(--red)}
+.section-top{align-items:center;margin-bottom:23px;gap:10px}
+.section-top h2{font-size:clamp(29px,7vw,42px);font-weight:790;line-height:1.13;letter-spacing:-.045em;color:var(--ink)}
+.section-top small{font-size:15px;font-weight:450;color:var(--ink)}
+.lessons{gap:12px}
+.lesson{grid-template-columns:82px minmax(0,1fr);gap:18px;padding:17px 16px;border:1px solid #ffffffb8;border-radius:23px;background:linear-gradient(135deg,#ffffffc9,#ffffff91);box-shadow:0 5px 14px #28202b12,0 1px 3px #28202b08;align-items:start}
+.lesson>div:first-child{padding:3px 12px 0 1px;border-right:1px solid #e1dce1;align-self:stretch}
+.lesson>div:nth-child(2){padding:0;min-width:0}
+.time-start{font-size:23px;font-weight:780;color:var(--red);line-height:1.2;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.time-end{font-size:16px;line-height:1.25;font-weight:430;color:var(--muted);margin-top:5px}
+.subject{font-size:18px;line-height:1.23;font-weight:750;letter-spacing:-.025em;overflow-wrap:break-word}
+.details{gap:7px;margin-top:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;font-size:13px;line-height:1.2;font-weight:500;color:var(--ink);background:linear-gradient(110deg,#ebe9eb,#e5e3e5);border-radius:999px;max-width:100%;overflow-wrap:anywhere}
+.chip.room{background:linear-gradient(110deg,#ffe5e9,#fbdde3);color:var(--red-dark)}
+.chip svg,.teacher svg{width:16px;height:16px;flex:none}
+.teacher{display:flex;align-items:flex-start;gap:7px;color:var(--muted);font-size:13px;font-weight:430;line-height:1.35;margin-top:9px;overflow-wrap:anywhere}
+.teacher svg{margin-left:9px}
+.lesson.cancelled{background:#faf7f8}
+@media(max-width:520px){
+ .calendar-section,.schedule-section,header,.more,footer,.verification{padding-left:13px;padding-right:13px}
+ .controls{gap:3px;margin-bottom:15px}
+ .month-toggle{gap:6px;padding:0 2px}
+ .month-toggle strong{font-size:clamp(16px,4.2vw,21px)}
+ .month-toggle svg{width:20px;height:20px}
+ .month-toggle svg:last-child{width:13px;height:13px}
+ .week-nav{gap:0}
+ .icon-button{width:32px}
+ .icon-button svg{width:20px;height:20px}
+ .today-button{font-size:15px;padding:0 5px}
+ .month-picker{left:13px;max-width:calc(100% - 26px)}
+ .days{margin-bottom:40px}
+ .day strong{width:40px;height:40px;font-size:21px}
+ .day span{font-size:13px}
+ .section-top{padding:0 4px;margin-bottom:22px}
+ .section-top h2{font-size:clamp(27px,7.4vw,36px)}
+ .section-top small{font-size:14px}
+ .lesson{grid-template-columns:clamp(61px,18.8vw,85px) minmax(0,1fr);gap:clamp(10px,4vw,18px);padding:16px 14px;border-radius:22px}
+ .lesson>div:first-child{padding-right:7px}
+ .time-start{font-size:clamp(19px,5.3vw,24px)}
+ .time-end{font-size:15px}
+ .subject{font-size:clamp(16px,4.25vw,19px)}
+ .chip{font-size:12px;padding:5px 8px;gap:5px}
+ .chip svg,.teacher svg{width:15px;height:15px}
+ .teacher svg{margin-left:8px}
+}
+@media(max-width:360px){
+ .calendar-section,.schedule-section,header,.more,footer,.verification{padding-left:10px;padding-right:10px}
+ .month-toggle{gap:4px}
+ .month-toggle svg{width:18px}
+ .month-toggle strong{font-size:16px}
+ .icon-button{width:28px}
+ .today-button{font-size:13px;padding:0 3px}
+ .day strong{width:35px;height:35px;font-size:19px}
+ .lesson{padding:13px 10px;gap:10px;grid-template-columns:59px minmax(0,1fr)}
+ .chip{padding:5px 6px;gap:4px;font-size:11px}
+ .teacher svg{margin-left:6px}
+}
+@media(min-width:851px){
+ main.app-shell{padding-top:34px}
+ .controls{margin-bottom:24px}
+ .month-toggle strong{font-size:26px}
+ .month-toggle svg{width:27px;height:27px}
+ .week-nav{gap:16px}
+ .today-button{font-size:19px}
+ .days{margin-bottom:48px}
+ .day strong{width:50px;height:50px;font-size:25px}
+ .day span{font-size:16px}
+ .section-top{margin-bottom:24px}
+ .section-top small{font-size:18px}
+ .lesson{grid-template-columns:140px minmax(0,1fr);padding:23px 26px;gap:26px;border-radius:26px}
+ .time-start{font-size:28px}
+ .time-end{font-size:19px}
+ .subject{font-size:23px}
+ .chip{font-size:16px;padding:6px 12px}
+ .chip svg,.teacher svg{width:19px;height:19px}
+ .teacher{font-size:16px}
+ .teacher svg{margin-left:12px}
+}
+
 </style>
 </head>
 <body>
@@ -256,7 +374,7 @@ header .group{background:#ffe5e8;border-radius:14px;font-weight:700}
 <main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
   <header><div class="eyebrow">Институт гуманитарных наук</div><h1 class="appname">Расписание</h1><div class="group">ИОЗ-231</div></header>
   <div class="verification" id="verification" aria-label="Проверка источников"><span class="source-tag warn">Проверяем источники…</span></div>
-  <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><strong id="weekLabel">Загрузка…</strong><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя">‹</button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя">›</button></div></div><nav class="days" id="days" aria-label="Дни недели"></nav></section>
+  <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><button type="button" class="month-toggle" id="monthToggle" aria-label="Выбрать месяц" aria-expanded="false" aria-controls="monthPicker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M7 3v4m10-4v4M3 10h18m-13 4h.01m4 0h.01m4 0h.01m-8 3h.01m4 0h.01"/></svg><strong id="weekLabel">Загрузка…</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button></div></div><div id="monthPicker" class="month-picker" hidden><form id="monthForm"><select id="monthSelect" aria-label="Месяц"><option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option><option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option><option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option><option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option></select><input id="yearSelect" aria-label="Год" type="number" min="1900" max="2100" required><button type="submit">Перейти</button></form></div><nav class="days" id="days" aria-label="Дни недели"></nav></section>
   <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessons" class="lessons"></div></section>
   <details id="reviewSection" class="more" hidden><summary id="reviewLabel">Непроверенные изменения</summary><div id="reviews"></div></details>
   <footer><div><div id="updated">Источник данных загружается…</div><div>Неофициальное расписание. При сомнениях сверяй данные с деканатом.</div><div><a data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener">Таблица МГПУ</a> · <a href="https://vk.ru/dekanat_ign" target="_blank" rel="noopener">Изменения ВК</a></div></div><button class="refresh" id="refresh" title="Перезагрузить расписание">Обновить ↻</button></footer>
@@ -275,15 +393,18 @@ function iso(d){return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padSta
 function daysFrom(s,n){const d=date(s);d.setUTCDate(d.getUTCDate()+n);return iso(d)}
 function monday(s){const d=date(s);return daysFrom(s,-(d.getUTCDay()+6)%7)}
 const h=s=>String(s??'').replace(/[&<>"']/g,a=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[a]));
+const uiIcons={"practice":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m15 5 4 4M4 20l4.5-1 12-12a2.8 2.8 0 0 0-4-4l-12 12L4 20Z\"/></svg>","lecture":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 6c-2.5-2-6-2-10-1v14c4-1 7.5-1 10 1 2.5-2 6-2 10-1V5c-4-1-7.5-1-10 1v14\"/></svg>","room":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z\"/><circle cx=\"12\" cy=\"10\" r=\"2.5\"/></svg>","teacher":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"7\" r=\"4\"/><path d=\"M3 21v-2a6 6 0 0 1 6-6h6a6 6 0 0 1 6 6v2Z\"/></svg>","other":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"2\"/><path d=\"M9 8h6m-6 4h6m-6 4h4\"/></svg>"};
+const monthFmt=new Intl.DateTimeFormat('ru-RU',{month:'long',timeZone:'UTC'});
+function kindIcon(kind){return /практик|семинар|лаборатор/i.test(kind||'')?uiIcons.practice:/лекци/i.test(kind||'')?uiIcons.lecture:uiIcons.other}
 let selected=todayMoscow(),schedule=null;
 function plural(n){const a=n%10,b=n%100;return b>=11&&b<=14||a===0||a>=5?'занятий':a===1?'занятие':'занятия'}
 function render(){
  if (/^https:\/\/cloud\.mail\.ru\/public\/[\w-]+\/[\w-]+$/.test(schedule?.source)) {
   document.querySelectorAll('[data-source-link]').forEach(link=>{link.href=schedule.source});
  }
- const start=monday(selected),finish=daysFrom(start,6);
- const weekDate=day=>shortFmt.format(date(day)).replace(/ /g,'\u00a0');
- $('weekLabel').textContent=`${weekDate(start)}\u00a0— ${weekDate(finish)}`;
+ const start=monday(selected), selectedDate=date(selected);
+ const month=monthFmt.format(selectedDate);
+ $('weekLabel').textContent=month.charAt(0).toUpperCase()+month.slice(1)+' '+selectedDate.getUTCFullYear();
  const week=$('days');week.replaceChildren();const dateSet=new Set((schedule?.entries||[]).filter(x=>!x.cancelled).map(x=>x.date));
  for(let i=0;i<7;i++){
   const dt=daysFrom(start,i),current=dt===selected,btn=document.createElement('button');
@@ -355,7 +476,7 @@ function render(){
   else if(e.previous_room===''&&e.room)flag=`Новая аудитория: ${e.room}`;
   else if(e.changed)flag='Изменено';
   const flagContent=flag?(e.change_url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(e.change_url)?`<a href="${e.change_url}" class="change-badge" target="_blank" rel="noopener">${h(flag)} ↗</a>`:`<span class="change-badge">${h(flag)}</span>`):'';
-  return `<section class="lesson-option"><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${h(e.teacher)}</div>`:''}${flagContent}${finalBadge}</section>`;
+  return `<section class="lesson-option"><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${kindIcon(e.kind)}${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">${uiIcons.room}Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${uiIcons.teacher}<span>${h(e.teacher)}</span></div>`:''}${flagContent}${finalBadge}</section>`;
   }).join('');
   el.innerHTML=`<div><div class="time-start">${h(e.time)}</div><div class="time-end">${e.end?h(e.end):'время уточняется'}</div></div><div>${sections}</div>`;
   list.append(el);
@@ -381,6 +502,11 @@ async function load(){try{
 $('prev').onclick=()=>{selected=daysFrom(selected,-7);render()};
 $('next').onclick=()=>{selected=daysFrom(selected,7);render()};
 $('today').onclick=()=>{selected=todayMoscow();render()};
+function closeMonthPicker(){ $('monthPicker').hidden=true;$('monthToggle').setAttribute('aria-expanded','false'); }
+$('monthToggle').onclick=()=>{const panel=$('monthPicker');if(!panel.hidden){closeMonthPicker();return}const d=date(selected);$('monthSelect').value=String(d.getUTCMonth()+1);$('yearSelect').value=String(d.getUTCFullYear());panel.hidden=false;$('monthToggle').setAttribute('aria-expanded','true');$('monthSelect').focus()};
+$('monthForm').onsubmit=event=>{event.preventDefault();const year=Number($('yearSelect').value),month=Number($('monthSelect').value);if(!Number.isInteger(year)||year<1900||year>2100||month<1||month>12)return;const day=Math.min(date(selected).getUTCDate(),new Date(Date.UTC(year,month,0)).getUTCDate());selected=iso(new Date(Date.UTC(year,month-1,day,12)));closeMonthPicker();render();$('monthToggle').focus()};
+document.addEventListener('click',event=>{if(!event.target.closest('#monthPicker,#monthToggle'))closeMonthPicker()});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('monthPicker').hidden){closeMonthPicker();$('monthToggle').focus()}});
 $('refresh').onclick=load;load();
 
 /* Pull down at the top to reload both the page and its schedule. */
