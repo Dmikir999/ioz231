@@ -630,6 +630,19 @@ footer .refresh:disabled{opacity:.65;cursor:default}
  #pullRefresh.is-loading .ring-progress{stroke-dasharray:52 75.3982}
  #pullRefresh .refresh-ring{transform:none!important}
 }
+
+/* Expanded calendar: soft viewport edges and native week-row snapping. */
+#monthScroll{
+ --month-fade-top:22px;
+ --month-fade-bottom:34px;
+ padding-block:var(--month-fade-top) var(--month-fade-bottom);
+ scroll-padding-block:var(--month-fade-top) var(--month-fade-bottom);
+ scroll-snap-type:y proximity;
+ -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--month-fade-top),#000 calc(100% - var(--month-fade-bottom)),transparent 100%);
+ mask-image:linear-gradient(to bottom,transparent 0,#000 var(--month-fade-top),#000 calc(100% - var(--month-fade-bottom)),transparent 100%);
+}
+#monthScroll .month-panel,#monthScroll .month-week-start{scroll-snap-align:start;scroll-snap-stop:normal}
+#monthScroll.is-month-programmatic{scroll-snap-type:none}
 </style>
 </head>
 <body>
@@ -715,32 +728,37 @@ function makeMonthPanel(month,dateSet){
  for(const name of ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']){const el=document.createElement('span');el.className='month-weekday';el.textContent=name;grid.append(el)}
  const start=monday(month),total=Math.ceil(((shown.getUTCDay()+6)%7+new Date(Date.UTC(shown.getUTCFullYear(),shown.getUTCMonth()+1,0)).getUTCDate())/7)*7;
  for(let i=0;i<total;i++){
-  const dt=daysFrom(start,i);
+  const dt=daysFrom(start,i);let cell;
   if(dt.slice(0,7)!==month.slice(0,7)){
-   const blank=document.createElement('span');blank.className='month-blank';blank.setAttribute('aria-hidden','true');grid.append(blank);
-  }else grid.append(makeDateButton(dt,dateSet,month));
+   cell=document.createElement('span');cell.className='month-blank';cell.setAttribute('aria-hidden','true');
+  }else cell=makeDateButton(dt,dateSet,month);
+  if(i%7===0)cell.classList.add('month-week-start');
+  grid.append(cell);
  }
  panel.append(grid);return panel;
 }
 function monthOffset(panel){return panel.offsetTop}
+function monthViewportInset(){return parseFloat(getComputedStyle($('monthScroll')).scrollPaddingTop)||0}
 function findMonthPanel(month){return $('monthScroll').querySelector('[data-month="'+month+'"]')}
 const MOTION={press:100,selection:180,week:230,open:280,close:240,month:280,lessons:150,ease:'cubic-bezier(.2,.75,.25,1)'};
 const reducedMotion=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let monthMotion=0,monthScrollFrame=0;
 function cancelMonthMotion(){
  if(monthMotion)cancelAnimationFrame(monthMotion);monthMotion=0;
+ $('monthScroll').classList.remove('is-month-programmatic');
 }
 function scrollToMonth(month,animated=false){
  const panel=findMonthPanel(month);if(!panel)return;
  cancelMonthMotion();
- const scroller=$('monthScroll'),from=scroller.scrollTop,to=Math.max(0,Math.min(monthOffset(panel),scroller.scrollHeight-scroller.clientHeight));
+ const scroller=$('monthScroll'),from=scroller.scrollTop,to=Math.max(0,Math.min(monthOffset(panel)-monthViewportInset(),scroller.scrollHeight-scroller.clientHeight));
  if(!animated||reducedMotion()||Math.abs(to-from)<2){scroller.scrollTop=to;return}
+ scroller.classList.add('is-month-programmatic');
  const start=performance.now();
  function step(now){
   const p=Math.min(1,(now-start)/MOTION.month),ease=1-Math.pow(1-p,3);
   scroller.scrollTop=from+(to-from)*ease;
   if(p<1&&expanded)monthMotion=requestAnimationFrame(step);
-  else{monthMotion=0;syncMonthFromScroll()}
+  else{monthMotion=0;scroller.classList.remove('is-month-programmatic');syncMonthFromScroll()}
  }
  monthMotion=requestAnimationFrame(step);
 }
@@ -784,7 +802,7 @@ function syncMonthFromScroll(){
  const scroller=$('monthScroll');if(!scroller.children.length)return;
  if(scroller.scrollTop<140)extendMonths(true);
  if(scroller.scrollHeight-scroller.scrollTop-scroller.clientHeight<180)extendMonths(false);
- const top=scroller.scrollTop+25;
+ const top=scroller.scrollTop+monthViewportInset()+3;
  let visible=scroller.firstElementChild;
  for(const panel of scroller.children){if(monthOffset(panel)>top)break;visible=panel}
  const month=visible.dataset.month;
