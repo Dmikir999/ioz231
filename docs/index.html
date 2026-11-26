@@ -427,7 +427,10 @@ header .group{font-size:14px;padding:7px 13px}
 .month-toggle .range-label{font-size:clamp(13px,3.65vw,19px);letter-spacing:-.04em}
 .day,.day.active,.day.today:not(.active){min-height:44px}
 .day:focus-visible,.month-toggle:focus-visible,.month-step:focus-visible,.calendar-handle:focus-visible,.week-nav button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+/* Disable Safari double-tap zoom while preserving scrolling and pinch zoom. */
+html,body,button,a,summary{touch-action:manipulation}
 .days{touch-action:pan-y pinch-zoom}
+.calendar-handle{touch-action:none}
 .day strong{font-variant-numeric:tabular-nums}
 @media(max-width:360px){.controls{flex-wrap:nowrap}.month-toggle .range-label{font-size:12px}.month-toggle strong{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.day,.day strong,.calendar-handle span,.month-toggle svg:last-child{transition:none!important}}
