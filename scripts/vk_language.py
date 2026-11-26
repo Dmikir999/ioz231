@@ -10,9 +10,9 @@ import unicodedata
 from datetime import date, datetime, timedelta
 from scripts import engine as old
 
-GROUP_ID=r'[А-ЯЁA-Z]{2,}[ _-]?\d{1,3}(?:\.\d+)?[мМ]?'
+GROUP_ID=r'[А-ЯЁA-Z]{2,}[ _-]?\d{1,3}(?:\.\d+)?[мМзЗ]?'
 TAG=re.compile(r'#(?P<id>'+GROUP_ID+r')',re.I)
-GROUP_LINE=re.compile(r'^\s*Группа\s+(?P<id>'+GROUP_ID+r')\s*:?\s*$',re.I)
+GROUP_LINE=re.compile(r'^\s*(?:Групп[ауые]\s+)?(?P<id>'+GROUP_ID+r'(?:\s*,\s*'+GROUP_ID+r')*)\s*:?\s*$',re.I)
 LEADING=re.compile(r'^[^\w#]*?(?P<tags>#'+GROUP_ID+r'(?:\s*,\s*#'+GROUP_ID+r')*)(?:\s*,?\s*(?P<sub>подгруппа\s+\d+|КВ))?\s*[—–-]\s*(?P<body>.+)$',re.I)
 PAIR_NUMBER={k:i for i,k in enumerate(('I','II','III','IV','V','VI','VII','VIII'),1)}
 PAIR=r'(?:VIII|VII|VI|IV|III|II|I|V|[1-8])'
@@ -34,7 +34,11 @@ DAY_NAMES=(
 SENTENCE=re.compile(r';|\n+|(?<=\.)(?<!практ\.)(?<!лекц\.)(?<!доц\.)(?<!проф\.)(?<!ст\.пр\.)(?<!ст\. пр\.)(?<!преп\.)(?<!ауд\.)\s+(?=(?:Практ|Лекц|Заняти|Пара|Все\s+заняти|Вместо|Отмена|Перенос))',re.I)
 
 def normalize(text):
-    return unicodedata.normalize('NFKC',text or '').replace('\u00a0',' ')
+    text=unicodedata.normalize('NFKC',text or '').replace('\u00a0',' ')
+    text=re.sub(r'\bдоцю\s+', 'доц. ',text,flags=re.I)
+    text=re.sub(r'('+PAIR+r')\s+парад\b',r'\1 пара',text,flags=re.I)
+    text=re.sub(r'(?<=\.)\s*(?=#)', '\n', text)
+    return text
 
 def group_id(value):
     return re.sub(r'[ _-]+','-',value.upper())
@@ -80,7 +84,7 @@ def sections(text):
             sub=m['sub'];out.append((groups[:],sub,' '.join(header),m['body']));continue
         m=GROUP_LINE.match(line)
         if m:
-            groups=[group_id(m['id'])];sub=None;continue
+            groups=[group_id(x.strip()) for x in m['id'].split(',')];sub=None;continue
         if line.upper().startswith('ВНИМАНИЕ') and TAG.search(line):
             groups=[group_id(t['id']) for t in TAG.finditer(line)];sub=None;continue
         if not groups:
@@ -101,7 +105,8 @@ def parse_statement(text,header,stamp):
     for m in ROOMS.finditer(text):
         rooms.extend(re.findall(r'\d{3,5}[А-Яа-я]?',m[1]))
     rooms=list(dict.fromkeys(rooms))
-    if len(names)>1 or len(rooms)>1:flags.append('Распределение преподавателей, пар и аудиторий требует сверки')
+    # A shared room for multiple named teachers is explicit, not ambiguous.
+    if len(rooms)>1 or (len(names)>1 and not (len(rooms)==1 and re.search(r'изменени[ея]\s+аудиторий',header,re.I))):flags.append('Распределение преподавателей, пар и аудиторий требует сверки')
     kind='lecture' if re.search(r'\bлекц',text,re.I) else 'practice' if re.search(r'\bпракт|семинар',text,re.I) else None
     result=dict(teachers=names,rooms=rooms,kind=kind,source_date=None,source_pairs=[],source_times=[],destination_date=None,destination_pairs=[],destination_times=[],flags=flags)
     def source(fragment):
@@ -113,7 +118,7 @@ def parse_statement(text,header,stamp):
         if not result['source_date']:result['source_date']=date_one(header,stamp,flags)
         result['all_day']=bool(re.search(r'\bвсе\s+(?:пары|занятия)',text,re.I))
         if MOVE.search(text):flags.append('Одновременно отмена и перенос')
-    elif MOVE.search(text):
+    elif MOVE.search(text) or (names and re.search(r'\bсо?\s+.+?\s+на\s+',text,re.I) and not SCHEDULED.search(text)):
         result['type']='transfer'
         m=re.search(r'\bсо?\s+(.+?)\s+на\s+(.+)',text,re.I)
         if not m:raise ValueError('Не определены части переноса')
@@ -134,6 +139,20 @@ def parse_statement(text,header,stamp):
     elif SCHEDULED.search(text) and re.search(r'\bвместо\b',text,re.I):
         result['type']='transfer'
         before,after=re.split(r'\bвместо\b',text,maxsplit=1,flags=re.I)
+        # "вместо 09.12" is source after the marker; "вместо 09.12 пройдут ..." reverses it.
+        following=re.search(r'\b(?:пройд[её]т|пройдут|состоится|состоятся|будет|будут)\b',after,re.I)
+        if following and date_values(after[:following.start()],stamp):
+            source(after[:following.start()]);destination(after[following.end():])
+        else:
+            source(after);destination(before)
+        bare_pair=re.fullmatch(r'\s*('+PAIR+r')(?:\s*[-–—]\s*('+PAIR+r'))?\s*[).!]*\s*',after,re.I)
+        if bare_pair and not result['source_pairs']:
+            result['source_pairs']=pair_numbers(bare_pair[0].strip(' ).!')+' пары')
+        if not result['source_date'] and result['source_pairs'] and result['destination_date'] and not date_values(after,stamp):
+            result['source_date']=result['destination_date'];result['same_day_inferred']=True
+    elif SCHEDULED.search(text) and re.search(r',?\s+а\s+не\s+',text,re.I):
+        result['type']='transfer'
+        before,after=re.split(r',?\s+а\s+не\s+',text,maxsplit=1,flags=re.I)
         source(after);destination(before)
     elif SCHEDULED.search(text) and re.search(r'\bтолько\b',text,re.I):
         result['type']='restriction';destination(text)
@@ -142,9 +161,10 @@ def parse_statement(text,header,stamp):
         result['type']='room';source(text)
         if not result['source_date']:result['source_date']=date_one(header,stamp,flags)
         if not rooms:flags.append('Не указана аудитория')
-    elif SCHEDULED.search(text) and (pair_numbers(text) or time_values(text)):
+    elif SCHEDULED.search(text) and (pair_numbers(text) or time_values(text) or (names and date_values(text,stamp))):
         result['type']='scheduled';destination(text)
         flags.append('Не указано, является ли занятие новым или перенесённым')
+        if not result['destination_pairs'] and not result['destination_times']:flags.append('Новый номер пары не указан')
     else:
         raise ValueError('Не определён тип изменения')
     if result['type']=='transfer':
