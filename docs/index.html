@@ -421,7 +421,7 @@ header .group{font-size:14px;padding:7px 13px}
 .month-tools{display:flex;gap:8px;margin:3px 0 0}
 .month-tools[hidden]{display:none!important}
 .month-hint{display:none!important}
-.today-button.is-current{visibility:hidden;pointer-events:none}
+.today-button{visibility:visible;pointer-events:auto}
 .month-toggle{flex:1 1 auto;min-width:0}
 .month-toggle strong{min-width:0;white-space:nowrap}
 .month-toggle .range-label{font-size:clamp(13px,3.65vw,19px);letter-spacing:-.04em}
@@ -448,6 +448,7 @@ html,body,button,a,summary{touch-action:manipulation}
 .month-panel .days.month-view{margin:0;row-gap:5px}
 .month-panel .day,.month-panel .day.active,.month-panel .day.today:not(.active){min-height:44px}
 .month-panel .day strong{font-size:19px}
+.month-panel .month-blank{min-height:44px;pointer-events:none}
 .month-panel .day.outside{opacity:.35}
 .month-panel .day.today.outside:not(.active){opacity:.8}
 .week-nav .month-step{width:44px;min-width:44px;height:44px;padding:0}
@@ -508,8 +509,7 @@ function updateCalendarControls(){
  const label=calendarLabel(selected,expanded,viewMonth),labelEl=$('weekLabel');
  labelEl.textContent=label.text;labelEl.classList.toggle('range-label',label.range);
  labelEl.title=label.title||label.text;
- const todayButton=$('today'),isCurrent=selected===todayMoscow()&&(!expanded||viewMonth===selected.slice(0,7)+'-01');
- todayButton.classList.toggle('is-current',isCurrent);todayButton.disabled=isCurrent;
+ $('today').disabled=false;
  $('monthToggle').setAttribute('aria-expanded',String(expanded));
  $('monthToggle').setAttribute('aria-label',label.text+'. '+(expanded?'Свернуть календарь месяца':'Раскрыть календарь месяца'));
  $('prev').hidden=expanded;$('next').hidden=expanded;
@@ -531,7 +531,12 @@ function makeMonthPanel(month,dateSet){
  const grid=document.createElement('div');grid.className='days month-view';grid.setAttribute('role','group');grid.setAttribute('aria-label',name);
  for(const name of ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']){const el=document.createElement('span');el.className='month-weekday';el.textContent=name;grid.append(el)}
  const start=monday(month),total=Math.ceil(((shown.getUTCDay()+6)%7+new Date(Date.UTC(shown.getUTCFullYear(),shown.getUTCMonth()+1,0)).getUTCDate())/7)*7;
- for(let i=0;i<total;i++)grid.append(makeDateButton(daysFrom(start,i),dateSet,month));
+ for(let i=0;i<total;i++){
+  const dt=daysFrom(start,i);
+  if(dt.slice(0,7)!==month.slice(0,7)){
+   const blank=document.createElement('span');blank.className='month-blank';blank.setAttribute('aria-hidden','true');grid.append(blank);
+  }else grid.append(makeDateButton(dt,dateSet,month));
+ }
  panel.append(grid);return panel;
 }
 function monthOffset(panel){return panel.offsetTop}
