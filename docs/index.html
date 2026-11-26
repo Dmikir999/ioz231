@@ -253,7 +253,7 @@ header .group{background:#ffe5e8;border-radius:14px;font-weight:700}
 /* Calendar reference design: circular dates, unboxed navigation and soft agenda cards. */
 :root{--red:#cf1025;--red-dark:#c20b20;--ink:#111114;--muted:#666368;--line:#e8e3e7;background:#faf8f9}
 html,body{background:#faf8f9;color:var(--ink)}
-main.app-shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(6,auto);align-content:start;background:radial-gradient(ellipse at 100% 17%,#f8e9ee 0%,transparent 49%),linear-gradient(160deg,#fcfafb 0%,#f6f4f6 100%);min-height:100vh;min-height:100dvh;padding:calc(env(safe-area-inset-top,0px) + 10px) env(safe-area-inset-right,0px) calc(14px + env(safe-area-inset-bottom,0px)) env(safe-area-inset-left,0px)}
+main.app-shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(6,auto);align-content:start;background:radial-gradient(ellipse at 100% 17%,rgba(248,233,238,.38) 0%,rgba(248,233,238,.16) 22%,transparent 46%),linear-gradient(160deg,#fcfafb 0%,#f6f4f6 100%);min-height:100vh;min-height:100dvh;padding:calc(env(safe-area-inset-top,0px) + 10px) env(safe-area-inset-right,0px) calc(14px + env(safe-area-inset-bottom,0px)) env(safe-area-inset-left,0px)}
 main.app-shell:before,main.app-shell:after{display:none;content:none}
 .calendar-section,.schedule-section,header,.more,footer,.verification{grid-column:1;width:100%;max-width:960px;justify-self:center;padding-left:24px;padding-right:24px}
 .calendar-section{grid-row:1;position:relative}
@@ -370,7 +370,7 @@ footer{grid-row:6;margin-top:16px}
 
 /* Header above calendar; continuous safe-area background and inline month grid. */
 :root,html,body{background:#faf7f8}
-main.app-shell{background:linear-gradient(to bottom,#faf7f8 0,transparent calc(env(safe-area-inset-top,0px) + 70px)),radial-gradient(ellipse at 100% 17%,#f8e9ee 0%,transparent 49%),linear-gradient(160deg,#fcfafb 0%,#f6f4f6 100%);padding-top:calc(env(safe-area-inset-top,0px) + 7px)}
+main.app-shell{background:linear-gradient(to bottom,#faf7f8 0,transparent calc(env(safe-area-inset-top,0px) + 70px)),radial-gradient(ellipse at 100% 17%,rgba(248,233,238,.38) 0%,rgba(248,233,238,.16) 22%,transparent 46%),linear-gradient(160deg,#fcfafb 0%,#f6f4f6 100%);padding-top:calc(env(safe-area-inset-top,0px) + 7px)}
 header{grid-row:1;padding-top:0;padding-bottom:12px}
 header .appname{font-size:20px}
 header .group{font-size:14px;padding:7px 13px}
