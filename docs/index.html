@@ -455,6 +455,53 @@ html,body,button,a,summary{touch-action:manipulation}
 .week-nav .month-step svg{width:21px;height:21px}
 @media(min-width:851px){.month-scroll{max-height:min(450px,55vh)}.month-panel .day strong{font-size:22px}}
 @media(max-width:360px){.month-scroll{max-height:min(350px,48vh)}}
+
+/* Control hierarchy v2: selected dates, primary controls, secondary actions, passive information. */
+:root{--control-fill:#fff;--control-shadow:0 2px 8px rgba(42,25,34,.055),0 1px 2px rgba(42,25,34,.035);--control-radius:22px}
+header{display:flex;align-items:baseline;justify-content:flex-start;gap:8px}
+header .appname{flex:0 1 auto}
+header .group{flex:0 0 auto;background:transparent;border:0;border-radius:0;box-shadow:none;padding:0;margin:0;color:var(--muted)}
+.controls{gap:8px}
+.month-toggle{flex:0 1 auto;min-width:0;min-height:44px;height:44px;padding:0 12px;gap:5px;background:var(--control-fill);border:0;border-radius:var(--control-radius);box-shadow:var(--control-shadow);justify-content:center}
+.month-toggle strong{min-width:0}
+.month-toggle svg:last-child{flex:none}
+.week-nav{flex:0 0 auto;gap:0;height:44px;min-height:44px;padding:0 2px;align-items:center;background:var(--control-fill);border-radius:var(--control-radius);box-shadow:var(--control-shadow)}
+.week-nav .icon-button,.week-nav .month-step,.week-nav .today-button{height:44px;min-height:44px;background:transparent;border:0;box-shadow:none;border-radius:var(--control-radius);transition:background-color .12s ease,transform .12s ease}
+.week-nav .icon-button,.week-nav .month-step{width:44px;min-width:44px;padding:0}
+.week-nav .icon-button svg,.week-nav .month-step svg{width:20px;height:20px}
+.week-nav .today-button{min-width:44px;padding:0 8px;font-weight:500}
+.month-toggle{transition:background-color .12s ease,transform .12s ease}
+.week-nav button:active,.month-toggle:active{background:#cf10250b;transform:scale(.98)}
+@media(hover:hover) and (pointer:fine){.week-nav button:hover,.month-toggle:hover{background:#fdf5f7}}
+/* Non-interactive labels retain their semantic colors, but not button-like surfaces. */
+.lesson .chip,.lesson .chip.room{background:transparent;border:0;border-radius:0;box-shadow:none;padding:0}
+.lesson .chip.room{color:var(--red-dark)}
+.lesson .details{gap:6px 14px}
+.lesson .teacher svg{margin-left:0}
+.verification .source-tag,.verification .source-tag.good,.verification .source-tag.warn,.verification .source-tag.bad{background:transparent;border:0;border-radius:0;box-shadow:none;padding:0}
+.verification{gap:9px 16px}
+footer .refresh{background:transparent;border:0;border-radius:10px;box-shadow:none;color:var(--red-dark);min-height:44px;padding:0 4px;font-weight:650}
+footer .refresh:active{background:#cf10250b}
+@media(max-width:520px){
+ .month-toggle{padding:0 10px;gap:4px}
+ .month-toggle strong{font-size:clamp(14px,4vw,19px)}
+ .week-nav .today-button{padding:0 6px}
+ .controls{gap:8px}
+ .lesson .details{gap:6px 12px}
+}
+@media(max-width:360px){
+ .controls{gap:4px}
+ .month-toggle{padding:0 7px;gap:3px}
+ .month-toggle strong{font-size:13px}
+ .week-nav{padding:0}
+ .week-nav .today-button{padding:0 4px}
+}
+@media(min-width:851px){
+ .month-toggle{padding:0 16px}
+ .week-nav{padding:0 4px}
+ .week-nav .today-button{padding:0 14px}
+}
+@media(prefers-reduced-motion:reduce){.month-toggle,.week-nav button,footer .refresh{transition:none!important;transform:none!important}}
 </style>
 </head>
 <body>
