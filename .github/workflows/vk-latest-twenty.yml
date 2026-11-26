@@ -1,0 +1,69 @@
+name: VK latest twenty read-only audit
+on:
+  push:
+    branches: [vk-parser-v2-shadow]
+    paths: ['.github/workflows/vk-latest-twenty.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch public VK bulletins and compare in memory
+        env:
+          VK_TOKEN: ${{ secrets.VK_TOKEN }}
+        run: |
+          python - <<'PY'
+          import re, json, copy
+          from datetime import date, datetime
+          from pathlib import Path
+          from scripts import engine as old
+          from scripts import vk_parser_v2 as new
+
+          try:
+              feed = old.fetch_vk_posts()
+          except Exception as exc:
+              print(json.dumps({'error':'VK API unavailable','error_type':type(exc).__name__}))
+              raise SystemExit(1)
+          base = json.loads(Path('data/base.json').read_text(encoding='utf-8'))
+          known = {p['id'] for p in json.loads(Path('data/posts.json').read_text(encoding='utf-8'))['items']}
+          periods = [(date.fromisoformat(a),date.fromisoformat(b)) for a,b in base['semester']['periods']]
+          entries = base['entries']
+          change = re.compile(r'перен[её]с|перенос|отмен|изменени[ея]\s+(?:расписани|аудитор)|замен|вместо|не\s+состо|не\s+будет|пройд[её]т\s+в\s+ауд|пройдут\s+в\s+ауд|будет\s+в\s+ауд|дистанцион|заняти[ея].{0,150}\bауд\.',re.I|re.S)
+          tags = re.compile(r'#[А-ЯЁA-Z][А-ЯЁA-Z0-9_-]*?[_-]?\d{2,3}(?!\d)',re.I)
+          group = re.compile(r'(?<![А-ЯЁA-Z0-9])(?:И[ОO0][З3]|ИЯЗ|ИСТОБЩ)[ _–—-]?\d{2,3}(?!\d)',re.I)
+          def normalize(text):
+              text=tags.sub('#ИОЗ_231',text)
+              text=group.sub('ИОЗ_231',text)
+              text=re.sub(r'#ИОЗ_231(?:\s*[,;/]\s*#ИОЗ_231)+','#ИОЗ_231',text)
+              return text if old._target(text) else '#ИОЗ_231 — '+text
+          candidates=[]
+          seen=set()
+          for p in sorted(feed,key=lambda p:(p.get('date',0),p.get('id',0)),reverse=True):
+              if p.get('id') in seen or p.get('is_pinned'):continue
+              seen.add(p.get('id'))
+              text=p.get('text','')
+              if change.search(text):candidates.append(p)
+          latest=candidates[:20]
+          unseen=[p for p in candidates if p.get('id') not in known][:20]
+          def evaluate(p):
+              q=copy.deepcopy(p);q['text']=normalize(p.get('text',''))
+              _,old_notices,old_applied=old.apply_changes(entries,[q],periods)
+              _,report=new.analyze(entries,[q],periods)
+              item=report[0] if report else {}
+              ops=item.get('operations',[])
+              return dict(id=p['id'],url=f"https://vk.com/wall{p.get('owner_id','')}_{p['id']}",date=datetime.fromtimestamp(p['date'],old.TZ).isoformat(),previously_cached=p['id'] in known,original=p.get('text',''),attachments=[a.get('type') for a in p.get('attachments',[])],normalized=q['text'],old_applicable=bool(old_applied),old_review=[n.get('reason') for n in old_notices],new_applicable=item.get('status')=='applicable',new_recognized=bool(ops) and all('operation' in x for x in ops),new_operations=ops,new_reason=item.get('reason'))
+          rows=[evaluate(p) for p in latest]
+          extra=[evaluate(p) for p in unseen if p['id'] not in {x['id'] for x in latest}]
+          result=dict(feed_count=len(feed),candidate_count=len(candidates),latest_count=len(rows),latest=rows,additional_unseen=extra,unseen_ids=[p['id'] for p in unseen],note='Independent tests against unchanged IOZ-231 baseline. Group tags hypothetically replaced; other-group teachers are not fabricated. Recognized means all emitted clauses yielded structured operations, not human-verified correctness.')
+          print('VK_AUDIT_RESULT_BEGIN')
+          print(json.dumps(result,ensure_ascii=False))
+          print('VK_AUDIT_RESULT_END')
+          PY
