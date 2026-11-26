@@ -27,6 +27,7 @@ jobs:
           from scripts import engine as old
           from scripts import vk_parser_v2 as new
           from scripts.vk_language import parse_post
+          from scripts.vk_reconcile import reconcile
 
           try:
               feed = old.fetch_vk_posts()
@@ -78,4 +79,8 @@ jobs:
           print('VK_LANGUAGE_RESULT_BEGIN')
           print(json.dumps({'current_unseen':current,'holdout':holdout,'note':'Structured extraction is not a correctness score; held-out fields have not been manually labeled.'},ensure_ascii=False))
           print('VK_LANGUAGE_RESULT_END')
+          cached=json.loads(Path('data/posts.json').read_text(encoding='utf-8'))['items']
+          print('VK_CONTEXT_RESULT_BEGIN')
+          print(json.dumps([{'id':p['id'],'result':reconcile(entries,p,periods)[1]} for p in cached],ensure_ascii=False))
+          print('VK_CONTEXT_RESULT_END')
           PY
