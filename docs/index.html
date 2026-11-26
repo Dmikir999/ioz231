@@ -604,6 +604,32 @@ footer{margin-top:var(--space-4);padding-top:var(--space-4);padding-bottom:var(-
 
 /* Disable the native WebKit tap rectangle; retain custom press feedback and keyboard focus. */
 html,body,button,a,summary{-webkit-tap-highlight-color:transparent}
+
+/* Minimal pull to refresh: one red ring, no plate or success decoration. */
+:root{--refresh-space:0px;--refresh-top:calc(env(safe-area-inset-top,0px) + 7px)}
+@media(min-width:851px){:root{--refresh-top:28px}}
+main.app-shell{padding-top:calc(var(--refresh-top) + var(--refresh-space))}
+html.refresh-settling main.app-shell{transition:padding-top 240ms var(--motion-ease)}
+#pullRefresh{position:fixed;top:var(--refresh-top);left:0;right:0;transform:none;max-width:none;width:auto;height:var(--refresh-space);padding:0;margin:0;border:0;border-radius:0;box-shadow:none;background:transparent;display:grid;place-items:center;overflow:hidden;color:var(--red);opacity:1;pointer-events:none;transition:none}
+html.refresh-settling #pullRefresh{transition:height 240ms var(--motion-ease)}
+#pullRefresh .refresh-ring{display:block;width:28px;height:28px;opacity:0;transform:scale(.85);transition:opacity 150ms ease,transform 150ms var(--motion-ease)}
+#pullRefresh.is-tracking .refresh-ring{transition:none;opacity:var(--ring-opacity,0);transform:scale(var(--ring-scale,.85))}
+#pullRefresh.is-loading .refresh-ring{opacity:1;transform:scale(1)}
+#pullRefresh.is-finishing .refresh-ring{opacity:0;transform:scale(1)}
+#pullRefresh .ring-track{fill:none;stroke:currentColor;stroke-opacity:.09;stroke-width:2.5}
+#pullRefresh .ring-progress{fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-dasharray:75.3982;stroke-dashoffset:75.3982}
+#pullRefresh.is-loading .ring-spinner{animation:refresh-ring-spin .9s linear infinite;transform-origin:16px 16px}
+#pullRefresh.is-loading .ring-progress{stroke-dasharray:22 75.3982;stroke-dashoffset:0;animation:refresh-ring-arc 1.15s ease-in-out infinite}
+@keyframes refresh-ring-spin{to{transform:rotate(360deg)}}
+@keyframes refresh-ring-arc{0%,100%{stroke-dasharray:18 75.3982}50%{stroke-dasharray:52 75.3982}}
+.refresh-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+footer .refresh:disabled{opacity:.65;cursor:default}
+@media(prefers-reduced-motion:reduce){
+ html.refresh-settling main.app-shell,html.refresh-settling #pullRefresh,#pullRefresh .refresh-ring{transition:none!important}
+ #pullRefresh.is-loading .ring-spinner,#pullRefresh.is-loading .ring-progress{animation:none!important}
+ #pullRefresh.is-loading .ring-progress{stroke-dasharray:52 75.3982}
+ #pullRefresh .refresh-ring{transform:none!important}
+}
 </style>
 </head>
 <body>
@@ -614,9 +640,10 @@ html,body,button,a,summary{-webkit-tap-highlight-color:transparent}
   <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><button type="button" class="month-toggle" id="monthToggle" aria-label="Раскрыть календарь месяца" aria-expanded="false" aria-controls="calendarBody"><strong id="weekLabel">Загрузка…</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button><button type="button" class="month-step" id="monthPrev" aria-label="Предыдущий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7"/></svg></button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button><button type="button" class="month-step" id="monthNext" aria-label="Следующий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div></div><div class="calendar-body" id="calendarBody"><nav class="days" id="days" aria-label="Дни недели"></nav><div id="monthScroll" class="month-scroll" role="region" aria-label="Календарь по месяцам. Прокручивайте вверх и вниз" tabindex="0" hidden></div></div></section>
   <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessons" class="lessons"></div></section>
   <details id="reviewSection" class="more" hidden><summary id="reviewLabel">Непроверенные изменения</summary><div id="reviews"></div></details>
-  <footer><div><div id="updated">Источник данных загружается…</div><div>Неофициальное расписание. При сомнениях сверяй данные с деканатом.</div><div><a data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener">Таблица МГПУ</a> · <a href="https://vk.ru/dekanat_ign" target="_blank" rel="noopener">Изменения ВК</a></div></div><button class="refresh" id="refresh" title="Перезагрузить расписание">Обновить ↻</button></footer>
+  <footer><div><div id="updated">Источник данных загружается…</div><div>Неофициальное расписание. При сомнениях сверяй данные с деканатом.</div><div><a data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener">Таблица МГПУ</a> · <a href="https://vk.ru/dekanat_ign" target="_blank" rel="noopener">Изменения ВК</a></div></div><button class="refresh" id="refresh" title="Получить последнее опубликованное расписание">Обновить ↻</button></footer>
 </div></main>
-<div id="pullRefresh" class="pull-refresh" role="status" aria-live="polite" aria-atomic="true"></div>
+<div id="pullRefresh" class="pull-refresh" aria-hidden="true"><svg class="refresh-ring" viewBox="0 0 32 32"><circle class="ring-track" cx="16" cy="16" r="12"/><g class="ring-spinner"><circle class="ring-progress" cx="16" cy="16" r="12" transform="rotate(-90 16 16)"/></g></svg></div>
+<div id="refreshStatus" class="refresh-sr" role="status" aria-live="polite" aria-atomic="true"></div>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -812,6 +839,7 @@ function render(){
  }else if(schedule.updated_at && Date.now()-new Date(schedule.updated_at).getTime()>48*3600*1000){
   banner='<div class="alert"><strong>Данные давно не обновлялись</strong>Проверка источников могла остановиться. Сверь изменения в паблике.</div>';
  }
+ if(refreshError&&usableSchedule(schedule))banner='<div class="alert"><strong>Не удалось обновить расписание</strong>Показана последняя сохранённая версия. Проверь подключение и попробуй снова.</div>'+banner;
  $('banner').innerHTML=banner;
  const list=$('lessons'),nextList=document.createElement('div');
  if(!lessons.length){
@@ -857,14 +885,49 @@ function render(){
  $('updated').textContent=schedule?.updated_at?`Версия расписания: ${new Date(schedule.updated_at).toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow',day:'numeric',month:'short',year:'numeric'})}`:'Расписание ещё не проверялось';
  return lessonsChanged;
 }
-async function load(){try{
+const scheduleCacheKey='ioz231:lastValidSchedule:v1';
+let refreshError=false,loadFlight=null,lastFetchAttempt=0;
+function usableSchedule(value){
+ return !!value&&value.group==='ИОЗ-231'&&value.status!=='unavailable'&&Array.isArray(value.entries)&&value.entries.every(e=>e&&typeof e.date==='string'&&typeof e.time==='string');
+}
+function readScheduleCache(){try{const value=JSON.parse(localStorage.getItem(scheduleCacheKey)||'null');return usableSchedule(value)?value:null}catch{return null}}
+function writeScheduleCache(value){try{localStorage.setItem(scheduleCacheKey,JSON.stringify(value))}catch{}}
+async function fetchSchedule(){
  const embedded=$('embedded-data');
- if(location.protocol==='file:'&&embedded){schedule=JSON.parse(embedded.textContent)}
- else {let response=await fetch('./schedule.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);schedule=await response.json()}
- if(schedule.group!=='ИОЗ-231')throw Error('Загружена неверная группа');
-}catch(err){console.error(err);schedule={group:'ИОЗ-231',status:'unavailable',entries:[],notices:[]};}const hadContent=$('lessons').childElementCount>0,changed=render();if(hadContent&&changed)animateLessons()}
-
-
+ if(location.protocol==='file:'&&embedded)return JSON.parse(embedded.textContent);
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
+ try{
+  const response=await fetch('./schedule.json?v='+Date.now(),{cache:'no-store',signal:controller.signal});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  return await response.json();
+ }finally{clearTimeout(timeout)}
+}
+function load(){
+ if(loadFlight)return loadFlight;
+ lastFetchAttempt=Date.now();
+ const button=$('refresh');button.disabled=true;button.textContent='Обновляем…';button.setAttribute('aria-busy','true');
+ $('refreshStatus').textContent='Обновление расписания';
+ loadFlight=(async()=>{
+  let ok=false;
+  try{
+   const next=await fetchSchedule();
+   if(!usableSchedule(next))throw Error('Расписание недоступно или некорректно');
+   const hadContent=$('lessons').childElementCount>0;
+   schedule=next;refreshError=false;
+   const changed=render();writeScheduleCache(next);if(hadContent&&changed)animateLessons();
+   ok=true;
+  }catch(err){
+   console.error(err);refreshError=true;
+   if(!usableSchedule(schedule))schedule=readScheduleCache()||{group:'ИОЗ-231',status:'unavailable',entries:[],notices:[]};
+   render();
+  }finally{
+   button.disabled=false;button.textContent='Обновить ↻';button.removeAttribute('aria-busy');
+   $('refreshStatus').textContent=ok?'Расписание обновлено':usableSchedule(schedule)?'Не удалось обновить. Показано сохранённое расписание':'Не удалось загрузить расписание';
+  }
+  return ok;
+ })().finally(()=>{loadFlight=null});
+ return loadFlight;
+}
 
 function haptic(){try{if(typeof navigator.vibrate==='function')navigator.vibrate(8)}catch{}}
 let selectionMotion=null,weekMotion=null,lastLessonMotion=-Infinity;
@@ -1027,7 +1090,7 @@ $('days').addEventListener('touchend',e=>{
 },{passive:true});
 $('days').addEventListener('touchcancel',()=>{endWeekDrag();swipe=null},{passive:true});
 $('days').addEventListener('click',e=>{if(e.detail!==0&&Date.now()<suppressTapUntil){e.preventDefault();e.stopPropagation()}},true);
-$('refresh').onclick=load;load();
+$('refresh').onclick=()=>startRefresh(window.scrollY<=1);
 let lastCalendarToday=todayMoscow();
 function updateCalendarToday(){
  const current=todayMoscow();if(current===lastCalendarToday)return;
@@ -1035,59 +1098,95 @@ function updateCalendarToday(){
  if(wasToday){selected=current;viewMonth=current.slice(0,7)+'-01';saveSelectedDate();render()}
  else renderCalendar();
 }
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateCalendarToday()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){updateCalendarToday();if(Date.now()-lastFetchAttempt>=60000&&!refreshBusy)load()}});
 window.addEventListener('pageshow',updateCalendarToday);
 setInterval(()=>{if(!document.hidden)updateCalendarToday()},60000);
 
-/* Pull down at the top to reload both the page and its schedule. */
-(function setupPullToRefresh(){
- const indicator=$('pullRefresh');
- const threshold=80;
- let gesture=null,reloading=false,ready=false;
- function reset(){
-  gesture=null;ready=false;
-  indicator.classList.remove('is-visible','is-tracking');
-  indicator.style.removeProperty('--pull-shift');
-  indicator.textContent='';
+/* Native-feeling pull to refresh, without reloading the document. */
+const refreshIndicator=$('pullRefresh'),refreshArc=refreshIndicator.querySelector('.ring-progress');
+const REFRESH_THRESHOLD=80,REFRESH_HOLD=46,REFRESH_CIRC=2*Math.PI*12;
+let refreshBusy=false,pullGesture=null,pullSuppressUntil=0,refreshCollapseTimer=0;
+const waitRefresh=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function setRefreshSpace(px,settle=false){
+ document.documentElement.classList.toggle('refresh-settling',settle&&!reducedMotion());
+ document.documentElement.style.setProperty('--refresh-space',Math.max(0,px)+'px');
+}
+function setRefreshProgress(value){
+ const p=Math.min(1,Math.max(0,value));
+ refreshArc.style.strokeDashoffset=String(REFRESH_CIRC*(1-p));
+ refreshIndicator.style.setProperty('--ring-opacity',String(Math.min(1,p*2)));
+ refreshIndicator.style.setProperty('--ring-scale',String(.85+p*.15));
+}
+function resetPull(settle=true){
+ clearTimeout(refreshCollapseTimer);
+ refreshIndicator.classList.remove('is-tracking','is-loading');
+ refreshIndicator.classList.add('is-finishing');
+ setRefreshSpace(0,settle);setRefreshProgress(0);
+ refreshCollapseTimer=setTimeout(()=>{refreshIndicator.classList.remove('is-finishing');document.documentElement.classList.remove('refresh-settling')},settle&&!reducedMotion()?250:0);
+}
+async function startRefresh(showRing=true){
+ if(refreshBusy)return;
+ refreshBusy=true;pullGesture=null;clearTimeout(refreshCollapseTimer);
+ const began=performance.now();
+ if(showRing){
+  refreshIndicator.classList.remove('is-tracking','is-finishing');
+  refreshIndicator.classList.add('is-loading');
+  setRefreshProgress(1);setRefreshSpace(REFRESH_HOLD,true);
+ }else resetPull(false);
+ try{
+  const ok=await load();
+  if(showRing){
+   if(!reducedMotion())await waitRefresh(Math.max(0,300-(performance.now()-began)));
+   refreshIndicator.classList.remove('is-loading');
+   refreshIndicator.classList.add('is-finishing');
+   // No success mark, no artificial completion or visible status label.
+   if(ok)setRefreshProgress(1);
+   if(!reducedMotion())await waitRefresh(90);
+  }
+ }finally{
+  resetPull(true);refreshBusy=false;
  }
- document.addEventListener('touchstart',event=>{
-  if(reloading)return;
-  reset();
-  if(event.touches.length!==1||window.scrollY>0)return;
-  if(event.target.closest('input,textarea,select,[contenteditable],.calendar-section'))return;
-  const touch=event.touches[0];
-  gesture={x:touch.clientX,y:touch.clientY,distance:0,active:false};
- },{passive:true});
- document.addEventListener('touchmove',event=>{
-  if(!gesture||reloading)return;
-  if(event.touches.length!==1){reset();return;}
-  const touch=event.touches[0],dx=touch.clientX-gesture.x,dy=touch.clientY-gesture.y;
-  if(!gesture.active){
-   if(window.scrollY>0||dy<0||Math.abs(dx)>12&&Math.abs(dx)>dy){reset();return;}
-   if(dy<12||dy<=Math.abs(dx))return;
-   gesture.active=true;
-  }
-  if(event.cancelable)event.preventDefault();
-  gesture.distance=Math.max(0,dy);
-  const nextReady=gesture.distance>=threshold;
-  indicator.classList.add('is-tracking');
-  if(!reducedMotion())indicator.style.setProperty('--pull-shift',Math.min(20,Math.max(-45,gesture.distance*.65-45))+'px');
-  indicator.classList.toggle('is-visible',gesture.distance>12);
-  if(indicator.textContent===''||ready!==nextReady){
-   ready=nextReady;
-   indicator.textContent=ready?'Отпустите для обновления ↻':'Потяните вниз для обновления ↓';
-  }
- },{passive:false});
- document.addEventListener('touchend',event=>{
-  if(event.touches.length)return;
-  if(!gesture||!gesture.active||!ready){reset();return;}
-  gesture=null;reloading=true;
-  indicator.classList.remove('is-tracking');indicator.style.removeProperty('--pull-shift');
-  indicator.textContent='Обновляем страницу…';
-  window.location.reload();
- },{passive:true});
- document.addEventListener('touchcancel',reset,{passive:true});
-})();
+}
+function canPull(target){
+ return window.scrollY<=1&&!target.closest('input,textarea,select,[contenteditable],#monthScroll');
+}
+document.addEventListener('touchstart',event=>{
+ if(refreshBusy||loadFlight)return;
+ if(event.touches.length!==1){if(pullGesture?.active)resetPull();pullGesture=null;return}
+ pullSuppressUntil=0;pullGesture=null;
+ if(!canPull(event.target))return;
+ const t=event.touches[0];pullGesture={x:t.clientX,y:t.clientY,active:false,distance:0};
+},{passive:true});
+document.addEventListener('touchmove',event=>{
+ if(!pullGesture||refreshBusy)return;
+ if(event.touches.length!==1){pullGesture=null;resetPull();return}
+ const t=event.touches[0],dx=t.clientX-pullGesture.x,dy=t.clientY-pullGesture.y;
+ if(!pullGesture.active){
+  if(window.scrollY>1||dy<0||(Math.abs(dx)>12&&Math.abs(dx)>=dy)){pullGesture=null;return}
+  if(dy<10||dy<Math.abs(dx)*1.25)return;
+  if(!event.cancelable){pullGesture=null;return}
+  pullGesture.active=true;clearTimeout(refreshCollapseTimer);
+  refreshIndicator.classList.remove('is-finishing');refreshIndicator.classList.add('is-tracking');
+ }
+ if(event.cancelable)event.preventDefault();
+ const distance=Math.max(0,dy),p=Math.min(1,distance/REFRESH_THRESHOLD);
+ pullGesture.distance=distance;setRefreshProgress(p);
+ const offset=distance<=REFRESH_THRESHOLD?distance*.60:48+Math.min(12,(distance-REFRESH_THRESHOLD)*.12);
+ setRefreshSpace(reducedMotion()?(distance>12?REFRESH_HOLD:0):offset,false);
+},{passive:false});
+document.addEventListener('touchend',event=>{
+ if(event.touches.length||!pullGesture)return;
+ const g=pullGesture;pullGesture=null;if(!g.active)return;
+ pullSuppressUntil=Date.now()+350;
+ if(g.distance>=REFRESH_THRESHOLD)startRefresh(true);else resetPull();
+},{passive:true});
+document.addEventListener('touchcancel',()=>{if(pullGesture?.active)resetPull();pullGesture=null},{passive:true});
+document.addEventListener('click',event=>{
+ if(event.detail!==0&&Date.now()<pullSuppressUntil){event.preventDefault();event.stopPropagation()}
+},true);
+const cachedSchedule=readScheduleCache();
+if(cachedSchedule){schedule=cachedSchedule;render()}
+load();
 
 </script>
 </body></html>
