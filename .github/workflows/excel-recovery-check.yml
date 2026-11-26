@@ -1,0 +1,42 @@
+name: Excel recovery read-only check
+on:
+  push:
+    branches: [excel-auto-recovery]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -q
+      - name: Validate actual public workbook without publishing
+        env:
+          XLSX_DIRECT_URL: ${{ secrets.XLSX_DIRECT_URL }}
+        run: |
+          python - <<'PY'
+          import json, hashlib
+          from pathlib import Path
+          from datetime import date
+          from scripts.engine import fetch_mail_xlsx
+          from scripts.xlsx_reader import parse_xlsx
+          c=json.loads(Path('semester.json').read_text())
+          p=[tuple(map(date.fromisoformat,x)) for x in c['periods']]
+          def validate(blob):
+              entries,warnings=parse_xlsx(blob,c['sheet'],p)
+              if not entries: raise ValueError('Empty workbook')
+              return entries,warnings
+          try:
+              blob=fetch_mail_xlsx(c['source'],validate=validate)
+              entries,warnings=validate(blob)
+              print('RECOVERY_LIVE '+json.dumps({'success':True,'lessons':len(entries),'warnings':len(warnings),'sha256':hashlib.sha256(blob).hexdigest()}))
+          except Exception as exc:
+              print('RECOVERY_LIVE '+json.dumps({'success':False,'reason':str(exc)},ensure_ascii=False))
+              # Distinguish upstream outage from code test failure.
+          PY

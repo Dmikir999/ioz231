@@ -77,27 +77,10 @@ def _mail_download_hosts(dispatcher):
     return hosts
 
 
-def fetch_mail_xlsx(source):
-    # Manual override is useful for diagnostics, but Cloud Mail links expire:
-    # the normal path must resolve a new URL on *every* check.
-    direct=os.getenv('XLSX_DIRECT_URL','').strip()
-    if direct and source == MAIL:
-        try:
-            return _download(direct)
-        except Exception as exc:
-            LOG.warning('XLSX_DIRECT_URL is unavailable; trying public link: %s',exc)
-    # Mail returns weblink_get as a LIST OF DICTS containing "url", not
-    # merely strings. Previously every valid dispatcher host was discarded.
-    result=_json_get('https://cloud.mail.ru/api/v2/dispatcher',{'api':'2','build':'cloudweb-1'})
-    hosts=_mail_download_hosts(result)
-    if not hosts:
-        raise RuntimeError('Mail Cloud dispatcher returned no HTTPS weblink_get endpoint')
-    for host in hosts:
-        try:
-            return _download(host+'/'+source.split('/public/', 1)[1])
-        except Exception as exc:
-            LOG.warning('Mail download endpoint failed: %s',exc)
-    raise RuntimeError('Не удалось скачать XLSX ни с одного адреса Mail Cloud')
+def fetch_mail_xlsx(source, validate=None):
+    from scripts.mail_recovery import recover
+    direct=os.getenv('XLSX_DIRECT_URL','').strip() if source==MAIL else ''
+    return recover(source,validate=validate,direct=direct)
 
 
 def _norm(v):return ' '.join(str(v or '').split())
@@ -354,11 +337,14 @@ def run():
     if base.get('group')!=GROUP:entries=[]
     warnings=[];errors=[];source_live=False
     try:
-        blob=fetch_mail_xlsx(source)
-        live,parse_warnings=parse_xlsx(blob, config['sheet'], periods)
-        if not live:raise ValueError('Новый файл не содержит занятий')
-        if switching and parse_warnings:
-            raise ValueError('Проверьте новую таблицу: ' + '; '.join(parse_warnings[:3]))
+        def validate(blob):
+            live,parse_warnings=parse_xlsx(blob, config['sheet'], periods)
+            if not live:raise ValueError('Новый файл не содержит занятий')
+            if switching and parse_warnings:
+                raise ValueError('Проверьте новую таблицу: ' + '; '.join(parse_warnings[:3]))
+            return live,parse_warnings
+        blob=fetch_mail_xlsx(source,validate=validate)
+        live,parse_warnings=validate(blob)
         entries=live;warnings.extend(parse_warnings);source_live=True
         checksum=hashlib.sha256(blob).hexdigest()
         # Save a GROUP-ONLY cached version, never the entire XLSX of other students.
