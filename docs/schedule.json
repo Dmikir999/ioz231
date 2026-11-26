@@ -17,7 +17,7 @@
   ],
   "status": "ok",
   "source_ok": true,
-  "source_live": true,
+  "source_live": false,
   "vk_ok": true,
   "entries": [
     {
@@ -2539,5 +2539,7 @@
     "https://vk.com/wall-70091881_20465"
   ],
   "warnings": [],
-  "errors": []
+  "errors": [
+    "Источник Excel: Не удалось скачать XLSX ни с одного адреса Mail Cloud"
+  ]
 }
