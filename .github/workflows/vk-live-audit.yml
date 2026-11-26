@@ -1,0 +1,80 @@
+name: VK live twenty-post read-only audit
+on:
+  push:
+    branches: [vk-parser-v2-shadow]
+    paths: ['.github/workflows/vk-live-audit.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit latest public posts without saving or deploying
+        env:
+          VK_TOKEN: ${{ secrets.VK_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, re
+          from datetime import date, datetime
+          from pathlib import Path
+          from scripts import engine as old
+          from scripts import vk_parser_v2 as v2
+          base=json.loads(Path('data/base.json').read_text(encoding='utf-8'))
+          entries=base['entries']
+          periods=[(date.fromisoformat(a),date.fromisoformat(b)) for a,b in base['semester']['periods']]
+          posts=old.fetch_vk_posts()
+          posts=sorted(posts,key=lambda p:(p.get('date',0),p.get('id',0)),reverse=True)
+          # Keep chronological newest 20, including non-schedule posts; separately
+          # provide latest 20 likely timetable bulletins from the same actual feed.
+          change=re.compile(r'перен[её]с|перенос|отмен|изменени[ея] (?:аудитор|расписан)|вместо|состоится|состоятся|пройд[её]т|пройдут|заняти[ея].{0,80}ауд\.|замен[аые]|пары? .{0,40}не (?:буд|сост)',re.I|re.S)
+          lesson=re.compile(r'заняти|лекци|лекц\.|практ|пар[ауые]|аудитор|расписан|ауд\.',re.I)
+          def relevant(p):
+              t=p.get('text','')
+              return bool(change.search(t) and lesson.search(t))
+          def hypothetic(t):
+              t=v2.GROUP_TAG.sub('#ИОЗ_231',t)
+              t=old.ANY_GROUP_RE.sub('ИОЗ-231',t)
+              # Only posts with explicit group designation are remapped.
+              return t
+          def audit(p):
+              text=p.get('text','')
+              attachments=p.get('attachments',[])
+              raw={'id':p['id'],'day':datetime.fromtimestamp(p['date'],old.TZ).isoformat(),'url':f"https://vk.com/wall{p['owner_id']}_{p['id']}",'likely_schedule':relevant(p),'attachments':[a.get('type','') for a in attachments]}
+              if not raw['likely_schedule']:
+                  raw['excerpt']=text[:180]
+                  return raw
+              raw['text']=text[:2400]
+              altered=dict(p,text=hypothetic(text))
+              _,report=v2.analyze(entries,[altered],periods)
+              raw['hypothetical']=report
+              # Additional language-only test, with explicitly mentioned names
+              # added to the vocabulary, not to the actual timetable.
+              lexicon=list(entries)
+              for match in v2.RANK.finditer(altered['text']):
+                  name=match[1]
+                  if not v2.known_teachers(lexicon,name):
+                      lexicon.append({'teacher':name})
+              syntax=[]
+              for header,body in v2.scopes(altered):
+                  for clause in v2.clauses(body):
+                      item={'clause':clause}
+                      try:
+                          op=v2.parse_clause(header,clause,altered,lexicon)
+                          item.update(status='recognized',operation=op)
+                      except (ValueError,KeyError) as exc:
+                          item.update(status='review',reason=str(exc))
+                      syntax.append(item)
+              raw['language_only']=syntax
+              return raw
+          newest=posts[:20]
+          bulletins=[p for p in posts if relevant(p)][:20]
+          combined={p['id']:p for p in newest+bulletins}
+          print(json.dumps({'fetched':len(posts),'latest_ids':[p['id'] for p in newest],'bulletin_ids':[p['id'] for p in bulletins],'results':[audit(p) for p in combined.values()]},ensure_ascii=False))
+          PY
