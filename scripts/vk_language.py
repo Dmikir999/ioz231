@@ -108,7 +108,13 @@ def sections(text):
 
 def parse_statement(text,header,stamp):
     flags=[]
-    names=list(dict.fromkeys(m[1] for m in TEACHER.finditer(text)))
+    # Keep multiword personal names when the second capitalized word is
+    # directly followed by a lesson predicate. Do not truncate foreign names.
+    def teacher_name(m):
+        tail=text[m.end():]
+        extra=re.match(r'\s+([А-ЯЁ][а-яё]+)(?=\s+(?:не\s+будет|не\s+состоится|не\s+состоятся|перенесен[оыа]|пройд[её]т|пройдут|в\s+ауд))',tail)
+        return m[1]+(' '+extra[1] if extra else '')
+    names=list(dict.fromkeys(teacher_name(m) for m in TEACHER.finditer(text)))
     if not names:
         bare=BARE_TEACHER.search(text)
         if bare:names=[bare[1]]
