@@ -48,6 +48,11 @@ def resolve_operation(entries,op,url,periods):
     unresolved=[x for x in op['flags'] if x not in CONTEXT_FLAGS]
     if unresolved:raise ValueError('; '.join(unresolved))
     typ=op['type']
+    # Unhandled qualifiers must not silently broaden the requested mutation.
+    if re.search(r'#|(?:\bкроме\b|\bза\s+исключением\b|\bесли\b|\bвозможно\b|\bпредварительно\b|\bдистанцион\w*|\bонлайн\b)',op['text'],re.I):
+        raise ValueError('Дополнительные условия публикации требуют проверки')
+    if re.search(r'\bпо\s+дисциплин[еы]\b',op['text'],re.I) and not op.get('subject_evidence'):
+        raise ValueError('Не удалось однозначно определить дисциплину')
     # Invalid date tokens must never be treated as an omitted source date.
     for token in old.DATE_RE.finditer(op['text']):
         day,month,year=token.groups()
@@ -105,6 +110,8 @@ def resolve_operation(entries,op,url,periods):
             if room:old._set_room(e,room)
         return len(matches),'Исходные пары однозначно найдены по преподавателю, дате и числу занятий'
     if not matches or (a and {e['time'] for e in matches}!=set(a)):raise ValueError('Не найдены все исходные занятия')
+    if typ in ('room','cancel') and not a and not op.get('all_day') and len(matches)>1 and re.search(r'\b(?:занятие|лекция|практическое занятие|пара)\b',op['text'],re.I):
+        raise ValueError('Указано одно занятие, найдено несколько')
     if typ=='room' and not room:raise ValueError('Нет новой аудитории')
     if typ=='cancel' and not op.get('all_day') and any(e.get('parallel_id') for e in matches):raise ValueError('Параллельные занятия требуют проверки')
     if typ=='cancel' and not op.get('all_day') and not op['teachers'] and len({e['time'] for e in matches})!=len(matches):raise ValueError('Неоднозначная отмена')
