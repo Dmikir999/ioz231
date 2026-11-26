@@ -725,6 +725,21 @@ header .group{flex:0 0 auto;font-size:clamp(14px,3.9vw,19px);font-weight:450;lin
 @media(max-width:520px){.lesson .change-badge svg{width:15px;height:15px;flex-basis:15px}}
 @media(max-width:360px){.lesson .change-badge{--badge-inset:8px}}
 @media(min-width:851px){.lesson .change-badge svg{width:19px;height:19px;flex-basis:19px}}
+
+/* Unified final lesson badge: match the change badge's geometry and icon alignment. */
+.lesson .final-semester-badge{
+ --badge-inset:9px;display:flex;width:fit-content;align-items:center;gap:var(--metadata-icon-gap);
+ box-sizing:border-box;max-width:calc(100% + var(--badge-inset));margin-top:12px;
+ margin-inline-start:calc(-1 * var(--badge-inset));padding:6px 9px;
+ border:0;border-radius:10px;background:#fff0e4;color:#a04415;
+ font-size:12px;font-weight:600;line-height:1.35;text-decoration:none;
+}
+.lesson .final-semester-badge::before{content:none}
+.lesson .final-semester-badge svg{width:16px;height:16px;flex:0 0 16px}
+.lesson .final-semester-badge .final-label{min-width:0;overflow-wrap:anywhere}
+@media(max-width:520px){.lesson .final-semester-badge svg{width:15px;height:15px;flex-basis:15px}}
+@media(max-width:360px){.lesson .final-semester-badge{--badge-inset:8px;font-size:11px;padding:6px 8px}}
+@media(min-width:851px){.lesson .final-semester-badge svg{width:19px;height:19px;flex-basis:19px}}
 </style>
 </head>
 <body>
@@ -994,7 +1009,7 @@ function render(){
   el.className='lesson'+(variants.every(v=>v.cancelled)?' cancelled':'');
   const sections=variants.map(e=>{
   const subjectKey=String(e.subject||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('ru-RU');
-  const finalBadge=!e.cancelled&&finalBySubject.get(subjectKey)===e?'<div class="final-semester-badge">Заключительная пара в семестре</div>':'';
+  const finalBadge=!e.cancelled&&finalBySubject.get(subjectKey)===e?'<div class="final-semester-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4m0 0c5-4 9 4 14 0v11c-5 4-9-4-14 0"/></svg><span class="final-label">Заключительная пара в семестре</span></div>':'';
   const previousSlot=e.previous_date&&e.previous_date!==e.date
    ?`${shortFmt.format(date(e.previous_date))}, ${e.previous_time}`:e.previous_time;
   let flag='';
