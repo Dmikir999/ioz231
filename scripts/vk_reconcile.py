@@ -1,6 +1,7 @@
 """Read-only resolution of language operations against a verified group timetable."""
 from __future__ import annotations
 import copy
+import re
 from datetime import date
 from scripts import engine as old
 from scripts.vk_language import parse_post
@@ -34,37 +35,36 @@ def target_rows(entries,op,day,wanted):
     if op.get('kind'):
         needle='лекц' if op['kind']=='lecture' else 'практ'
         pool=[e for e in pool if needle in e.get('kind','').casefold()]
+    if op.get('subject_evidence'):
+        subjects={x.casefold().strip() for x in op['subject_evidence']}
+        pool=[e for e in pool if e.get('subject','').casefold().strip() in subjects]
     if wanted:pool=[e for e in pool if e['time'] in wanted]
+    if teacher_names and set(identities)-{e.get('teacher') for e in pool}:return []
     return pool
 
 def resolve_operation(entries,op,url,periods):
-    if op.get('subgroup') or op.get('groups')!=['ИОЗ-231'] and 'ИОЗ-231' not in op.get('groups',[]):
+    if op.get('subgroup') or 'ИОЗ-231' not in op.get('groups',[]):
         raise ValueError('Не подтверждена принадлежность подгруппе')
     unresolved=[x for x in op['flags'] if x not in CONTEXT_FLAGS]
     if unresolved:raise ValueError('; '.join(unresolved))
     typ=op['type']
-    if typ not in ('room','cancel','transfer','scheduled','restriction'):raise ValueError('Тип изменения требует отдельной сверки')
+    if typ not in ('room','cancel','transfer','scheduled'):raise ValueError('Тип изменения требует отдельной сверки')
     source=op['source_date'];destination=op['destination_date']
     for d in (source,destination):
         if d and periods and not any(a<=date.fromisoformat(d)<=b for a,b in periods):
             raise ValueError('Дата вне учебного периода')
     a=slots(op,'source');b=slots(op,'destination')
+    if typ=='transfer' and source==destination and a and set(a)==set(b):raise ValueError('Исходные и новые пары совпадают')
+    if typ=='transfer' and any(t not in ENDS for t in b):raise ValueError('Новое время не подтверждено сеткой пар ИОЗ-231')
+    if typ=='transfer' and not op['teachers']:raise ValueError('Не указан преподаватель переноса')
     if not op['teachers'] and not (a or op.get('all_day')):raise ValueError('Не определена исходная запись')
     if len(op['rooms'])>1:raise ValueError('Не определено распределение аудиторий')
     room=op['rooms'][0] if op['rooms'] else None
-    if typ in ('scheduled','restriction'):
+    if typ=='scheduled':
         if not b or not destination or not op['teachers']:raise ValueError('Нельзя однозначно подтвердить занятие')
         matches=target_rows(entries,op,destination,b)
         if not matches or len(matches)!=len(b) or {e['time'] for e in matches}!=set(b):
             raise ValueError('Заявленное занятие не найдено однозначно в Excel')
-        if typ=='restriction':
-            # Only explicit "только" plus a confirmed retained lesson can limit
-            # this teacher's lessons on this exact date; don't touch other teachers.
-            if len(op['teachers'])!=1:raise ValueError('Несколько преподавателей')
-            rest=target_rows(entries,op,destination,[])
-            if any(e.get('parallel_id') for e in rest):raise ValueError('Параллельные занятия требуют проверки')
-            for e in rest:
-                if e['time'] not in b:e.update(cancelled=True,changed=True,change_url=url)
         for e in matches:
             if room:old._set_room(e,room)
             e.update(changed=True,change_url=url)
@@ -78,7 +78,8 @@ def resolve_operation(entries,op,url,periods):
             # Already reflected, only if the previous slots were explicitly named.
             if not a or len(a)!=len(b) or not op['teachers']:raise ValueError('Исходное занятие не найдено')
             done=target_rows(entries,op,destination,b)
-            if len(done)!=len(b) or {e['time'] for e in done}!=set(b):raise ValueError('Перенос не подтверждён в Excel')
+            if len(done)!=len(b) or {e['time'] for e in done}!=set(b) or any(e.get('parallel_id') for e in done):raise ValueError('Перенос не подтверждён в Excel')
+            if any(e not in done and not e.get('cancelled') and e['date']==destination and e['time'] in b for e in entries):raise ValueError('Конфликт в новом времени')
             for e,t in zip(sorted(done,key=lambda x:x['time']),a):
                 if room:old._set_room(e,room)
                 e.update(previous_date=source,previous_time=t,changed=True,change_url=url)
@@ -96,6 +97,7 @@ def resolve_operation(entries,op,url,periods):
         return len(matches),'Исходные пары однозначно найдены по преподавателю, дате и числу занятий'
     if not matches or (a and {e['time'] for e in matches}!=set(a)):raise ValueError('Не найдены все исходные занятия')
     if typ=='room' and not room:raise ValueError('Нет новой аудитории')
+    if typ=='cancel' and not op.get('all_day') and any(e.get('parallel_id') for e in matches):raise ValueError('Параллельные занятия требуют проверки')
     if typ=='cancel' and not op.get('all_day') and not op['teachers'] and len({e['time'] for e in matches})!=len(matches):raise ValueError('Неоднозначная отмена')
     for e in matches:
         if typ=='room':old._set_room(e,room)
@@ -105,8 +107,16 @@ def resolve_operation(entries,op,url,periods):
 
 def reconcile(entries,post,periods=None):
     """Atomic per-post, never applies data to disk; no hypothetical group remapping."""
+    # The cache only contains relevant public bulletins. Refuse attachments,
+    # missing identity, unparsed group scope and partial publications.
+    if post.get('attachments'):
+        return copy.deepcopy(entries),{'status':'review','reason':'Вложение требует проверки','operations':[]}
+    if post.get('owner_id')!=-70091881 or not isinstance(post.get('id'),int) or not post.get('date'):
+        return copy.deepcopy(entries),{'status':'review','reason':'Некорректный источник публикации','operations':[]}
     parsed=parse_post(post);target=[op for op in parsed['operations'] if 'ИОЗ-231' in op['groups']]
-    if not target:return copy.deepcopy(entries),{'status':'irrelevant','operations':[]}
+    if not target:
+        status='review' if old._target(post.get('text','')) else 'irrelevant'
+        return copy.deepcopy(entries),{'status':status,'reason':'Нет однозначной операции для ИОЗ-231','operations':[]}
     trial=copy.deepcopy(entries);report=[]
     if any('ИОЗ-231' in x.get('groups',[]) or not x.get('groups') for x in parsed['unparsed']):
         return copy.deepcopy(entries),{'status':'review','reason':'Не разобрана часть публикации','operations':[]}
