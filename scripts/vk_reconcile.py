@@ -48,6 +48,12 @@ def resolve_operation(entries,op,url,periods):
     unresolved=[x for x in op['flags'] if x not in CONTEXT_FLAGS]
     if unresolved:raise ValueError('; '.join(unresolved))
     typ=op['type']
+    # Invalid date tokens must never be treated as an omitted source date.
+    for token in old.DATE_RE.finditer(op['text']):
+        day,month,year=token.groups()
+        try:
+            date(int(year or 2026)+(2000 if year and len(year)==2 else 0),int(month),int(day))
+        except ValueError:raise ValueError('Некорректная дата в публикации')
     if typ not in ('room','cancel','transfer','scheduled'):raise ValueError('Тип изменения требует отдельной сверки')
     source=op['source_date'];destination=op['destination_date']
     for d in (source,destination):
@@ -56,14 +62,16 @@ def resolve_operation(entries,op,url,periods):
     a=slots(op,'source');b=slots(op,'destination')
     if typ=='transfer' and source==destination and a and set(a)==set(b):raise ValueError('Исходные и новые пары совпадают')
     if typ=='transfer' and any(t not in ENDS for t in b):raise ValueError('Новое время не подтверждено сеткой пар ИОЗ-231')
-    if typ=='transfer' and not op['teachers']:raise ValueError('Не указан преподаватель переноса')
+    if typ in ('transfer','room') and not op['teachers']:raise ValueError('Не указан преподаватель изменения')
+    if typ=='cancel' and not op['teachers'] and not op.get('all_day'):raise ValueError('Не указано, чьи занятия отменены')
     if not op['teachers'] and not (a or op.get('all_day')):raise ValueError('Не определена исходная запись')
     if len(op['rooms'])>1:raise ValueError('Не определено распределение аудиторий')
+    if any(t not in ENDS for t in a+b):raise ValueError('Время не подтверждено сеткой пар ИОЗ-231')
     room=op['rooms'][0] if op['rooms'] else None
     if typ=='scheduled':
         if not b or not destination or not op['teachers']:raise ValueError('Нельзя однозначно подтвердить занятие')
         matches=target_rows(entries,op,destination,b)
-        if not matches or len(matches)!=len(b) or {e['time'] for e in matches}!=set(b):
+        if not matches or len(matches)!=len(b) or {e['time'] for e in matches}!=set(b) or any(e.get('parallel_id') for e in matches):
             raise ValueError('Заявленное занятие не найдено однозначно в Excel')
         for e in matches:
             if room:old._set_room(e,room)
