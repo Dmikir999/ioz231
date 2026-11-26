@@ -4,7 +4,7 @@ import copy
 import re
 from datetime import date
 from scripts import engine as old
-from scripts.vk_language import parse_post
+from scripts.vk_language import parse_post, QUALIFIED_TAG, GROUP_LINE, group_id, normalize
 from scripts.vk_parser_v2 import forms, surname
 
 SLOTS={i:old.PAIR_TIMES[k][0] for i,k in enumerate(('V','VI','VII','VIII'),5)}
@@ -74,6 +74,7 @@ def resolve_operation(entries,op,url,periods):
     if typ=='transfer':
         if not b or not destination:raise ValueError('Не указано новое время')
         if len(op['teachers'])>1:raise ValueError('Несколько преподавателей в переносе')
+        if matches and len({(e['subject'],e.get('kind')) for e in matches})>1:raise ValueError('Несколько дисциплин или типов занятия в переносе')
         if not matches:
             # Already reflected, only if the previous slots were explicitly named.
             if not a or len(a)!=len(b) or not op['teachers']:raise ValueError('Исходное занятие не найдено')
@@ -109,11 +110,16 @@ def reconcile(entries,post,periods=None):
     """Atomic per-post, never applies data to disk; no hypothetical group remapping."""
     # The cache only contains relevant public bulletins. Refuse attachments,
     # missing identity, unparsed group scope and partial publications.
+    # Explicit target references must not be lost by malformed group headers.
+    text=normalize(post.get('text',''))
+    mentions_target=old._target(text)
     if post.get('attachments'):
-        return copy.deepcopy(entries),{'status':'review','reason':'Вложение требует проверки','operations':[]}
+        return copy.deepcopy(entries),{'status':'review' if mentions_target else 'irrelevant','reason':'Вложение требует проверки','operations':[]}
     if post.get('owner_id')!=-70091881 or not isinstance(post.get('id'),int) or not post.get('date'):
         return copy.deepcopy(entries),{'status':'review','reason':'Некорректный источник публикации','operations':[]}
     parsed=parse_post(post);target=[op for op in parsed['operations'] if 'ИОЗ-231' in op['groups']]
+    # Never promote course-wide labels, partial subgroup IDs, or a target
+    # mentioned only in unparsed prose to the exact group.
     if not target:
         status='review' if old._target(post.get('text','')) else 'irrelevant'
         return copy.deepcopy(entries),{'status':status,'reason':'Нет однозначной операции для ИОЗ-231','operations':[]}
