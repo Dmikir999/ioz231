@@ -27,8 +27,8 @@ class ProductionSafetyTests(unittest.TestCase):
         self.assertEqual(notices[0]['status'],'review')
 
     def test_real_cache_legacy_equivalence(self):
-        base=json.loads((ROOT/'data/base.json').read_text(encoding='utf-8'))
-        posts=json.loads((ROOT/'data/posts.json').read_text(encoding='utf-8'))['items']
+        base=json.loads((ROOT/'tests/vk_production_baseline.json').read_text(encoding='utf-8'))
+        posts=base['posts']
         periods=[tuple(map(date.fromisoformat,p)) for p in base['semester']['periods']]
         old,old_notices,old_applied=apply_changes(base['entries'],posts,periods)
         new,notices,applied=apply_verified_changes(base['entries'],posts,periods)
