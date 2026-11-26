@@ -13,7 +13,9 @@ from scripts import engine as old
 GROUP_ID=r'[А-ЯЁA-Z]{2,}[ _-]?\d{1,3}(?:\.\d+)?[мМзЗ]?'
 TAG=re.compile(r'#(?P<id>'+GROUP_ID+r')',re.I)
 GROUP_LINE=re.compile(r'^\s*(?:Групп[ауые]\s+)?(?P<id>'+GROUP_ID+r'(?:\s*,\s*'+GROUP_ID+r')*)\s*:?\s*$',re.I)
-LEADING=re.compile(r'^[^\w#]*?(?P<tags>#'+GROUP_ID+r'(?:\s*,\s*#'+GROUP_ID+r')*)(?:\s*,?\s*(?P<sub>подгруппа\s+\d+|КВ))?\s*[—–-]\s*(?P<body>.+)$',re.I)
+GROUP_ITEM=r'#'+GROUP_ID+r'(?:\s*,?\s*(?:подгруппа\s+\d+|КВ))?'
+LEADING=re.compile(r'^[^\w#]*?(?P<tags>'+GROUP_ITEM+r'(?:\s*,\s*'+GROUP_ITEM+r')*)\s*[—–-]\s*(?P<body>.+)$',re.I)
+QUALIFIED_TAG=re.compile(r'#(?P<id>'+GROUP_ID+r')(?:\s*,?\s*(?P<sub>подгруппа\s+\d+|КВ))?',re.I)
 PAIR_NUMBER={k:i for i,k in enumerate(('I','II','III','IV','V','VI','VII','VIII'),1)}
 PAIR=r'(?:VIII|VII|VI|IV|III|II|I|V|[1-8])'
 PAIR_RX=re.compile(r'(?<![\w])('+PAIR+r')(?:\s*[-–—]\s*('+PAIR+r'))?\s*(?:-?(?:я|й|ю|ой|ые|ых)\s+)?пар(?:а|у|е|ы|ах|ой)?\b',re.I)
@@ -82,8 +84,15 @@ def sections(text):
         if not line:continue
         m=LEADING.match(line)
         if m:
-            groups=[group_id(t['id']) for t in TAG.finditer(m['tags'])]
-            sub=m['sub'];out.append((groups[:],sub,' '.join(header),m['body']));continue
+            # Preserve the association of each subgroup with its own group.
+            tags=list(QUALIFIED_TAG.finditer(m['tags']))
+            groups=[group_id(t['id']) for t in tags]
+            qualifiers=[(group_id(t['id']),t['sub']) for t in tags]
+            sub=tags[0]['sub'] if len(tags)==1 else None
+            if len(tags)>1 and any(x[1] for x in qualifiers):
+                for g,q in qualifiers:out.append(([g],q,' '.join(header),m['body']))
+            else:out.append((groups[:],sub,' '.join(header),m['body']))
+            continue
         m=GROUP_LINE.match(line)
         if m:
             groups=[group_id(x.strip()) for x in m['id'].split(',')];sub=None;continue
@@ -112,6 +121,8 @@ def parse_statement(text,header,stamp):
     kind='lecture' if re.search(r'\bлекц',text,re.I) else 'practice' if re.search(r'\bпракт|семинар',text,re.I) else None
     result=dict(teachers=names,rooms=rooms,kind=kind,source_date=None,source_pairs=[],source_times=[],destination_date=None,destination_pairs=[],destination_times=[],flags=flags)
     result['source_dates']=[];result['destination_dates']=[]
+    result['teacher_evidence']=[m[0] for m in TEACHER.finditer(text)] or names[:]
+    result['subject_evidence']=re.findall(r'(?:дисциплин[аеуы]|предмет[ау]?)\s*[«"]([^»"]+)[»"]',text,re.I)
     def source(fragment):
         result.update(source_date=date_one(fragment,stamp,flags),source_dates=date_values(fragment,stamp),source_pairs=pair_numbers(fragment),source_times=time_values(fragment))
     def destination(fragment):
@@ -126,10 +137,10 @@ def parse_statement(text,header,stamp):
         m=re.search(r'\bсо?\s+(.+?)\s+на\s+(.+)',text,re.I)
         if not m:raise ValueError('Не определены части переноса')
         source(m[1]);destination(m[2])
-        if not result['source_date'] and result['destination_date'] and result['source_pairs']:
+        if not result['source_dates'] and result['destination_date'] and result['source_pairs']:
             result['source_date']=result['destination_date']
             result['same_day_inferred']=True
-        if not result['destination_date'] and result['source_date'] and result['destination_pairs']:
+        if not result['destination_dates'] and result['source_date'] and result['destination_pairs']:
             result['destination_date']=result['source_date']
             result['same_day_inferred']=True
     elif re.search(r'\bвместо\s+(?:дисциплины|предмета)\b',text,re.I):
@@ -186,6 +197,14 @@ def parse_statement(text,header,stamp):
     if not names and result['type']=='room' and not result['source_pairs'] and not result['source_times']:
         flags.append('Преподаватель или номер пары не указан')
     result['flags']=list(dict.fromkeys(flags))
+    # Preserve missing fields as missing, not as recognition errors. They remain
+    # blocking flags for the independent reconciliation stage.
+    result['context_needed']=[f for f in result['flags'] if f in (
+        'Исходный номер пары не указан',
+        'Не указано, является ли занятие новым или перенесённым',
+        'Указано только оставшееся занятие; отменяемые пары нужно сверить',
+        'Постоянная смена аудитории: проверить учебный период и все будущие занятия')]
+    result['text_issues']=[f for f in result['flags'] if f not in result['context_needed']]
     return result
 
 def split_clauses(body,header):
@@ -195,7 +214,17 @@ def split_clauses(body,header):
         if re.search(r'изменени[ея]\s+аудиторий',header,re.I):
             chunks.extend(re.split(r',\s*(?=(?:практ\.\s*)?(?:занятия?|лекци[яи])\s+)',part,flags=re.I))
         else:
-            chunks.append(part)
+            # In a transfer bulletin a second clause can inherit its explicitly
+            # named teacher, but not a date or a pair from the first clause.
+            m=re.search(r',\s*а\s+(?=(?:практ\.\s*)?(?:практическое\s+)?занятие\s+с)',part,re.I)
+            if m and TEACHER.search(part[:m.start()]):
+                first,second=part[:m.start()],part[m.end():]
+                teacher=TEACHER.search(first)[0]
+                room=ROOMS.search(second)
+                # A trailing room may apply only to the second clause. Do not copy it.
+                second=re.sub(r'(\bзанятие)\s+(?=с\b)',lambda x:x[1]+' '+teacher+' ',second,count=1,flags=re.I)
+                chunks.extend([first,second])
+            else:chunks.append(part)
     return chunks
 
 def parse_post(post):
@@ -206,7 +235,20 @@ def parse_post(post):
             if not clause:continue
             try:
                 op=parse_statement(clause,header,post['date'])
-                op.update(groups=groups,subgroup=sub,text=clause)
+                inline_sub=re.search(r'\bдля\s+(\d+)(?:-й)?\s+подгруппы\b',clause,re.I)
+                op.update(groups=groups,subgroup=sub or ('подгруппа '+inline_sub[1] if inline_sub else None),text=clause)
+                # Keep the pairing between individual dates and slots rather than
+                # collapsing two destinations into a flat date/slot cross product.
+                if op['type']=='transfer':
+                    move=re.search(r'\bсо?\s+(.+?)\s+на\s+(.+)',clause,re.I)
+                    if move and len(op['destination_dates'])>1:
+                        fragments=re.split(r'\s+и\s+(?=(?:на\s+)?'+PAIR+r'\s+пар)',move[2],flags=re.I)
+                        if len(fragments)>1:
+                            mapped=[]
+                            for fragment in fragments:
+                                ds=date_values(fragment,post['date']);ps=pair_numbers(fragment)
+                                if len(ds)==1 and ps:mapped.append({'date':ds[0],'pairs':ps})
+                            if len(mapped)==len(fragments):op['destination_assignments']=mapped
                 if op['type']=='scheduled' and len(op['destination_dates'])>1 and len(list(PAIR_RX.finditer(clause)))==1:
                     # Common pair range explicitly applies to a list of dates.
                     for when in op['destination_dates']:
