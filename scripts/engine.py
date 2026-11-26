@@ -396,7 +396,9 @@ def run():
         errors.append('VK: '+str(exc))
         relevant=list(known.values())
         LOG.warning('VK unavailable: %s',exc)
-    processed,notices,applied=apply_changes(entries,relevant,periods)
+    # Only the verified production adapter can modify published VK lesson rows.
+    from scripts.vk_production import apply_verified_changes
+    processed,notices,applied=apply_verified_changes(entries,relevant,periods)
     # Allow the site to see a fresh check at least once/day, without 96 commits/day.
     old=read_json(DOCS/'schedule.json',{})
     day=now.date().isoformat()

@@ -1,0 +1,312 @@
+"""VK bulletin language parser. Extract evidence independently of the timetable.
+
+This module deliberately never writes or changes a timetable. Group scope,
+pair numbers, missing fields and conflicting weekdays are preserved for a
+separate safe reconciliation stage. No times are assumed for pairs I-IV.
+"""
+from __future__ import annotations
+import re
+import unicodedata
+from datetime import date, datetime, timedelta
+from scripts import engine as old
+
+GROUP_ID=r'[А-ЯЁA-Z]{2,}[ _-]?\d{1,3}(?:\.\d+)?[мМзЗ]?'
+TAG=re.compile(r'#(?P<id>'+GROUP_ID+r')',re.I)
+GROUP_LINE=re.compile(r'^\s*(?:Групп[ауые]\s+)?(?P<id>'+GROUP_ID+r'(?:\s*,\s*'+GROUP_ID+r')*)\s*:?\s*$',re.I)
+GROUP_ITEM=r'#'+GROUP_ID+r'(?:\s*,?\s*(?:подгруппа\s+\d+|КВ))?'
+LEADING=re.compile(r'^[^\w#]*?(?P<tags>'+GROUP_ITEM+r'(?:\s*,\s*'+GROUP_ITEM+r')*)\s*[—–-]\s*(?P<body>.+)$',re.I)
+QUALIFIED_TAG=re.compile(r'#(?P<id>'+GROUP_ID+r')(?:\s*,?\s*(?P<sub>подгруппа\s+\d+|КВ))?',re.I)
+PAIR_NUMBER={k:i for i,k in enumerate(('I','II','III','IV','V','VI','VII','VIII'),1)}
+PAIR=r'(?:VIII|VII|VI|IV|III|II|I|V|[1-8])'
+PAIR_RX=re.compile(r'(?<![\w])('+PAIR+r')(?:\s*[-–—]\s*('+PAIR+r'))?\s*(?:-?(?:я|й|ю|ой|ые|ых)\s+)?пар(?:а|у|е|ы|ах|ой)?\b',re.I)
+CLOCK=re.compile(r'(?<!\d)([01]?\d|2[0-3]):([0-5]\d)(?!\d)')
+RANK=r'(?:доц\.|проф\.|ст\.\s*(?:преп\.|пр\.)|асс\.|преподавател[ья])'
+NAME=r'[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)*'
+TEACHER=re.compile(RANK+r'\s*(?:[А-ЯЁ]\.\s*){0,2}('+NAME+r')',re.I)
+BARE_TEACHER=re.compile(r'\b(?:занятия?|лекция|практика)\s+('+NAME+r')\s+(?:пройдут|пройд[её]т|в\s+ауд|перен[её]с|отмен)',re.I)
+ROOMS=re.compile(r'\b(?:ауд(?:итори[яиюе]|\.|ории)?|каб(?:инет[еа]|\.)?)\s*№?\s*(\d{3,5}[А-Яа-я]?(?:\s*(?:,|и|/)\s*\d{3,5}[А-Яа-я]?)*)(?!\d)',re.I)
+MOVE=re.compile(r'\bперен[её]с\w*|\bперенос\b',re.I)
+SCHEDULED=re.compile(r'назначен[оыа]|состо[ия]\w*|пройд[её]т|пройдут|будет|будут',re.I)
+CANCEL=re.compile(r'отмен\w*|не\s+состо[ия]\w*|не\s+будет',re.I)
+DAY_NAMES=(
+    ('понедельник','понедельника'),('вторник','вторника','вторинка'),
+    ('среда','среду','среды'),('четверг','четверга'),
+    ('пятница','пятницу','пятницы'),('суббота','субботу','субботы'),
+    ('воскресенье','воскресенья'))
+SENTENCE=re.compile(r';|\n+|(?<=\.)(?<!практ\.)(?<!лекц\.)(?<!доц\.)(?<!проф\.)(?<!ст\.пр\.)(?<!ст\. пр\.)(?<!преп\.)(?<!ауд\.)\s+(?=(?:Практ|Лекц|Заняти|Пара|Все\s+заняти|Вместо|Отмена|Перенос))',re.I)
+
+def normalize(text):
+    text=unicodedata.normalize('NFKC',text or '').replace('\u00a0',' ')
+    text=re.sub(r'\bдоцю\s+', 'доц. ',text,flags=re.I)
+    text=re.sub(r'('+PAIR+r')\s+парад\b',r'\1 пара',text,flags=re.I)
+    text=re.sub(r'(?<=\.)\s*(?=#)', '\n', text)
+    # Repeated predicates and explicit teacher/room clauses are independent.
+    text=re.sub(r'(?<=\.)\s+(?=Так\s+же\s+заняти)', '\n', text,flags=re.I)
+    return text
+
+def group_id(value):
+    return re.sub(r'[ _-]+','-',value.upper())
+
+def pair_numbers(text):
+    out=[]
+    for m in PAIR_RX.finditer(text):
+        def number(v):return int(v) if v.isdigit() else PAIR_NUMBER[v.upper()]
+        a,b=number(m[1]),number(m[2] or m[1])
+        if a>b:raise ValueError('Обратный диапазон пар')
+        out.extend(range(a,b+1))
+    return list(dict.fromkeys(out))
+
+def time_values(text):
+    return list(dict.fromkeys(f'{int(h):02d}:{m}' for h,m in CLOCK.findall(text)))
+
+def date_values(text,stamp):
+    ref=datetime.fromtimestamp(stamp,old.TZ).date()
+    out=old.parse_dates(text,ref.year)
+    for word,delta in [('сегодня',0),('завтра',1),('послезавтра',2)]:
+        if re.search(r'\b'+word+r'\b',text,re.I):out.append((ref+timedelta(days=delta)).isoformat())
+    return list(dict.fromkeys(out))
+
+def date_one(text,stamp,flags):
+    ds=date_values(text,stamp)
+    if len(ds)>1:flags.append('Несколько дат без однозначного назначения');return None
+    if not ds:return None
+    value=ds[0]
+    for i,words in enumerate(DAY_NAMES):
+        if any(re.search(r'\b'+w+r'\b',text,re.I) for w in words) and date.fromisoformat(value).weekday()!=i:
+            flags.append('День недели противоречит дате: '+value)
+    return value
+
+def sections(text):
+    """Retain original groups including course-wide tags, subgroup IDs and headings."""
+    header=[];groups=[];sub=None;out=[]
+    for line in normalize(text).splitlines():
+        line=line.strip()
+        if not line:continue
+        m=LEADING.match(line)
+        if m:
+            # Preserve the association of each subgroup with its own group.
+            tags=list(QUALIFIED_TAG.finditer(m['tags']))
+            groups=[group_id(t['id']) for t in tags]
+            qualifiers=[(group_id(t['id']),t['sub']) for t in tags]
+            sub=tags[0]['sub'] if len(tags)==1 else None
+            if len(tags)>1 and any(x[1] for x in qualifiers):
+                for g,q in qualifiers:out.append(([g],q,' '.join(header),m['body']))
+            else:out.append((groups[:],sub,' '.join(header),m['body']))
+            continue
+        m=GROUP_LINE.match(line)
+        if m:
+            groups=[group_id(x.strip()) for x in m['id'].split(',')];sub=None;continue
+        if line.upper().startswith('ВНИМАНИЕ') and TAG.search(line):
+            groups=[group_id(t['id']) for t in TAG.finditer(line)];sub=None;continue
+        if not groups:
+            header.append(line);continue
+        if TAG.search(line):
+            # Do not silently inherit a previous group's scope.
+            groups=[group_id(t['id']) for t in TAG.finditer(line)];sub=None
+        out.append((groups[:],sub,' '.join(header),line))
+    return out
+
+def parse_statement(text,header,stamp):
+    flags=[]
+    # Keep multiword personal names when the second capitalized word is
+    # directly followed by a lesson predicate. Do not truncate foreign names.
+    def teacher_name(m):
+        tail=text[m.end():]
+        extra=re.match(r'\s+([А-ЯЁ][а-яё]+)(?=\s+(?:не\s+будет|не\s+состоится|не\s+состоятся|перенесен[оыа]|пройд[её]т|пройдут|в\s+ауд))',tail)
+        return m[1]+(' '+extra[1] if extra else '')
+    names=list(dict.fromkeys(teacher_name(m) for m in TEACHER.finditer(text)))
+    if not names:
+        bare=BARE_TEACHER.search(text)
+        if bare:names=[bare[1]]
+    rooms=[]
+    for m in ROOMS.finditer(text):
+        rooms.extend(re.findall(r'\d{3,5}[А-Яа-я]?',m[1]))
+    rooms=list(dict.fromkeys(rooms))
+    # A shared room for multiple named teachers is explicit, not ambiguous.
+    if len(rooms)>1 or (len(names)>1 and not (len(rooms)==1 and re.search(r'изменени[ея]\s+аудиторий',header,re.I))):flags.append('Распределение преподавателей, пар и аудиторий требует сверки')
+    kind='lecture' if re.search(r'\bлекц',text,re.I) else 'practice' if re.search(r'\bпракт|семинар',text,re.I) else None
+    result=dict(teachers=names,rooms=rooms,kind=kind,source_date=None,source_pairs=[],source_times=[],destination_date=None,destination_pairs=[],destination_times=[],flags=flags)
+    result['source_dates']=[];result['destination_dates']=[]
+    result['teacher_evidence']=[m[0] for m in TEACHER.finditer(text)] or names[:]
+    result['subject_evidence']=re.findall(r'(?:дисциплин[аеуы]|предмет[ау]?)\s*[«"]([^»"]+)[»"]',text,re.I)
+    def source(fragment):
+        result.update(source_date=date_one(fragment,stamp,flags),source_dates=date_values(fragment,stamp),source_pairs=pair_numbers(fragment),source_times=time_values(fragment))
+        # Multiple source dates with their own explicit pair numbers.
+        if len(result['source_dates'])>1:
+            parts=re.split(r'\s+и\s+|,\s*(?=\d{1,2}[./]\d{1,2})',fragment)
+            assigned=[]
+            for part in parts:
+                ds=date_values(part,stamp);ps=pair_numbers(part)
+                if len(ds)==1 and ps:assigned.append({'date':ds[0],'pairs':ps})
+            if len(assigned)==len(parts) and {x['date'] for x in assigned}==set(result['source_dates']):
+                result['source_assignments']=assigned
+    def destination(fragment):
+        result.update(destination_date=date_one(fragment,stamp,flags),destination_dates=date_values(fragment,stamp),destination_pairs=pair_numbers(fragment),destination_times=time_values(fragment))
+    if re.search(r'\b(?:сообщим|будет\s+сообщено)\s+(?:позже|отдельно)\b',text,re.I) and not CANCEL.search(text) and not MOVE.search(text):
+        result['type']='pending'
+        flags.append('Подробности будут опубликованы позднее')
+    elif CANCEL.search(text):
+        result['type']='cancel';source(text)
+        if not result['source_date']:result['source_date']=date_one(header,stamp,flags)
+        result['all_day']=bool(re.search(r'\bвсе\s+(?:пары|занятия)|\bзанятия\s+у\s+групп\b',text,re.I))
+        if not names and not result['source_pairs'] and not result['source_times'] and not result['all_day']:
+            flags.append('Объём отмены не указан')
+        if MOVE.search(text):flags.append('Одновременно отмена и перенос')
+    elif MOVE.search(text) or (names and re.search(r'\bсо?\s+.+?\s+на\s+',text,re.I) and not SCHEDULED.search(text)):
+        result['type']='transfer'
+        m=re.search(r'\bсо?\s+(.+?)\s+на\s+(.+)',text,re.I)
+        if not m:raise ValueError('Не определены части переноса')
+        source(m[1]);destination(m[2])
+        if not result['source_dates'] and result['destination_date'] and result['source_pairs']:
+            result['source_date']=result['destination_date']
+            result['same_day_inferred']=True
+        if not result['destination_dates'] and result['source_date'] and result['destination_pairs']:
+            result['destination_date']=result['source_date']
+            result['same_day_inferred']=True
+    elif re.search(r'\bвместо\s+(?:дисциплины|предмета)\b',text,re.I):
+        result['type']='subject_replacement';source(text)
+        result['subjects']=re.findall(r'[«"]([^»"]+)[»"]',text)
+        if len(result['subjects'])!=2:flags.append('Не определены обе дисциплины')
+    elif re.search(r'\bвместо\b.*\bпровед[её]т',text,re.I):
+        result['type']='teacher_replacement';source(text)
+        if len(names)!=2:flags.append('Не определены оба преподавателя')
+    elif SCHEDULED.search(text) and re.search(r'\bвместо\b',text,re.I):
+        result['type']='transfer'
+        before,after=re.split(r'\bвместо\b',text,maxsplit=1,flags=re.I)
+        # "вместо 09.12" is source after the marker; "вместо 09.12 пройдут ..." reverses it.
+        following=re.search(r'\b(?:пройд[её]т|пройдут|состоится|состоятся|будет|будут)\b',after,re.I)
+        if following and date_values(after[:following.start()],stamp):
+            source(after[:following.start()]);destination(after[following.end():])
+        else:
+            source(after);destination(before)
+        bare_pair=re.fullmatch(r'\s*('+PAIR+r')(?:\s*[-–—]\s*('+PAIR+r'))?\s*[).!]*\s*',after,re.I)
+        if bare_pair and not result['source_pairs']:
+            result['source_pairs']=pair_numbers(bare_pair[0].strip(' ).!')+' пары')
+        if not result['source_date'] and result['source_pairs'] and result['destination_date'] and not date_values(after,stamp):
+            result['source_date']=result['destination_date'];result['same_day_inferred']=True
+    elif SCHEDULED.search(text) and re.search(r',?\s+а\s+не\s+',text,re.I):
+        result['type']='transfer'
+        before,after=re.split(r',?\s+а\s+не\s+',text,maxsplit=1,flags=re.I)
+        source(after);destination(before)
+    elif re.search(r'\bизменения\s+в\s+расписании\b',text,re.I) and not SCHEDULED.search(text):
+        result['type']='notice';source(text)
+        flags.append('В публикации нет деталей изменений; требуется сверка с Excel')
+    elif SCHEDULED.search(text) and re.search(r'\bтолько\b',text,re.I):
+        result['type']='restriction';destination(text)
+        flags.append('Указано только оставшееся занятие; отменяемые пары нужно сверить')
+    elif re.search(r'изменени[ея]\s+аудиторий',header,re.I) or (rooms and not pair_numbers(text) and not re.search(r'\bвпредь\b',text,re.I) and re.search(r'в\s+ауд|аудитор',text,re.I)):
+        result['type']='room';source(text)
+        if not result['source_date']:result['source_date']=date_one(header,stamp,flags)
+        if not rooms:flags.append('Не указана аудитория')
+    elif re.search(r'\bвпредь\b',text,re.I) and rooms:
+        result['type']='room_from';result['source_date']=datetime.fromtimestamp(stamp,old.TZ).date().isoformat()
+        flags.append('Постоянная смена аудитории: проверить учебный период и все будущие занятия')
+    elif SCHEDULED.search(text) and (pair_numbers(text) or time_values(text) or (names and date_values(text,stamp))):
+        result['type']='scheduled';destination(text)
+        flags.append('Не указано, является ли занятие новым или перенесённым')
+        if not result['destination_pairs'] and not result['destination_times']:flags.append('Новый номер пары не указан')
+    else:
+        raise ValueError('Не определён тип изменения')
+    if result['source_date'] and not result['source_dates']:result['source_dates']=[result['source_date']]
+    if result['destination_date'] and not result['destination_dates']:result['destination_dates']=[result['destination_date']]
+    if result['type']=='transfer':
+        if not result['source_date']:flags.append('Исходная дата не указана')
+        if not result['source_pairs'] and not result['source_times']:flags.append('Исходный номер пары не указан')
+        if not result['destination_date']:flags.append('Новая дата не указана')
+        if not result['destination_pairs'] and not result['destination_times']:flags.append('Новый номер пары не указан')
+    elif result['type'] in ('scheduled','restriction'):
+        if not result['destination_date']:flags.append('Дата не указана')
+    elif result['type']!='pending' and not result['source_date']:flags.append('Дата не указана')
+    if not names and result['type']=='room' and not result['source_pairs'] and not result['source_times']:
+        flags.append('Преподаватель или номер пары не указан')
+    result['flags']=list(dict.fromkeys(flags))
+    # Preserve missing fields as missing, not as recognition errors. They remain
+    # blocking flags for the independent reconciliation stage.
+    result['context_needed']=[f for f in result['flags'] if f in (
+        'Исходный номер пары не указан',
+        'Не указано, является ли занятие новым или перенесённым',
+        'Указано только оставшееся занятие; отменяемые пары нужно сверить',
+        'Постоянная смена аудитории: проверить учебный период и все будущие занятия')]
+    result['text_issues']=[f for f in result['flags'] if f not in result['context_needed']]
+    return result
+
+def split_clauses(body,header):
+    # Split an explicit room list only when each side has its own named lesson.
+    chunks=[]
+    for part in SENTENCE.split(body):
+        if re.search(r'изменени[ея]\s+аудиторий',header,re.I):
+            chunks.extend(re.split(r',\s*(?=(?:практ\.\s*)?(?:занятия?|лекци[яи])\s+)',part,flags=re.I))
+        else:
+            # In a transfer bulletin a second clause can inherit its explicitly
+            # named teacher, but not a date or a pair from the first clause.
+            m=re.search(r',\s*а\s+(?=(?:практ\.\s*)?(?:практическое\s+)?занятие\s+с)',part,re.I)
+            if m and TEACHER.search(part[:m.start()]):
+                first,second=part[:m.start()],part[m.end():]
+                teacher=TEACHER.search(first)[0]
+                room=ROOMS.search(second)
+                # A trailing room may apply only to the second clause. Do not copy it.
+                second=re.sub(r'(\bзанятие)\s+(?=с\b)',lambda x:x[1]+' '+teacher+' ',second,count=1,flags=re.I)
+                chunks.extend([first,second])
+            else:
+                # A clause with a new pair range and a second named teacher has
+                # its own slot; inherit the date only when there is exactly one
+                # explicit date in the entire sentence.
+                m=re.search(r',\s*(?=на\s+'+PAIR+r'(?:\s*[-–—]\s*'+PAIR+r')?\s+пар)',part,re.I)
+                if m and TEACHER.search(part[:m.start()]) and TEACHER.search(part[m.end():]) and SCHEDULED.search(part[m.end():]):
+                    first,second=part[:m.start()],part[m.end():]
+                    dates_in_first=list(old.DATE_RE.finditer(first))
+                    if len(dates_in_first)==1 and not old.DATE_RE.search(second):
+                        second=dates_in_first[0][0]+' '+second
+                        chunks.extend([first,second])
+                    else:chunks.append(part)
+                else:chunks.append(part)
+    return chunks
+
+def parse_post(post):
+    operations=[];unparsed=[]
+    for groups,sub,header,body in sections(post.get('text','')):
+        for clause in split_clauses(body,header):
+            clause=clause.strip()
+            if not clause:continue
+            try:
+                op=parse_statement(clause,header,post['date'])
+                inline_sub=re.search(r'\bдля\s+(\d+)(?:-й)?\s+подгруппы\b',clause,re.I)
+                op.update(groups=groups,subgroup=sub or ('подгруппа '+inline_sub[1] if inline_sub else None),text=clause)
+                # Keep the pairing between individual dates and slots rather than
+                # collapsing two destinations into a flat date/slot cross product.
+                if op['type']=='transfer':
+                    move=re.search(r'\bсо?\s+(.+?)\s+на\s+(.+)',clause,re.I)
+                    if not move and re.search(r'\bвместо\b',clause,re.I):
+                        after=re.split(r'\bвместо\b',clause,maxsplit=1,flags=re.I)[1]
+                        predicate=SCHEDULED.search(after)
+                        if predicate:
+                            move=re.match(r'(.*)',after[predicate.end():])
+                            destination_fragment=move[1]
+                        else:destination_fragment=None
+                    else:destination_fragment=move[2] if move else None
+                    if destination_fragment and len(op['destination_dates'])>1:
+                        fragments=re.split(r'\s+и\s+(?=(?:на\s+)?'+PAIR+r'\s+пар)',destination_fragment,flags=re.I)
+                        if len(fragments)>1:
+                            mapped=[]
+                            for fragment in fragments:
+                                ds=date_values(fragment,post['date']);ps=pair_numbers(fragment)
+                                if len(ds)==1 and ps:mapped.append({'date':ds[0],'pairs':ps})
+                            if len(mapped)==len(fragments) and {x['date'] for x in mapped}==set(op['destination_dates']):op['destination_assignments']=mapped
+                if op['type']=='scheduled' and len(op['destination_dates'])>1 and len(list(PAIR_RX.finditer(clause)))==1:
+                    # Common pair range explicitly applies to a list of dates.
+                    for when in op['destination_dates']:
+                        item=dict(op,destination_date=when,destination_dates=[when],flags=[f for f in op['flags'] if f not in ('Несколько дат без однозначного назначения','Дата не указана')])
+                        for i,words in enumerate(DAY_NAMES):
+                            if any(re.search(r'\b'+w+r'\b',clause,re.I) for w in words) and date.fromisoformat(when).weekday()!=i:
+                                item['flags'].append('День недели противоречит дате: '+when)
+                        item['context_needed']=[f for f in item['flags'] if f in op['context_needed']]
+                        item['text_issues']=[f for f in item['flags'] if f not in item['context_needed']]
+                        operations.append(item)
+                else:operations.append(op)
+            except ValueError as exc:
+                unparsed.append({'groups':groups,'text':clause,'reason':str(exc)})
+    # Preserve attachments as an explicit unresolved source.
+    if post.get('attachments'):unparsed.append({'reason':'Вложение требует отдельного распознавания'})
+    return dict(post_id=post.get('id'),operations=operations,unparsed=unparsed,
+                status='recognized' if operations and not unparsed else 'review',
+                requires_review=bool(unparsed or not operations or any(x['flags'] for x in operations)))
