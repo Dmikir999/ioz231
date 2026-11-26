@@ -96,10 +96,8 @@ def scopes(post):
     return out
 
 def clauses(body):
-    # Split actual sentences, not abbreviations like "практ. занятия".
-    return [x.strip() for x in re.split(
-        r';|\n+|(?<!практ)(?<!лекц)(?<!доц)(?<!проф)(?<!ст\.пр)(?<!ст\. пр)(?<!ауд)(?<!каб)(?<=\.)\s+(?=(?:Практ|Лекц|Заняти|Пара|Все\s+заняти|Вместо|Отмена|Перенос))',
-        body,flags=re.I) if x.strip()]
+    from scripts.vk_language import SENTENCE
+    return [x.strip() for x in SENTENCE.split(body) if x.strip()]
 
 def known_teachers(entries,text):
     return {e.get('teacher','') for e in entries if e.get('teacher') and mentions(text,e['teacher'])}
