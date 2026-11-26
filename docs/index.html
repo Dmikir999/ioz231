@@ -549,8 +549,8 @@ footer .refresh:active{background:#cf10250b}
 header{gap:var(--space-2);padding-bottom:var(--space-3)}
 .controls{margin-bottom:var(--space-4)}
 .calendar-section{padding-bottom:var(--space-5)}
-.calendar-section #days{gap:2px;margin:0}
-.calendar-section #days .day{gap:var(--space-1)}
+.calendar-section :is(#days,.week-swipe-preview){gap:2px;margin:0}
+.calendar-section :is(#days,.week-swipe-preview) .day{gap:var(--space-1)}
 .section-top{padding:0;gap:var(--space-3);margin-bottom:var(--space-4)}
 .lessons{gap:var(--space-3)}
 .lesson{padding:var(--card-padding);column-gap:var(--card-column-gap)}
@@ -595,6 +595,9 @@ footer{margin-top:var(--space-4);padding-top:var(--space-4);padding-bottom:var(-
 #days .day.selection-moving strong,#days .day.active:not(.today).selection-moving strong{background:transparent}
 #days .date-motion-disc{position:absolute;z-index:0;pointer-events:none;border-radius:50%;background:var(--red)}
 .calendar-body.is-week-moving{overflow:hidden}
+.calendar-section .week-swipe-preview{position:absolute;top:0;left:0;pointer-events:none;user-select:none;z-index:1}
+.calendar-body.is-week-moving #days,.calendar-body.is-week-moving .week-swipe-preview{will-change:transform}
+.calendar-body.is-week-moving .day:active{transform:none}
 .pull-refresh.is-visible{transform:translate(-50%,var(--pull-shift,0px))}
 .pull-refresh.is-tracking{transition:none}
 @media(prefers-reduced-motion:reduce){
@@ -691,11 +694,11 @@ header .group{flex:0 0 auto;font-size:clamp(14px,3.9vw,19px);font-weight:450;lin
 .calendar-section .month-toggle svg:last-child{width:14px;height:14px;color:var(--red)}
 .calendar-section .week-nav{gap:3px;margin-left:auto;flex:0 0 auto}
 .calendar-section .week-nav .today-button{font-size:clamp(14px,3.8vw,18px);padding:0 10px;font-weight:500}
-.calendar-section #days{grid-template-columns:repeat(7,minmax(0,1fr));gap:0;margin:0}
-.calendar-section #days .day{gap:5px;min-width:0;padding:0 0 2px}
-.calendar-section #days .day span{font-size:clamp(12px,3.6vw,16px);font-weight:450;line-height:1.3}
-.calendar-section #days .day strong{width:min(100%,clamp(36px,10.4vw,46px));height:auto;aspect-ratio:1;font-size:clamp(20px,5.4vw,26px);font-weight:700}
-.calendar-section #days .day i{flex:none;margin-top:0}
+.calendar-section :is(#days,.week-swipe-preview){grid-template-columns:repeat(7,minmax(0,1fr));gap:0;margin:0}
+.calendar-section :is(#days,.week-swipe-preview) .day{gap:5px;min-width:0;padding:0 0 2px}
+.calendar-section :is(#days,.week-swipe-preview) .day span{font-size:clamp(12px,3.6vw,16px);font-weight:450;line-height:1.3}
+.calendar-section :is(#days,.week-swipe-preview) .day strong{width:min(100%,clamp(36px,10.4vw,46px));height:auto;aspect-ratio:1;font-size:clamp(20px,5.4vw,26px);font-weight:700}
+.calendar-section :is(#days,.week-swipe-preview) .day i{flex:none;margin-top:0}
 @media(max-width:360px){
  header{gap:12px}header .appname{font-size:24px}header .group{font-size:14px}
  .calendar-section .controls{gap:4px;--control-surface-height:34px;--control-circle-size:34px}
@@ -711,7 +714,7 @@ header .group{flex:0 0 auto;font-size:clamp(14px,3.9vw,19px);font-weight:450;lin
  .calendar-section .week-nav{gap:7px}
  .calendar-section .month-toggle{padding-inline:16px}
  .calendar-section .week-nav .today-button{padding-inline:14px}
- .calendar-section #days .day strong{width:50px;font-size:26px}
+ .calendar-section :is(#days,.week-swipe-preview) .day strong{width:50px;font-size:26px}
 }
 </style>
 </head>
@@ -1058,7 +1061,7 @@ function load(){
 }
 
 function haptic(){try{if(typeof navigator.vibrate==='function')navigator.vibrate(8)}catch{}}
-let selectionMotion=null,weekMotion=null,lastLessonMotion=-Infinity,calendarFold=null;
+let selectionMotion=null,weekMotion=null,weekPreview=null,weekPreviewMotion=null,lastLessonMotion=-Infinity,calendarFold=null;
 function clearSelectionMotion(){
  if(!selectionMotion)return;
  const current=selectionMotion;selectionMotion=null;
@@ -1091,7 +1094,44 @@ function animateSelection(origin,adjacent){
 }
 function clearWeekMotion(){
  const days=$('days');if(weekMotion){const a=weekMotion;weekMotion=null;a.cancel()}
+ if(weekPreviewMotion){weekPreviewMotion.cancel();weekPreviewMotion=null}
+ if(weekPreview){weekPreview.remove();weekPreview=null}
  days.style.transform='';$('calendarBody').classList.remove('is-week-moving');
+}
+function weekTranslate(x){return 'translate3d('+x+'px,0,0)'}
+function buildWeekPreview(delta,copyCurrent=false){
+ if(weekPreview)weekPreview.remove();
+ const days=$('days'),row=document.createElement('div');
+ row.className='days week-swipe-preview';row.dataset.direction=String(delta);
+ row.setAttribute('aria-hidden','true');row.setAttribute('inert','');
+ row.style.left=days.offsetLeft+'px';row.style.top=days.offsetTop+'px';row.style.width=days.clientWidth+'px';
+ if(copyCurrent){
+  for(const button of days.querySelectorAll('.day')){const clone=button.cloneNode(true);clone.tabIndex=-1;row.append(clone)}
+ }else{
+  const target=daysFrom(selected,delta*7),start=monday(target),dateSet=calendarDateSet();
+  for(let i=0;i<7;i++){
+   const dt=daysFrom(start,i),button=makeDateButton(dt,dateSet);
+   button.classList.toggle('active',dt===target);button.tabIndex=-1;row.append(button);
+  }
+ }
+ $('calendarBody').append(row);weekPreview=row;return row;
+}
+function trackWeekDrag(offset){
+ const days=$('days'),width=days.clientWidth,delta=offset<0?1:-1;
+ $('calendarBody').classList.add('is-week-moving');
+ if(!weekPreview||weekPreview.dataset.direction!==String(delta))buildWeekPreview(delta);
+ days.style.transform=weekTranslate(offset);
+ weekPreview.style.transform=weekTranslate(offset+delta*width);
+}
+function settleWeekPair(from,to,previewFrom,previewTo,duration){
+ const days=$('days'),preview=weekPreview;
+ if(reducedMotion()||typeof days.animate!=='function'||!preview){clearWeekMotion();return}
+ $('calendarBody').classList.add('is-week-moving');
+ const options={duration,easing:'cubic-bezier(.22,.61,.36,1)',fill:'both'};
+ const a=days.animate([{transform:weekTranslate(from)},{transform:weekTranslate(to)}],options);
+ weekPreviewMotion=preview.animate([{transform:weekTranslate(previewFrom)},{transform:weekTranslate(previewTo)}],options);
+ weekMotion=a;
+ a.onfinish=()=>{if(weekMotion===a)clearWeekMotion()};
 }
 function cancelCalendarAnimations(){
  clearCalendarFold();clearWeekMotion();clearSelectionMotion();
@@ -1205,10 +1245,17 @@ function selectDate(dt,restoreFocus=false){
 }
 function navigateWeek(delta,drag=0){
  if(expanded)return;
+ const days=$('days'),width=days.clientWidth,slide=!!drag&&width>0&&!reducedMotion()&&typeof days.animate==='function';
  const height=prepareCalendarAnimation();
+ const outgoing=slide?buildWeekPreview(-delta,true):null;
  selected=daysFrom(selected,7*delta);
  viewMonth=selected.slice(0,7)+'-01';saveSelectedDate();haptic();const changed=render();
- animateCalendar(delta,height,drag?Math.min(72,32+Math.abs(drag)*.35):32);if(changed)animateLessons();
+ if(outgoing){
+  const start=drag+delta*width;
+  const duration=Math.round(220+150*Math.min(1,Math.abs(start)/width));
+  settleWeekPair(start,0,drag,-delta*width,duration);
+ }else animateCalendar(delta,height);
+ if(changed)animateLessons();
 }
 function navigateMonth(delta){
  if(!expanded)return;
@@ -1251,8 +1298,8 @@ $('days').addEventListener('keydown',calendarKeydown);
 $('monthScroll').addEventListener('keydown',calendarKeydown);
 let swipe=null,suppressTapUntil=0;
 function dragWeek(dx){
- const limit=Math.min(96,$('days').clientWidth*.30),abs=Math.abs(dx);
- return Math.sign(dx)*(abs<=limit?abs:limit+Math.min(24,(abs-limit)*.15));
+ const width=$('days').clientWidth;
+ return Math.sign(dx)*Math.min(Math.abs(dx),width);
 }
 function endWeekDrag(commit=false,dx=0){
  const current=swipe;swipe=null;
@@ -1260,8 +1307,10 @@ function endWeekDrag(commit=false,dx=0){
  const offset=current.offset||0;
  suppressTapUntil=Date.now()+350;
  if(commit)navigateWeek(dx<0?1:-1,offset);
- else if(offset)animateWeekFrom(offset,180);
- else clearWeekMotion();
+ else if(offset&&weekPreview){
+  const shift=Number(weekPreview.dataset.direction)*$('days').clientWidth;
+  settleWeekPair(offset,0,offset+shift,shift,280);
+ }else clearWeekMotion();
 }
 $('days').addEventListener('touchstart',e=>{
  if(swipe)endWeekDrag();suppressTapUntil=0;
@@ -1277,7 +1326,7 @@ $('days').addEventListener('touchmove',e=>{
  }
  if(swipe.axis==='horizontal'&&!reducedMotion()){
   swipe.offset=dragWeek(dx);
-  $('calendarBody').classList.add('is-week-moving');$('days').style.transform='translateX('+swipe.offset+'px)';
+  trackWeekDrag(swipe.offset);
  }
 },{passive:true});
 $('days').addEventListener('touchend',e=>{
