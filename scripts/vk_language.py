@@ -136,10 +136,15 @@ def parse_statement(text,header,stamp):
                 result['source_assignments']=assigned
     def destination(fragment):
         result.update(destination_date=date_one(fragment,stamp,flags),destination_dates=date_values(fragment,stamp),destination_pairs=pair_numbers(fragment),destination_times=time_values(fragment))
-    if CANCEL.search(text):
+    if re.search(r'\b(?:сообщим|будет\s+сообщено)\s+(?:позже|отдельно)\b',text,re.I) and not CANCEL.search(text) and not MOVE.search(text):
+        result['type']='pending'
+        flags.append('Подробности будут опубликованы позднее')
+    elif CANCEL.search(text):
         result['type']='cancel';source(text)
         if not result['source_date']:result['source_date']=date_one(header,stamp,flags)
-        result['all_day']=bool(re.search(r'\bвсе\s+(?:пары|занятия)',text,re.I))
+        result['all_day']=bool(re.search(r'\bвсе\s+(?:пары|занятия)|\bзанятия\s+у\s+групп\b',text,re.I))
+        if not names and not result['source_pairs'] and not result['source_times'] and not result['all_day']:
+            flags.append('Объём отмены не указан')
         if MOVE.search(text):flags.append('Одновременно отмена и перенос')
     elif MOVE.search(text) or (names and re.search(r'\bсо?\s+.+?\s+на\s+',text,re.I) and not SCHEDULED.search(text)):
         result['type']='transfer'
@@ -177,6 +182,9 @@ def parse_statement(text,header,stamp):
         result['type']='transfer'
         before,after=re.split(r',?\s+а\s+не\s+',text,maxsplit=1,flags=re.I)
         source(after);destination(before)
+    elif re.search(r'\bизменения\s+в\s+расписании\b',text,re.I) and not SCHEDULED.search(text):
+        result['type']='notice';source(text)
+        flags.append('В публикации нет деталей изменений; требуется сверка с Excel')
     elif SCHEDULED.search(text) and re.search(r'\bтолько\b',text,re.I):
         result['type']='restriction';destination(text)
         flags.append('Указано только оставшееся занятие; отменяемые пары нужно сверить')
@@ -202,7 +210,7 @@ def parse_statement(text,header,stamp):
         if not result['destination_pairs'] and not result['destination_times']:flags.append('Новый номер пары не указан')
     elif result['type'] in ('scheduled','restriction'):
         if not result['destination_date']:flags.append('Дата не указана')
-    elif not result['source_date']:flags.append('Дата не указана')
+    elif result['type']!='pending' and not result['source_date']:flags.append('Дата не указана')
     if not names and result['type']=='room' and not result['source_pairs'] and not result['source_times']:
         flags.append('Преподаватель или номер пары не указан')
     result['flags']=list(dict.fromkeys(flags))
@@ -233,7 +241,19 @@ def split_clauses(body,header):
                 # A trailing room may apply only to the second clause. Do not copy it.
                 second=re.sub(r'(\bзанятие)\s+(?=с\b)',lambda x:x[1]+' '+teacher+' ',second,count=1,flags=re.I)
                 chunks.extend([first,second])
-            else:chunks.append(part)
+            else:
+                # A clause with a new pair range and a second named teacher has
+                # its own slot; inherit the date only when there is exactly one
+                # explicit date in the entire sentence.
+                m=re.search(r',\s*(?=на\s+'+PAIR+r'(?:\s*[-–—]\s*'+PAIR+r')?\s+пар)',part,re.I)
+                if m and TEACHER.search(part[:m.start()]) and TEACHER.search(part[m.end():]) and SCHEDULED.search(part[m.end():]):
+                    first,second=part[:m.start()],part[m.end():]
+                    dates_in_first=list(old.DATE_RE.finditer(first))
+                    if len(dates_in_first)==1 and not old.DATE_RE.search(second):
+                        second=dates_in_first[0][0]+' '+second
+                        chunks.extend([first,second])
+                    else:chunks.append(part)
+                else:chunks.append(part)
     return chunks
 
 def parse_post(post):
@@ -250,8 +270,16 @@ def parse_post(post):
                 # collapsing two destinations into a flat date/slot cross product.
                 if op['type']=='transfer':
                     move=re.search(r'\bсо?\s+(.+?)\s+на\s+(.+)',clause,re.I)
-                    if move and len(op['destination_dates'])>1:
-                        fragments=re.split(r'\s+и\s+(?=(?:на\s+)?'+PAIR+r'\s+пар)',move[2],flags=re.I)
+                    if not move and re.search(r'\bвместо\b',clause,re.I):
+                        after=re.split(r'\bвместо\b',clause,maxsplit=1,flags=re.I)[1]
+                        predicate=SCHEDULED.search(after)
+                        if predicate:
+                            move=re.match(r'(.*)',after[predicate.end():])
+                            destination_fragment=move[1]
+                        else:destination_fragment=None
+                    else:destination_fragment=move[2] if move else None
+                    if destination_fragment and len(op['destination_dates'])>1:
+                        fragments=re.split(r'\s+и\s+(?=(?:на\s+)?'+PAIR+r'\s+пар)',destination_fragment,flags=re.I)
                         if len(fragments)>1:
                             mapped=[]
                             for fragment in fragments:
