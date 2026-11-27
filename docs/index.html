@@ -740,6 +740,30 @@ header .group{flex:0 0 auto;font-size:clamp(14px,3.9vw,19px);font-weight:450;lin
 @media(max-width:520px){.lesson .final-semester-badge svg{width:15px;height:15px;flex-basis:15px}}
 @media(max-width:360px){.lesson .final-semester-badge{--badge-inset:8px;font-size:11px;padding:6px 8px}}
 @media(min-width:851px){.lesson .final-semester-badge svg{width:19px;height:19px;flex-basis:19px}}
+/* Footer: source transparency and the same control hierarchy as the calendar. */
+footer{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px 12px;font-size:13px;line-height:1.5;color:#69666b;background:transparent}
+footer .footer-version{grid-column:1;grid-row:1;min-width:0}
+footer .footer-version-label{font-size:12px;color:#716d73;margin-bottom:2px}
+footer #updated{font-size:14px;font-weight:600;color:var(--ink);line-height:1.4}
+footer .refresh{grid-column:2;grid-row:1;justify-self:end;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;padding:0 13px;background:var(--control-fill,#fff);border:1px solid #e8dfe2;border-radius:var(--control-radius,22px);box-shadow:none;color:var(--red-dark);font-size:14px;font-weight:600;white-space:nowrap}
+footer .refresh .footer-refresh-icon{width:16px;height:16px;flex:0 0 16px}
+footer .refresh[aria-busy=true] .footer-refresh-icon{animation:footer-refresh-spin 1s linear infinite}
+@keyframes footer-refresh-spin{to{transform:rotate(360deg)}}
+footer .footer-sources{grid-column:1/-1;grid-row:2;min-width:0}
+footer .footer-heading{font-size:13px;line-height:1.5;font-weight:650;color:#5f5b61;margin:0 0 7px}
+footer .verification{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:7px;width:100%;max-width:none;padding:0;margin:0}
+footer .verification .source-tag{display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;line-height:1.5;min-width:0}
+footer .verification .source-tag>span{min-width:0;overflow-wrap:break-word}
+footer .verification .source-tag svg{width:15px;height:15px;flex:0 0 15px;margin-top:2.25px}
+footer .source-info{grid-column:1/-1;grid-row:3;min-width:0;width:100%;border-top:1px solid #e8dfe2;padding-top:13px}
+footer .source-info .footer-heading{margin-bottom:3px}
+footer .footer-disclaimer{color:#716d73;font-size:13px;line-height:1.5}
+footer .footer-links{display:flex;flex-direction:column;align-items:flex-start;gap:7px;margin-top:10px}
+footer .footer-links a{display:inline-flex;align-items:flex-start;gap:4px;max-width:100%;min-height:24px;color:var(--red-dark);font-size:13px;line-height:1.5;text-decoration:none}
+footer .footer-links a span{min-width:0;overflow-wrap:break-word;text-decoration:underline;text-underline-offset:2px}
+footer .footer-links .source-arrow{width:12px;height:12px;flex:0 0 12px;margin-top:3.75px}
+@media(hover:hover) and (pointer:fine){footer .refresh:hover{background:#fdf5f7}}
+@media(prefers-reduced-motion:reduce){footer .refresh[aria-busy=true] .footer-refresh-icon{animation:none}}
 </style>
 </head>
 <body>
@@ -749,7 +773,22 @@ header .group{flex:0 0 auto;font-size:clamp(14px,3.9vw,19px);font-weight:450;lin
   <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><button type="button" class="month-toggle" id="monthToggle" aria-label="Раскрыть календарь месяца" aria-expanded="false" aria-controls="calendarBody"><strong id="weekLabel">Загрузка…</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button><button type="button" class="month-step" id="monthPrev" aria-label="Предыдущий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7"/></svg></button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button><button type="button" class="month-step" id="monthNext" aria-label="Следующий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div></div><div class="calendar-body" id="calendarBody"><nav class="days" id="days" aria-label="Дни недели"></nav><div id="monthViewport" class="month-viewport" hidden><div id="monthScroll" class="month-scroll" role="region" aria-label="Календарь по месяцам. Прокручивайте вверх и вниз" tabindex="0" hidden></div></div></div></section>
   <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessons" class="lessons"></div></section>
   <details id="reviewSection" class="more" hidden><summary id="reviewLabel">Непроверенные изменения</summary><div id="reviews"></div></details>
-  <footer><div class="verification" id="verification" aria-label="Проверка источников"><span class="source-tag warn">Проверяем источники…</span></div><div class="source-info"><div id="updated">Источник данных загружается…</div><div>Неофициальное расписание. При сомнениях сверяй данные с деканатом.</div><div><a data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener">Таблица МГПУ</a> · <a href="https://vk.ru/dekanat_ign" target="_blank" rel="noopener">Изменения ВК</a></div></div><button class="refresh" id="refresh" title="Получить последнее опубликованное расписание">Обновить ↻</button></footer>
+  <footer>
+    <div class="footer-version"><div class="footer-version-label">Версия расписания</div><div id="updated">Источник данных загружается…</div></div>
+    <button type="button" class="refresh" id="refresh" title="Получить последнее опубликованное расписание"><span id="refreshLabel">Обновить</span><svg class="footer-refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-5L3 9m0-5v5h5m-4 4a8 8 0 0 0 14 5l3-3m0 5v-5h-5"/></svg></button>
+    <section class="footer-sources" aria-labelledby="footerSourcesTitle">
+      <h3 id="footerSourcesTitle" class="footer-heading">Источники данных</h3>
+      <div class="verification" id="verification" aria-label="Проверка источников"><span class="source-tag warn">Проверяем источники…</span></div>
+    </section>
+    <div class="source-info">
+      <div class="footer-heading">Неофициальное приложение</div>
+      <div class="footer-disclaimer">Приложение не является официальным сервисом МГПУ. При расхождениях руководствуйтесь информацией из официальных источников.</div>
+      <div class="footer-links">
+        <a data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><span>Официальная таблица расписания ИГН</span><svg class="source-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12 12 4M5 4h7v7"/></svg></a>
+        <a href="https://vk.ru/dekanat_ign" target="_blank" rel="noopener"><span>Официальная группа «Деканат ИГН» ВКонтакте</span><svg class="source-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12 12 4M5 4h7v7"/></svg></a>
+      </div>
+    </div>
+  </footer>
 </div></main>
 <div id="pullRefresh" class="pull-refresh" aria-hidden="true"><svg class="refresh-ring" viewBox="0 0 32 32"><circle class="ring-track" cx="16" cy="16" r="12"/><g class="ring-spinner"><circle class="ring-progress" cx="16" cy="16" r="12" transform="rotate(-90 16 16)"/></g></svg></div>
 <div id="refreshStatus" class="refresh-sr" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -1031,13 +1070,13 @@ function render(){
  if(!schedule||schedule.status==='unavailable'){
   tags.push('<span class="source-tag bad">Расписание недоступно</span>');
  }else{
-  tags.push(schedule.source_live===true?'<span class="source-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Excel: получен</span>':'<span class="source-tag warn">Excel: сохранённая версия</span>');
-  tags.push(schedule.vk_ok===true?'<span class="source-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>VK: проверен</span>':'<span class="source-tag bad">VK: не проверен</span>');
+  tags.push(schedule.source_live===true?'<span class="source-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span>Расписание загружено из официальной таблицы ИГН</span></span>':'<span class="source-tag warn">Показано сохранённое расписание из таблицы ИГН</span>');
+  tags.push(schedule.vk_ok===true?'<span class="source-tag good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span>Замены и переносы занятий проверены по публикациям группы «Деканат ИГН» ВКонтакте</span></span>':'<span class="source-tag bad">Не удалось проверить изменения в группе «Деканат ИГН» ВКонтакте</span>');
  }
  $('verification').innerHTML=tags.join('');
  const review=(schedule?.notices||[]).filter(n=>n.date===selected || n.lesson_dates?.includes(selected));$('reviewSection').hidden=!review.length;$('reviewLabel').textContent=`Требуют проверки (${review.length})`;
  $('reviews').innerHTML=review.slice(0,30).map(x=>`<div class="review"><strong>${h(x.reason||'Изменение требует проверки')}</strong><p>${h(x.text||'')}</p>${x.url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(x.url)?`<a target="_blank" rel="noopener" href="${x.url}">Посмотреть пост ↗</a>`:''}</div>`).join('');
- $('updated').textContent=schedule?.updated_at?`Версия расписания: ${new Date(schedule.updated_at).toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow',day:'numeric',month:'short',year:'numeric'})}`:'Расписание ещё не проверялось';
+ $('updated').textContent=schedule?.updated_at?new Date(schedule.updated_at).toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow',day:'numeric',month:'long',year:'numeric'}):'Расписание ещё не проверялось';
  return lessonsChanged;
 }
 const scheduleCacheKey='ioz231:lastValidSchedule:v1';
@@ -1060,7 +1099,7 @@ async function fetchSchedule(){
 function load(){
  if(loadFlight)return loadFlight;
  lastFetchAttempt=Date.now();
- const button=$('refresh');button.disabled=true;button.textContent='Обновляем…';button.setAttribute('aria-busy','true');
+ const button=$('refresh');button.disabled=true;$('refreshLabel').textContent='Обновляем…';button.setAttribute('aria-busy','true');
  $('refreshStatus').textContent='Обновление расписания';
  loadFlight=(async()=>{
   let ok=false;
@@ -1076,7 +1115,7 @@ function load(){
    if(!usableSchedule(schedule))schedule=readScheduleCache()||{group:'ИОЗ-231',status:'unavailable',entries:[],notices:[]};
    render();
   }finally{
-   button.disabled=false;button.textContent='Обновить ↻';button.removeAttribute('aria-busy');
+   button.disabled=false;$('refreshLabel').textContent='Обновить';button.removeAttribute('aria-busy');
    $('refreshStatus').textContent=ok?'Расписание обновлено':usableSchedule(schedule)?'Не удалось обновить. Показано сохранённое расписание':'Не удалось загрузить расписание';
   }
   return ok;
