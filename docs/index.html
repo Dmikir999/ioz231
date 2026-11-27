@@ -614,10 +614,10 @@ html,body,button,a,summary{-webkit-tap-highlight-color:transparent}
 /* Minimal pull to refresh: one red ring, no plate or success decoration. */
 :root{--refresh-space:0px;--refresh-top:calc(env(safe-area-inset-top,0px) + 7px)}
 @media(min-width:851px){:root{--refresh-top:28px}}
-main.app-shell{padding-top:calc(var(--refresh-top) + var(--refresh-space))}
-html.refresh-settling main.app-shell{transition:padding-top 240ms var(--motion-ease)}
+main.app-shell{padding-top:var(--refresh-top);transform:translate3d(0,var(--refresh-space),0)}
+html.refresh-settling main.app-shell{transition:transform 210ms var(--motion-ease)}
 #pullRefresh{position:fixed;top:var(--refresh-top);left:0;right:0;transform:none;max-width:none;width:auto;height:var(--refresh-space);padding:0;margin:0;border:0;border-radius:0;box-shadow:none;background:transparent;display:grid;place-items:center;overflow:hidden;color:var(--red);opacity:1;pointer-events:none;transition:none}
-html.refresh-settling #pullRefresh{transition:height 240ms var(--motion-ease)}
+html.refresh-settling #pullRefresh{transition:height 210ms var(--motion-ease)}
 #pullRefresh .refresh-ring{display:block;width:28px;height:28px;opacity:0;transform:scale(.85);transition:opacity 150ms ease,transform 150ms var(--motion-ease)}
 #pullRefresh.is-tracking .refresh-ring{transition:none;opacity:var(--ring-opacity,0);transform:scale(var(--ring-scale,.85))}
 #pullRefresh.is-loading .refresh-ring{opacity:1;transform:scale(1)}
@@ -764,6 +764,19 @@ footer .footer-links a span{min-width:0;overflow-wrap:break-word;text-decoration
 footer .footer-links .source-arrow{width:12px;height:12px;flex:0 0 12px;margin-top:3.75px}
 @media(hover:hover) and (pointer:fine){footer .refresh:hover{background:#fdf5f7}}
 @media(prefers-reduced-motion:reduce){footer .refresh[aria-busy=true] .footer-refresh-icon{animation:none}}
+/* Motion refinements: same resting layout. */
+:root{--motion-release:170ms}
+.month-toggle,.week-nav .icon-button,.week-nav .month-step,.week-nav .today-button,.day,footer .refresh{transition-duration:var(--motion-release)}
+.month-toggle:active,.week-nav button:active,.day:active,footer .refresh:active{transition-duration:var(--motion-press)}
+footer .footer-links a,.lesson a.change-badge{transition:opacity var(--motion-release) ease}
+footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transition-duration:var(--motion-press)}
+.calendar-open-layer{position:absolute;inset:0;pointer-events:none;z-index:3}
+.calendar-open-layer .days{grid-template-columns:repeat(7,minmax(0,1fr));gap:0;margin:0}
+.calendar-open-layer .day strong{width:min(100%,clamp(36px,10.4vw,46px));height:auto;aspect-ratio:1;font-size:clamp(20px,5.4vw,26px);font-weight:700}
+.calendar-open-layer .day{gap:5px;min-width:0;padding:0 0 2px}
+.calendar-open-layer .day span{font-size:clamp(12px,3.6vw,16px);font-weight:450;line-height:1.3}
+@media(min-width:851px){.calendar-open-layer .day strong{width:50px;font-size:26px}}
+@media(prefers-reduced-motion:reduce){footer .footer-links a,.lesson a.change-badge{transition:none}}
 </style>
 </head>
 <body>
@@ -876,39 +889,26 @@ function makeMonthPanel(month,dateSet){
 function monthOffset(panel){return panel.offsetTop}
 function monthViewportInset(){return parseFloat(getComputedStyle($('monthScroll')).scrollPaddingTop)||0}
 function findMonthPanel(month){return $('monthScroll').querySelector('[data-month="'+month+'"]')}
-const MOTION={press:100,selection:180,week:230,open:280,close:240,month:280,lessons:150,ease:'cubic-bezier(.2,.75,.25,1)'};
+const MOTION={press:100,selection:200,week:240,open:280,close:260,month:260,lessons:160,ease:'cubic-bezier(.2,.75,.25,1)'};
 const reducedMotion=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let monthMotion=0,monthScrollFrame=0,monthSettleTimer=0,monthTouching=false;
-function fadeMonthRows(){
- if(!expanded)return;
- const scroller=$('monthScroll'),bounds=scroller.getBoundingClientRect(),top=bounds.top,bottom=bounds.bottom;
- for(const panel of scroller.children){
-  const p=panel.getBoundingClientRect();if(p.bottom<top||p.top>bottom)continue;
-  for(const row of panel.querySelectorAll('.month-week-row')){
-   const r=row.getBoundingClientRect();
-   const opacity=Math.max(0,Math.min(1,(r.top-top)/18,(bottom-r.bottom)/18));
-   row.style.opacity=String(opacity);
-  }
- }
-}
+// One viewport mask; let native scrolling settle without a second snap.
 function queueMonthSettle(){
  clearTimeout(monthSettleTimer);
  if(!expanded||monthTouching||monthMotion)return;
- monthSettleTimer=setTimeout(snapMonthRows,160);
+ monthSettleTimer=setTimeout(pruneMonths,200);
 }
-function snapMonthRows(){
+function pruneMonths(){
  if(!expanded||monthTouching||monthMotion)return;
- const scroller=$('monthScroll'),inset=monthViewportInset(),origin=scroller.getBoundingClientRect().top+inset;
- let best=null,dist=Infinity;
- for(const panel of scroller.children){
-  const p=panel.getBoundingClientRect();if(p.bottom<origin-100||p.top>origin+100)continue;
-  for(const el of [panel,...panel.querySelectorAll('.month-week-row')]){
-   const delta=el.getBoundingClientRect().top-origin;
-   if(Math.abs(delta)<dist){dist=Math.abs(delta);best=delta}
-  }
- }
- if(best===null||dist<2)return;
- animateMonthScroll(scroller.scrollTop+best,180);
+ const scroller=$('monthScroll'),panels=Array.from(scroller.children);
+ if(panels.length<=11)return;
+ const current=panels.findIndex(p=>p.dataset.month===viewMonth);
+ if(current<0)return;
+ const first=Math.max(0,Math.min(current-5,panels.length-11)),last=first+11;
+ if(panels.some((p,i)=>(i<first||i>=last)&&p.contains(document.activeElement)))return;
+ const anchor=panels[current],before=anchor.offsetTop,scroll=scroller.scrollTop;
+ panels.forEach((p,i)=>{if(i<first||i>=last)p.remove()});
+ scroller.scrollTop=scroll+anchor.offsetTop-before;
 }
 function cancelMonthMotion(){
  if(monthMotion)cancelAnimationFrame(monthMotion);monthMotion=0;
@@ -917,13 +917,13 @@ function cancelMonthMotion(){
 function animateMonthScroll(target,duration){
  cancelMonthMotion();
  const scroller=$('monthScroll'),from=scroller.scrollTop,to=Math.max(0,Math.min(target,scroller.scrollHeight-scroller.clientHeight));
- if(!duration||reducedMotion()||Math.abs(to-from)<2){scroller.scrollTop=to;fadeMonthRows();return}
+ if(!duration||reducedMotion()||Math.abs(to-from)<2){scroller.scrollTop=to;return}
  const start=performance.now();
  function step(now){
   const p=Math.min(1,(now-start)/duration),ease=1-Math.pow(1-p,3);
-  scroller.scrollTop=from+(to-from)*ease;fadeMonthRows();
+  scroller.scrollTop=from+(to-from)*ease;
   if(p<1&&expanded)monthMotion=requestAnimationFrame(step);
-  else{monthMotion=0;syncMonthFromScroll();fadeMonthRows()}
+  else{monthMotion=0;syncMonthFromScroll();queueMonthSettle()}
  }
  monthMotion=requestAnimationFrame(step);
 }
@@ -951,7 +951,7 @@ function renderCalendar(){
   scroller.replaceChildren();return;
  }
  if(wasOpen&&scroller.children.length&&findMonthPanel(viewMonth)){
-  scroller.querySelectorAll('.day').forEach(btn=>updateDateButton(btn,dateSet));fadeMonthRows();return;
+  scroller.querySelectorAll('.day').forEach(btn=>updateDateButton(btn,dateSet));return;
  }
  cancelMonthMotion();
  const fragment=document.createDocumentFragment();
@@ -982,12 +982,12 @@ $('monthScroll').addEventListener('scroll',()=>{
  if(monthMotion)return;
  queueMonthSettle();
  if(monthScrollFrame)return;
- monthScrollFrame=requestAnimationFrame(()=>{monthScrollFrame=0;syncMonthFromScroll();fadeMonthRows()});
+ monthScrollFrame=requestAnimationFrame(()=>{monthScrollFrame=0;syncMonthFromScroll()});
 },{passive:true});
 $('monthScroll').addEventListener('touchstart',()=>{monthTouching=true;cancelMonthMotion()},{passive:true});
 for(const event of ['touchend','touchcancel'])$('monthScroll').addEventListener(event,e=>{if(!e.touches.length){monthTouching=false;queueMonthSettle()}},{passive:true});
 for(const event of ['wheel','pointerdown'])$('monthScroll').addEventListener(event,()=>{cancelMonthMotion()},{passive:true});
-window.addEventListener('resize',()=>{if(expanded)fadeMonthRows()},{passive:true});
+window.addEventListener('resize',()=>{if(expanded)syncMonthFromScroll()},{passive:true});
 
 function render(){
  if (/^https:\/\/cloud\.mail\.ru\/public\/[\w-]+\/[\w-]+$/.test(schedule?.source)) {
@@ -1133,7 +1133,7 @@ function clearSelectionMotion(){
 }
 function selectionOrigin(){
  const week=$('days'),el=selectionMotion?.disc||week.querySelector('.day.active strong');
- return el?.getBoundingClientRect()||null;
+ return el?{rect:el.getBoundingClientRect(),color:getComputedStyle(el).backgroundColor}:null;
 }
 function animateSelection(origin,adjacent){
  if(reducedMotion())return;
@@ -1141,15 +1141,15 @@ function animateSelection(origin,adjacent){
  if(!number||typeof number.animate!=='function')return;
  const rect=number.getBoundingClientRect(),base=week.getBoundingClientRect();
  if(!adjacent||!origin){
-  number.animate([{transform:'scale(.90)'},{transform:'scale(1)'}],{duration:MOTION.selection,easing:MOTION.ease});return;
+  number.animate([{transform:'scale(.96)',opacity:.85},{transform:'scale(1)',opacity:1}],{duration:MOTION.selection,easing:MOTION.ease});return;
  }
- const dx=origin.left-rect.left,dy=origin.top-rect.top;
+ const dx=origin.rect.left-rect.left,dy=origin.rect.top-rect.top;
  if(Math.abs(dx)+Math.abs(dy)<1)return;
  const disc=document.createElement('span');disc.className='date-motion-disc';disc.setAttribute('aria-hidden','true');disc.style.backgroundColor=getComputedStyle(number).backgroundColor;
  Object.assign(disc.style,{left:(rect.left-base.left)+'px',top:(rect.top-base.top)+'px',width:rect.width+'px',height:rect.height+'px'});
  target.classList.add('selection-moving');week.append(disc);
- const animation=disc.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:MOTION.selection,easing:MOTION.ease});
- const colors=[];const old=Array.from(week.querySelectorAll('.day:not(.active) strong')).find(el=>{const r=el.getBoundingClientRect();return Math.abs(r.left-origin.left)<2&&Math.abs(r.top-origin.top)<2});
+ const color=disc.style.backgroundColor;const animation=disc.animate([{transform:'translate3d('+dx+'px,'+dy+'px,0)',backgroundColor:origin.color},{transform:'translate3d(0,0,0)',backgroundColor:color}],{duration:MOTION.selection,easing:MOTION.ease});
+ const colors=[];const old=Array.from(week.querySelectorAll('.day:not(.active) strong')).find(el=>{const r=el.getBoundingClientRect();return Math.abs(r.left-origin.rect.left)<2&&Math.abs(r.top-origin.rect.top)<2});
  if(old)colors.push(old.animate([{color:'#fff'},{color:old.closest('.day').classList.contains('today')?'var(--red)':'var(--ink)'}],{duration:100,easing:'ease-out'}));
  colors.push(number.animate([{color:'var(--ink)'},{color:'#fff'}],{duration:MOTION.selection,easing:'ease-in'}));
  selectionMotion={disc,target,animation,colors};
@@ -1190,7 +1190,7 @@ function settleWeekPair(from,to,previewFrom,previewTo,duration){
  const days=$('days'),preview=weekPreview;
  if(reducedMotion()||typeof days.animate!=='function'||!preview){clearWeekMotion();return}
  $('calendarBody').classList.add('is-week-moving');
- const options={duration,easing:'cubic-bezier(.22,.61,.36,1)',fill:'both'};
+ const options={duration,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'};
  const a=days.animate([{transform:weekTranslate(from)},{transform:weekTranslate(to)}],options);
  weekPreviewMotion=preview.animate([{transform:weekTranslate(previewFrom)},{transform:weekTranslate(previewTo)}],options);
  weekMotion=a;
@@ -1222,7 +1222,7 @@ function clearCalendarFold(){
  const fold=calendarFold;calendarFold=null;
  clearTimeout(fold.timer);
  for(const animation of fold.animations)animation.cancel();
- fold.layer.remove();$('calendarBody').classList.remove('is-folding');
+ fold.layer.remove();fold.restore?.();$('calendarBody').classList.remove('is-folding');
 }
 function captureMonthFold(dt){
  const body=$('calendarBody'),viewport=$('monthViewport'),scroller=$('monthScroll');
@@ -1238,7 +1238,9 @@ function captureMonthFold(dt){
    }
   }
  }
- const clone=viewport.cloneNode(true),copyScroller=clone.querySelector('.month-scroll');
+ const clone=viewport.cloneNode(false),copyScroller=scroller.cloneNode(false);
+ for(const panel of scroller.children){const rect=panel.getBoundingClientRect();if(rect.bottom<=bounds.top||rect.top>=bounds.bottom)continue;const copy=panel.cloneNode(true);Object.assign(copy.style,{position:'absolute',top:(rect.top-bounds.top)+'px',left:(rect.left-bounds.left)+'px',width:rect.width+'px',margin:0});copyScroller.append(copy)}
+ clone.append(copyScroller);
  clone.removeAttribute('id');clone.setAttribute('aria-hidden','true');clone.setAttribute('inert','');
  copyScroller.removeAttribute('id');
  for(const el of clone.querySelectorAll('[id]'))el.removeAttribute('id');
@@ -1249,10 +1251,10 @@ function captureMonthFold(dt){
  }
  copyScroller.style.height=bounds.height+'px';copyScroller.style.maxHeight='none';copyScroller.style.boxSizing='border-box';
  const layer=document.createElement('div');layer.className='calendar-fold-layer';layer.style.height=viewport.getBoundingClientRect().height+'px';layer.setAttribute('aria-hidden','true');layer.setAttribute('inert','');layer.append(clone);
- return {layer,copyScroller,scrollTop:scroller.scrollTop,positions,animations:[],timer:0};
+ return {layer,copyScroller,scrollTop:0,positions,animations:[],timer:0};
 }
 function playMonthFold(fold,oldHeight,lessonsChanged){
- const body=$('calendarBody'),week=$('days'),duration=320,easing=MOTION.ease;
+ const body=$('calendarBody'),week=$('days'),duration=MOTION.close,easing=MOTION.ease;
  clearCalendarFold();
  const endHeight=body.getBoundingClientRect().height;
  body.append(fold.layer);fold.copyScroller.scrollTop=fold.scrollTop;body.classList.add('is-folding');
@@ -1263,22 +1265,22 @@ function playMonthFold(fold,oldHeight,lessonsChanged){
  run(fold.layer,[{opacity:1},{opacity:0}],{duration:180,easing:'ease-out',fill:'both'});
  for(const button of week.querySelectorAll('[data-date]')){
   const number=button.querySelector('strong'),dot=button.querySelector('i'),label=button.querySelector('span'),from=fold.positions.get(button.dataset.date);
-  if(label)run(label,[{opacity:0},{opacity:1}],{duration:180,delay:90,easing:'ease-out',fill:'both'});
+  if(label)run(label,[{opacity:0},{opacity:1}],{duration:150,delay:65,easing:'ease-out',fill:'both'});
   if(from){
    const to=number.getBoundingClientRect(),toDot=dot.getBoundingClientRect();
    const dx=from.rect.left+from.rect.width/2-to.left-to.width/2,dy=from.rect.top+from.rect.height/2-to.top-to.height/2;
    run(number,[{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],travel);
    run(dot,[{transform:'translate('+(from.dot.left-toDot.left)+'px,'+(from.dot.top-toDot.top)+'px)'},{transform:'translate(0,0)'}],travel);
   }else{
-   run(number,[{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:190,delay:90,easing,fill:'both'});
-   run(dot,[{opacity:0},{opacity:1}],{duration:190,delay:90,easing,fill:'both'});
+   run(number,[{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:160,delay:65,easing,fill:'both'});
+   run(dot,[{opacity:0},{opacity:1}],{duration:160,delay:65,easing,fill:'both'});
   }
  }
  const heightAnimation=run(body,[{height:oldHeight+'px',overflow:'hidden'},{height:endHeight+'px',overflow:'hidden'}],travel);
  heightAnimation.id='calendar-height';
  if(lessonsChanged&&typeof $('lessons').animate==='function'){
   cancelLessonMotion();
-  const a=run($('lessons'),[{opacity:.85},{opacity:1}],{duration:140,delay:180,easing:'ease-out',fill:'both'});a.id='lesson-change';
+  animateLessons();
  }
  heightAnimation.onfinish=()=>{if(calendarFold===fold)clearCalendarFold()};
  fold.timer=setTimeout(()=>{if(calendarFold===fold)clearCalendarFold()},duration+80);
@@ -1291,12 +1293,12 @@ function animateLessons(){
  const list=$('lessons'),now=performance.now(),rapid=now-lastLessonMotion<220;lastLessonMotion=now;
  cancelLessonMotion();
  if(rapid||reducedMotion()||typeof list.animate!=='function')return;
- const a=list.animate([{opacity:.94},{opacity:1}],{duration:MOTION.lessons,easing:'ease-out'});a.id='lesson-change';
+ const a=list.animate([{opacity:.86,transform:'translate3d(0,3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:MOTION.lessons,easing:MOTION.ease});a.id='lesson-change';
 }
 function selectDate(dt,restoreFocus=false){
  if(dt===selected&&!expanded)return;
  const wasExpanded=expanded,changed=dt!==selected,previous=selected,origin=!expanded?selectionOrigin():null;
- const adjacent=!expanded&&monday(dt)===monday(previous)&&Math.abs((date(dt)-date(previous))/86400000)===1;
+ const adjacent=!expanded&&monday(dt)===monday(previous);
  const height=prepareCalendarAnimation(),fold=wasExpanded?captureMonthFold(dt):null;
  selected=dt;expanded=false;viewMonth=selected.slice(0,7)+'-01';saveSelectedDate();if(changed)haptic();const contentChanged=render();
  if(fold)playMonthFold(fold,height,contentChanged);
@@ -1306,18 +1308,21 @@ function selectDate(dt,restoreFocus=false){
  }
  if(restoreFocus)$('days').querySelector('[data-date="'+selected+'"]')?.focus({preventScroll:true});
 }
-function navigateWeek(delta,drag=0){
+function weekSettleDuration(distance,width,velocity=0){
+ if(!width)return MOTION.week;
+ return Math.round(Math.max(115,Math.min(265,150+105*Math.min(1,Math.abs(distance)/width)-45*Math.min(2,Math.abs(velocity)))));
+}
+function navigateWeek(delta,drag=0,velocity=0){
  if(expanded)return;
- const days=$('days'),width=days.clientWidth,slide=!!drag&&width>0&&!reducedMotion()&&typeof days.animate==='function';
- const height=prepareCalendarAnimation();
+ const days=$('days'),width=days.clientWidth,slide=width>0&&!reducedMotion()&&typeof days.animate==='function';
+ prepareCalendarAnimation();
  const outgoing=slide?buildWeekPreview(-delta,true):null;
  selected=daysFrom(selected,7*delta);
  viewMonth=selected.slice(0,7)+'-01';saveSelectedDate();haptic();const changed=render();
  if(outgoing){
   const start=drag+delta*width;
-  const duration=Math.round(220+150*Math.min(1,Math.abs(start)/width));
-  settleWeekPair(start,0,drag,-delta*width,duration);
- }else animateCalendar(delta,height);
+  settleWeekPair(start,0,drag,-delta*width,drag?weekSettleDuration(start,width,velocity):MOTION.week);
+ }
  if(changed)animateLessons();
 }
 function navigateMonth(delta){
@@ -1331,13 +1336,50 @@ $('next').onclick=()=>navigateWeek(1);
 $('today').onclick=()=>selectDate(todayMoscow());
 $('monthPrev').onclick=()=>navigateMonth(-1);
 $('monthNext').onclick=()=>navigateMonth(1);
+function captureWeekOpen(){
+ const week=$('days'),body=$('calendarBody');
+ if(reducedMotion()||typeof week.animate!=='function')return null;
+ const bounds=body.getBoundingClientRect(),r=week.getBoundingClientRect(),clone=week.cloneNode(true);
+ clone.removeAttribute('id');clone.setAttribute('aria-hidden','true');clone.setAttribute('inert','');
+ clone.querySelectorAll('button').forEach(el=>el.tabIndex=-1);
+ const layer=document.createElement('div');layer.className='calendar-open-layer';layer.setAttribute('aria-hidden','true');layer.setAttribute('inert','');
+ Object.assign(clone.style,{position:'absolute',left:(r.left-bounds.left)+'px',top:(r.top-bounds.top)+'px',width:r.width+'px',margin:0});
+ layer.append(clone);return {layer,clone,animations:[],timer:0};
+}
+function playMonthOpen(fold,oldHeight){
+ const body=$('calendarBody'),viewport=$('monthViewport'),scroller=$('monthScroll');
+ const chosen=findMonthPanel(viewMonth)?.querySelector('[data-date="'+selected+'"]'),row=chosen?.closest('.month-week-row');
+ if(!row){animateCalendar(0,oldHeight);return}
+ const bounds=scroller.getBoundingClientRect(),rr=row.getBoundingClientRect();
+ if(rr.bottom>bounds.bottom-34||rr.top<bounds.top+24)scroller.scrollTop+=rr.top-bounds.top-monthViewportInset();
+ const endHeight=body.getBoundingClientRect().height,duration=MOTION.open,options={duration,easing:MOTION.ease,fill:'both'};
+ body.append(fold.layer);calendarFold=fold;
+ fold.restore=()=>{row.style.visibility='';viewport.style.pointerEvents=''};
+ viewport.style.pointerEvents='none';
+ const run=(el,frames,opts)=>{const a=el.animate(frames,opts);fold.animations.push(a);return a};
+ const targets=Array.from(row.querySelectorAll('[data-date]'));
+ for(const button of fold.clone.querySelectorAll('[data-date]')){
+  const target=targets.find(el=>el.dataset.date===button.dataset.date),label=button.querySelector('span');
+  if(label)run(label,[{opacity:1},{opacity:0}],{duration:120,easing:'ease-out',fill:'both'});
+  if(!target){run(button,[{opacity:1},{opacity:0}],{duration:160,easing:'ease-out',fill:'both'});continue}
+  for(const selector of ['strong','i']){
+   const el=button.querySelector(selector),dest=target.querySelector(selector),a=el.getBoundingClientRect(),z=dest.getBoundingClientRect();
+   const dx=z.left+z.width/2-a.left-a.width/2,dy=z.top+z.height/2-a.top-a.height/2,scale=a.width?z.width/a.width:1;
+   run(el,[{transform:'translate3d(0,0,0) scale(1)'},{transform:'translate3d('+dx+'px,'+dy+'px,0) scale('+scale+')'}],options);
+  }
+ }
+ row.style.visibility='hidden';
+ run(viewport,[{opacity:.05},{opacity:1}],{duration:220,easing:'ease-out',fill:'both'});
+ const height=run(body,[{height:oldHeight+'px',overflow:'hidden'},{height:endHeight+'px',overflow:'hidden'}],options);height.id='calendar-height';
+ height.onfinish=()=>{if(calendarFold===fold)clearCalendarFold()};
+ fold.timer=setTimeout(()=>{if(calendarFold===fold)clearCalendarFold()},duration+80);
+}
 function setMonthExpanded(value){
  if(expanded===value)return;
  if(!value){selectDate(selected);return}
- const height=prepareCalendarAnimation();
- expanded=value;
- if(expanded)viewMonth=selected.slice(0,7)+'-01';
- renderCalendar();animateCalendar(0,height);
+ const height=prepareCalendarAnimation(),fold=captureWeekOpen();
+ expanded=value;viewMonth=selected.slice(0,7)+'-01';
+ renderCalendar();if(fold)playMonthOpen(fold,height);else animateCalendar(0,height);
 }
 const monthButton=$('monthToggle');
 monthButton.onclick=()=>setMonthExpanded(!expanded);
@@ -1359,43 +1401,46 @@ function calendarKeydown(e){
 }
 $('days').addEventListener('keydown',calendarKeydown);
 $('monthScroll').addEventListener('keydown',calendarKeydown);
-let swipe=null,suppressTapUntil=0;
+let swipe=null,suppressTapUntil=0,weekDragFrame=0;
+function stopWeekDragFrame(){if(weekDragFrame)cancelAnimationFrame(weekDragFrame);weekDragFrame=0}
 function dragWeek(dx){
  const width=$('days').clientWidth;
  return Math.sign(dx)*Math.min(Math.abs(dx),width);
 }
 function endWeekDrag(commit=false,dx=0){
- const current=swipe;swipe=null;
+ const current=swipe;swipe=null;stopWeekDragFrame();
  if(!current||current.axis!=='horizontal')return;
  const offset=current.offset||0;
  suppressTapUntil=Date.now()+350;
- if(commit)navigateWeek(dx<0?1:-1,offset);
+ if(commit)navigateWeek(dx<0?1:-1,offset,current.velocity||0);
  else if(offset&&weekPreview){
   const shift=Number(weekPreview.dataset.direction)*$('days').clientWidth;
-  settleWeekPair(offset,0,offset+shift,shift,280);
+  settleWeekPair(offset,0,offset+shift,shift,Math.min(200,weekSettleDuration(offset,$('days').clientWidth,current.velocity||0)));
  }else clearWeekMotion();
 }
 $('days').addEventListener('touchstart',e=>{
  if(swipe)endWeekDrag();suppressTapUntil=0;
- swipe=e.touches.length===1?{x:e.touches[0].clientX,y:e.touches[0].clientY,axis:null,offset:0,start:performance.now()}:null;
+ swipe=e.touches.length===1?{x:e.touches[0].clientX,y:e.touches[0].clientY,axis:null,offset:0,start:performance.now(),lastX:e.touches[0].clientX,lastTime:performance.now(),velocity:0}:null;
 },{passive:true});
 $('days').addEventListener('touchmove',e=>{
  if(!swipe)return;
  if(e.touches.length!==1){endWeekDrag();swipe=null;return}
- const dx=e.touches[0].clientX-swipe.x,dy=e.touches[0].clientY-swipe.y;
+ const dx=e.touches[0].clientX-swipe.x,dy=e.touches[0].clientY-swipe.y,now=performance.now();
+  const elapsed=now-swipe.lastTime;if(elapsed>0){swipe.velocity=.55*swipe.velocity+.45*(e.touches[0].clientX-swipe.lastX)/elapsed;swipe.lastX=e.touches[0].clientX;swipe.lastTime=now;}
  if(!swipe.axis){
   if(Math.abs(dy)>12&&Math.abs(dy)>=Math.abs(dx))swipe.axis='vertical';
   else if(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)*1.5){swipe.axis='horizontal';clearWeekMotion();clearSelectionMotion()}
  }
  if(swipe.axis==='horizontal'&&!reducedMotion()){
   swipe.offset=dragWeek(dx);
-  trackWeekDrag(swipe.offset);
+  if(!weekDragFrame)weekDragFrame=requestAnimationFrame(()=>{weekDragFrame=0;if(swipe?.axis==='horizontal')trackWeekDrag(swipe.offset)});
  }
 },{passive:true});
 $('days').addEventListener('touchend',e=>{
  if(!swipe||e.changedTouches.length!==1){endWeekDrag();swipe=null;return}
  const t=e.changedTouches[0],dx=t.clientX-swipe.x,dy=t.clientY-swipe.y,elapsed=Math.max(1,performance.now()-swipe.start);
- const commit=swipe.axis==='horizontal'&&Math.abs(dx)>Math.abs(dy)*1.5&&(Math.abs(dx)>45||(Math.abs(dx)>25&&Math.abs(dx)/elapsed>.45));
+ if(performance.now()-swipe.lastTime>100)swipe.velocity=0;
+  const commit=swipe.axis==='horizontal'&&Math.abs(dx)>Math.abs(dy)*1.5&&(Math.abs(dx)>45||(Math.abs(dx)>25&&Math.sign(dx)*swipe.velocity>.45));
  endWeekDrag(commit,dx);swipe=null;
 },{passive:true});
 $('days').addEventListener('touchcancel',()=>{endWeekDrag();swipe=null},{passive:true});
@@ -1412,7 +1457,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){updateCal
 window.addEventListener('pageshow',updateCalendarToday);
 setInterval(()=>{if(!document.hidden)updateCalendarToday()},60000);
 
-/* Pull to refresh reloads the document and its schedule; the footer refreshes data only. */
+/* Pull to refresh updates data in place; reload only when the published interface changes. */
 const refreshIndicator=$('pullRefresh'),refreshArc=refreshIndicator.querySelector('.ring-progress');
 const REFRESH_THRESHOLD=80,REFRESH_HOLD=46,REFRESH_CIRC=2*Math.PI*12;
 let refreshBusy=false,pullGesture=null,pullSuppressUntil=0,refreshCollapseTimer=0;
@@ -1432,9 +1477,25 @@ function resetPull(settle=true){
  refreshIndicator.classList.remove('is-tracking','is-loading');
  refreshIndicator.classList.add('is-finishing');
  setRefreshSpace(0,settle);setRefreshProgress(0);
- refreshCollapseTimer=setTimeout(()=>{refreshIndicator.classList.remove('is-finishing');document.documentElement.classList.remove('refresh-settling')},settle&&!reducedMotion()?250:0);
+ refreshCollapseTimer=setTimeout(()=>{refreshIndicator.classList.remove('is-finishing');document.documentElement.classList.remove('refresh-settling')},settle&&!reducedMotion()?220:0);
 }
-async function startRefresh(showRing=true,reloadPage=false){
+const initialAppScript=document.currentScript?.textContent||'';
+const initialAppStyle=document.querySelector('head style')?.textContent||'';
+const initialInstallScript=document.querySelector('script[src*="mgpu-install.js"]')?.getAttribute('src')||'./mgpu-install.js?v=16';
+async function hasNewInterface(){
+ if(navigator.onLine===false)return false;
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),2200);
+ try{
+  const response=await fetch('./index.html?interface='+Date.now(),{cache:'no-store',signal:controller.signal});
+  if(!response.ok)return false;
+  const next=new DOMParser().parseFromString(await response.text(),'text/html');
+  const code=Array.from(next.querySelectorAll('body script:not([src])')).find(el=>el.textContent.includes('function renderCalendar()'));
+  const style=next.querySelector('head style'),install=next.querySelector('script[src*="mgpu-install.js"]');
+  if(!code||!style||!install)return false;
+  return code.textContent!==initialAppScript||style.textContent!==initialAppStyle||install.getAttribute('src')!==initialInstallScript;
+ }catch{return false}finally{clearTimeout(timeout)}
+}
+async function startRefresh(showRing=true,checkInterface=false){
  if(refreshBusy)return;
  refreshBusy=true;pullGesture=null;clearTimeout(refreshCollapseTimer);
  const began=performance.now();
@@ -1444,18 +1505,14 @@ async function startRefresh(showRing=true,reloadPage=false){
   setRefreshProgress(1);setRefreshSpace(REFRESH_HOLD,true);
  }else resetPull(false);
  try{
-  if(reloadPage&&navigator.onLine!==false){
-   saveSelectedDate();
-   $('refreshStatus').textContent='Обновление приложения';
-   if(!reducedMotion())await waitRefresh(180);
-   const url=new URL(window.location.href);
-   if(url.protocol==='http:'||url.protocol==='https:'){
-    url.searchParams.set('v',String(Date.now()));
-    window.location.replace(url.href);
-   }else window.location.reload();
-   return;
-  }
+  const versionCheck=checkInterface?hasNewInterface():Promise.resolve(false);
   const ok=await load();
+  const newInterface=await versionCheck;
+  if(newInterface&&ok){
+   saveSelectedDate();$('refreshStatus').textContent='Доступна новая версия приложения';
+   const url=new URL(window.location.href);url.searchParams.set('v',String(Date.now()));
+   window.location.replace(url.href);return;
+  }
   if(showRing){
    if(!reducedMotion())await waitRefresh(Math.max(0,300-(performance.now()-began)));
    refreshIndicator.classList.remove('is-loading');
@@ -1511,5 +1568,5 @@ if(cachedSchedule){schedule=cachedSchedule;render()}
 load();
 
 </script>
-<script src="./mgpu-install.js?v=15" defer></script>
+<script src="./mgpu-install.js?v=16" defer></script>
 </body></html>
