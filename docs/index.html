@@ -786,13 +786,35 @@ footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transiti
 #lessonViewport.is-resizing{overflow:clip;overflow-clip-margin:12px}
 @supports not (overflow:clip){#lessonViewport.is-resizing{overflow:hidden}}
 @media(prefers-reduced-motion:reduce){#lessonViewport.is-resizing{overflow:visible}.calendar-section .day strong{transition:none!important}}
+
+/* Shared compact lesson indicators in week and month views. */
+.calendar-section,.calendar-fold-layer,.calendar-open-layer{--lecture-fill:#DCE7F4;--lecture-ink:#365D86;--practice-fill:#E4E3E6;--practice-ink:#57545D}
+.calendar-subject-filter{margin:0 0 8px;min-width:0}
+.calendar-subject-filter[hidden]{display:none!important}
+.calendar-subject-filter select{display:block;width:100%;min-height:36px;border:1px solid #e8dfe2;border-radius:12px;padding:6px 30px 6px 11px;font:inherit;font-size:14px;color:var(--ink);background:#fff;overflow:hidden;text-overflow:ellipsis}
+.calendar-subject-filter select:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.calendar-section .day i.pair-indicator,.calendar-fold-layer .day i.pair-indicator,.calendar-open-layer .day i.pair-indicator{display:block;flex:none;width:34px;max-width:100%;height:12px;margin:0;background:transparent!important;border-radius:0;line-height:0;font-style:normal}
+.pair-indicator svg{display:block;width:100%;height:12px;overflow:visible}
+.calendar-section :is(#days,.week-swipe-preview) .day,.calendar-open-layer .day{gap:3px;padding-bottom:3px}
+.calendar-section :is(#days,.week-swipe-preview) .day i.pair-indicator,.calendar-open-layer .day i.pair-indicator{margin-top:2px}
+.calendar-section .month-panel .days.month-view,.calendar-fold-layer .month-panel .days.month-view{row-gap:0}
+.month-panel .month-weekday{padding-bottom:3px}
+#monthScroll .month-week-row,.calendar-fold-layer .month-week-row{border-top:1px solid #E1DEE2}
+.calendar-section .month-panel .day,.calendar-section .month-panel .day.active,.calendar-section .month-panel .day.today:not(.active),.calendar-fold-layer .month-panel .day{min-height:55px;gap:0;padding:3px 0;justify-content:space-between}
+.calendar-section .month-panel .month-blank,.calendar-fold-layer .month-panel .month-blank{min-height:55px}
+.calendar-section .month-panel .day strong,.calendar-fold-layer .month-panel .day strong{width:34px;height:34px;font-size:19px}
+.calendar-section .day.filtered-empty:not(.active):not(.today) strong{color:var(--muted)}
+.lesson .chip.calendar-kind-lecture{background:#DCE7F4;color:#365D86;border-radius:999px;padding:3px 7px}
+.lesson .chip.calendar-kind-practice{background:#E4E3E6;color:#57545D;border-radius:999px;padding:3px 7px}
+.lesson .subject.calendar-subject-link{display:block;width:100%;text-align:left;font-family:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.lesson .subject.calendar-subject-link:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:4px}
 </style>
 </head>
 <body>
 <noscript><div><img src="https://mc.yandex.ru/watch/114487182" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
   <header><div class="eyebrow">Институт гуманитарных наук</div><h1 class="appname">Расписание</h1><div class="group">ИОЗ-231</div></header>
-  <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><button type="button" class="month-toggle" id="monthToggle" aria-label="Раскрыть календарь месяца" aria-expanded="false" aria-controls="calendarBody"><strong id="weekLabel">Загрузка…</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button><button type="button" class="month-step" id="monthPrev" aria-label="Предыдущий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7"/></svg></button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button><button type="button" class="month-step" id="monthNext" aria-label="Следующий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div></div><div class="calendar-body" id="calendarBody"><nav class="days" id="days" aria-label="Дни недели"></nav><div id="monthViewport" class="month-viewport" hidden><div id="monthScroll" class="month-scroll" role="region" aria-label="Календарь по месяцам. Прокручивайте вверх и вниз" tabindex="0" hidden></div></div></div></section>
+  <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><button type="button" class="month-toggle" id="monthToggle" aria-label="Раскрыть календарь месяца" aria-expanded="false" aria-controls="calendarBody"><strong id="weekLabel">Загрузка…</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button><button type="button" class="month-step" id="monthPrev" aria-label="Предыдущий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7"/></svg></button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button><button type="button" class="month-step" id="monthNext" aria-label="Следующий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div></div><div class="calendar-subject-filter" id="calendarSubjectFilter" hidden><select id="calendarSubject" aria-label="Предмет в календаре"><option value="">Все предметы</option></select></div><div class="calendar-body" id="calendarBody"><nav class="days" id="days" aria-label="Дни недели"></nav><div id="monthViewport" class="month-viewport" hidden><div id="monthScroll" class="month-scroll" role="region" aria-label="Календарь по месяцам. Прокручивайте вверх и вниз" tabindex="0" hidden></div></div></div></section>
   <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessonViewport"><div id="lessons" class="lessons"></div></div></section>
   <details id="reviewSection" class="more" hidden><summary id="reviewLabel">Непроверенные изменения</summary><div id="reviews"></div></details>
   <footer>
@@ -847,7 +869,7 @@ function readSavedDate(){
  return todayMoscow();
 }
 function saveSelectedDate(){try{sessionStorage.setItem(selectedStorageKey,selected)}catch{}}
-let selected=readSavedDate(),schedule=null,expanded=false,viewMonth=selected.slice(0,7)+'-01';
+let selected=readSavedDate(),schedule=null,expanded=false,viewMonth=selected.slice(0,7)+'-01',calendarSubject='';
 function plural(n){const a=n%10,b=n%100;return b>=11&&b<=14||a===0||a>=5?'занятий':a===1?'занятие':'занятия'}
 
 function monthShift(s,delta){const d=date(s);return iso(new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+delta,1,12)))}
@@ -861,22 +883,86 @@ function updateCalendarControls(){
  $('prev').hidden=expanded;$('next').hidden=expanded;
  $('monthPrev').hidden=!expanded;$('monthNext').hidden=!expanded;
 }
+
+function subjectKey(value){return String(value||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('ru-RU')}
+function calendarKind(value){return /лекци/i.test(value||'')?0:/практик|семинар|лаборатор/i.test(value||'')?1:2}
+function calendarEntries(entries,subject=''){return entries.filter(e=>!subject||subjectKey(e.subject)===subject)}
+function buildCalendarCounts(entries,subject=''){
+ const result=new Map(),slots=new Map();
+ for(const e of calendarEntries(entries,subject)){
+  if(e.cancelled||!e.date)continue;
+  const key=e.parallel_id?JSON.stringify([e.date,e.parallel_id,e.time,e.end]):null;
+  const k=calendarKind(e.kind);
+  if(key){if(!slots.has(key))slots.set(key,{date:e.date,kinds:new Set()});slots.get(key).kinds.add(k)}
+  else add(e.date,k);
+ }
+ for(const slot of slots.values())add(slot.date,slot.kinds.size===1?[...slot.kinds][0]:2);
+ function add(dt,k){if(!result.has(dt))result.set(dt,[0,0,0]);result.get(dt)[k]++}
+ return result;
+}
+function calendarCountLabel(counts){
+ if(!counts)return '';
+ return ', '+counts.map((n,k)=>n?(['лекций: ','практик: ','других занятий: '][k]+n):'').filter(Boolean).join(', ');
+}
+function calendarIndicator(counts){
+ if(!counts||!counts.some(Boolean))return '';
+ const fills=['#DCE7F4','#E4E3E6','#E9E0EF'],inks=['#365D86','#57545D','#694C7A'];
+ const parts=counts.map((n,k)=>({n,k})).filter(p=>p.n);
+ const width=parts.length===1?18:parts.length===2?32:34,left=(34-width)/2,seg=width/parts.length;
+ const shapes=parts.map(({n,k},i)=>{
+  const x=left+i*seg,end=x+seg;
+  let shape;
+  if(parts.length===1)shape='<rect x="'+x+'" y="0" width="'+width+'" height="12" rx="6" fill="'+fills[k]+'"/>';
+  else if(i===0)shape='<path d="M'+end+' 0 H'+(x+6)+' A6 6 0 0 0 '+(x+6)+' 12 H'+end+' Z" fill="'+fills[k]+'"/>';
+  else if(i===parts.length-1)shape='<path d="M'+x+' 0 H'+(end-6)+' A6 6 0 0 1 '+(end-6)+' 12 H'+x+' Z" fill="'+fills[k]+'"/>';
+  else shape='<rect x="'+x+'" y="0" width="'+seg+'" height="12" fill="'+fills[k]+'"/>';
+  return shape+'<text x="'+(x+seg/2)+'" y="9" text-anchor="middle" font-size="'+(parts.length===3||n>9?'8':'9.5')+'" font-weight="600" fill="'+inks[k]+'">'+n+'</text>';
+ }).join('');
+ return '<svg viewBox="0 0 34 12" aria-hidden="true" focusable="false">'+shapes+'</svg>';
+}
+function refreshCalendarSubject(){
+ const select=$('calendarSubject'),options=new Map();
+ for(const e of schedule?.entries||[]){const key=subjectKey(e.subject);if(key&&!options.has(key))options.set(key,String(e.subject).trim())}
+ if(calendarSubject&&!options.has(calendarSubject))calendarSubject='';
+ const labels=[...options].sort((a,b)=>a[1].localeCompare(b[1],'ru'));
+ const fingerprint=JSON.stringify(labels);
+ if(select.dataset.options!==fingerprint){
+  select.replaceChildren(new Option('Все предметы',''),...labels.map(([key,label])=>new Option(label,key)));
+  select.dataset.options=fingerprint;
+ }
+ select.value=calendarSubject;
+ $('calendarSubjectFilter').hidden=!expanded&&!calendarSubject;
+}
+function chooseCalendarSubject(value,fromCard=false){
+ const oldMonth=viewMonth;
+ calendarSubject=value;
+ if(fromCard&&!expanded){setMonthExpanded(true);render();return}
+ if(value&&!fromCard){
+  const entries=calendarEntries(schedule?.entries||[],value).filter(e=>!e.cancelled&&e.date).sort((a,b)=>a.date.localeCompare(b.date)||String(a.time).localeCompare(String(b.time)));
+  const now=todayMoscow(),sameMonth=entries.filter(e=>e.date.slice(0,7)===(expanded?viewMonth:selected).slice(0,7));
+  const target=sameMonth.find(e=>e.date>=now)||sameMonth[0]||entries.find(e=>e.date>=now)||entries[entries.length-1];
+  if(target){selected=target.date;viewMonth=selected.slice(0,7)+'-01';saveSelectedDate()}
+ }
+ render();
+ if(expanded&&oldMonth!==viewMonth)scrollToMonth(viewMonth);
+}
+$('calendarSubject').addEventListener('change',e=>chooseCalendarSubject(e.target.value));
 function makeDateButton(dt,dateSet,month=null){
  const dd=date(dt),current=dt===selected,now=todayMoscow(),btn=document.createElement('button');
- btn.type='button';btn.className='day'+(current?' active':'')+(dt===now?' today':'')+(month&&dt.slice(0,7)!==month.slice(0,7)?' outside':'');
- btn.dataset.date=dt;btn.setAttribute('aria-label',fmt.format(dd)+' '+dd.getUTCFullYear()+(dateSet.has(dt)?', есть занятия':''));btn.setAttribute('aria-pressed',String(current));if(dt===now)btn.setAttribute('aria-current','date');
- btn.innerHTML=(month?'':'<span>'+dnames[dd.getUTCDay()]+'</span>')+'<strong>'+dd.getUTCDate()+'</strong><i style="visibility:'+(dateSet.has(dt)?'visible':'hidden')+'"></i>';
+ btn.type='button';btn.className='day'+(current?' active':'')+(dt===now?' today':'')+(month&&dt.slice(0,7)!==month.slice(0,7)?' outside':'')+(calendarSubject&&!dateSet.has(dt)?' filtered-empty':'');
+ btn.dataset.date=dt;btn.setAttribute('aria-label',fmt.format(dd)+' '+dd.getUTCFullYear()+calendarCountLabel(dateSet.get(dt)));btn.setAttribute('aria-pressed',String(current));if(dt===now)btn.setAttribute('aria-current','date');
+ btn.innerHTML=(month?'':'<span>'+dnames[dd.getUTCDay()]+'</span>')+'<strong>'+dd.getUTCDate()+'</strong><i class="pair-indicator" aria-hidden="true">'+calendarIndicator(dateSet.get(dt))+'</i>';
  btn.onclick=e=>selectDate(dt,e.detail===0);
  return btn;
 }
 function updateDateButton(btn,dateSet){
  const dt=btn.dataset.date,active=dt===selected,now=dt===todayMoscow();
- btn.classList.toggle('active',active);btn.classList.toggle('today',now);
+ btn.classList.toggle('active',active);btn.classList.toggle('today',now);btn.classList.toggle('filtered-empty',!!calendarSubject&&!dateSet.has(dt));
  btn.setAttribute('aria-pressed',String(active));if(now)btn.setAttribute('aria-current','date');else btn.removeAttribute('aria-current');
- btn.setAttribute('aria-label',fmt.format(date(dt))+' '+date(dt).getUTCFullYear()+(dateSet.has(dt)?', есть занятия':''));
- btn.querySelector('i').style.visibility=dateSet.has(dt)?'visible':'hidden';
+ btn.setAttribute('aria-label',fmt.format(date(dt))+' '+date(dt).getUTCFullYear()+calendarCountLabel(dateSet.get(dt)));
+ const indicator=btn.querySelector('i'),markup=calendarIndicator(dateSet.get(dt));if(indicator.innerHTML!==markup)indicator.innerHTML=markup;
 }
-function calendarDateSet(){return new Set((schedule?.entries||[]).filter(x=>!x.cancelled).map(x=>x.date))}
+function calendarDateSet(){return buildCalendarCounts(schedule?.entries||[],calendarSubject)}
 function makeMonthPanel(month,dateSet){
  const panel=document.createElement('section');panel.className='month-panel';panel.dataset.month=month;
  const shown=date(month),name=capitalize(monthFmt.format(shown))+' '+shown.getUTCFullYear();
@@ -941,6 +1027,7 @@ function scrollToMonth(month,animated=false){
  animateMonthScroll(monthOffset(panel)-monthViewportInset(),animated?MOTION.month:0);
 }
 function renderCalendar(){
+ refreshCalendarSubject();
  const week=$('days'),scroller=$('monthScroll'),dateSet=calendarDateSet();
  const wasOpen=!scroller.hidden;
  if(!expanded){cancelMonthMotion();if(monthScrollFrame)cancelAnimationFrame(monthScrollFrame);monthScrollFrame=0}
@@ -1005,7 +1092,7 @@ function render(){
  renderCalendar();
  const d=date(selected),wd=longNames[d.getUTCDay()];
  $('dateTitle').textContent=`${fmt.format(d)}`;
- const lessons=(schedule?.entries||[]).filter(x=>x.date===selected).sort((a,b)=>a.time.localeCompare(b.time));
+ const lessons=calendarEntries(schedule?.entries||[],calendarSubject).filter(x=>x.date===selected).sort((a,b)=>a.time.localeCompare(b.time));
  const semesterStart=schedule?.semester_start||'';
  const semesterEnd=schedule?.semester_end||'';
  const finalBySubject=new Map();
@@ -1049,6 +1136,7 @@ function render(){
   if(!schedule?.entries?.length)msg='Данные ещё не загружены.';
   else if(selected<semesterStart||selected>semesterEnd)msg='Эта дата за пределами загруженного семестра.';
   else if(schedule.periods && !schedule.periods.some(([a,b])=>a<=selected && selected<=b))msg='Перерыв в занятиях по учебному календарю.';
+  else if(calendarSubject)msg='На выбранную дату нет занятий по этому предмету.';
   const empty=document.createElement('div');empty.className='empty';
   empty.innerHTML=`<div class="symbol" aria-hidden="true">☕</div><strong>Пар не найдено</strong><p>${h(msg)}</p>`;nextList.append(empty);
  }else for(const variants of cards){
@@ -1068,7 +1156,7 @@ function render(){
   else if(e.changed)flag='Изменено';
   const changeIcon=e.cancelled?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7a9 9 0 0 0-15-2L2 8m0-5v5h5M4 17a9 9 0 0 0 15 2l3-3m0 5v-5h-5"/></svg>';
   const flagContent=flag?(e.change_url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(e.change_url)?`<a href="${e.change_url}" class="change-badge" target="_blank" rel="noopener">${changeIcon}<span class="change-label">${h(flag)}</span><span class="change-link-arrow" aria-hidden="true">↗</span></a>`:`<span class="change-badge">${changeIcon}<span class="change-label">${h(flag)}</span></span>`):'';
-  return `<section class="lesson-option"><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${kindIcon(e.kind)}${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">${uiIcons.room}Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${uiIcons.teacher}<span>${h(e.teacher)}</span></div>`:''}${flagContent}${finalBadge}</section>`;
+  return `<section class="lesson-option"><button type="button" class="subject calendar-subject-link" data-calendar-subject="${h(subjectKey(e.subject))}" aria-label="${h(e.subject)} — показать в календаре">${h(e.subject)}</button><div class="details"><span class="chip${calendarKind(e.kind)===0?' calendar-kind-lecture':calendarKind(e.kind)===1?' calendar-kind-practice':''}">${kindIcon(e.kind)}${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">${uiIcons.room}Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${uiIcons.teacher}<span>${h(e.teacher)}</span></div>`:''}${flagContent}${finalBadge}</section>`;
   }).join('');
   el.innerHTML=`<div><div class="time-start">${h(e.time)}</div><div class="time-end">${e.end?h(e.end):'время уточняется'}</div></div><div>${sections}</div>`;
   nextList.append(el);
@@ -1333,7 +1421,7 @@ function navigateMonth(delta){
 }
 $('prev').onclick=()=>navigateWeek(-1);
 $('next').onclick=()=>navigateWeek(1);
-$('today').onclick=()=>selectDate(todayMoscow());
+$('today').onclick=()=>{if(calendarSubject){calendarSubject='';if(selected===todayMoscow()&&!expanded){render();return}}selectDate(todayMoscow())};
 $('monthPrev').onclick=()=>navigateMonth(-1);
 $('monthNext').onclick=()=>navigateMonth(1);
 function captureWeekOpen(){
@@ -1381,6 +1469,7 @@ function setMonthExpanded(value){
  expanded=value;viewMonth=selected.slice(0,7)+'-01';
  renderCalendar();if(fold)playMonthOpen(fold,height);else animateCalendar(0,height);
 }
+$('lessons').addEventListener('click',e=>{const button=e.target.closest('[data-calendar-subject]');if(button&&button.dataset.calendarSubject)chooseCalendarSubject(button.dataset.calendarSubject,true)});
 const monthButton=$('monthToggle');
 monthButton.onclick=()=>setMonthExpanded(!expanded);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&expanded&&!document.querySelector('.m5-dialog[open]')){setMonthExpanded(false);monthButton.focus()}});
