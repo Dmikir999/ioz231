@@ -795,16 +795,16 @@ footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transiti
 .month-panel .days.month-view .day{position:relative;align-self:stretch;justify-content:flex-start;gap:3px;min-width:0;min-height:44px;padding:0 0 2px}
 .month-panel .days.month-view .day strong{flex:none;width:min(100%,36px);height:36px;font-size:19px}
 .month-panel .day>i{position:absolute;top:36px;left:50%;transform:translateX(-50%);visibility:hidden!important;pointer-events:none}
+.month-panel .day{--month-card-bg:#ebe9ec;--month-card-ink:#5e5c62;--month-card-time:#747177;--month-choice-bg:#e6e3e7}
+.month-panel .day.today{--month-card-bg:#f8e3e5;--month-card-ink:#80333d;--month-card-time:#99434c;--month-choice-bg:#f4dfe3}
+.month-panel .day.active:not(.today){--month-card-bg:#e1e6ef;--month-card-ink:#2B3B5C;--month-card-time:#465674;--month-choice-bg:#dbe1ed}
 .month-panel .day .month-lessons{display:flex;flex-direction:column;align-items:stretch;gap:3px;width:100%;min-width:0}
-.month-panel .day .month-lesson{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:2px;box-sizing:border-box;width:100%;min-width:0;min-height:39px;padding:3px;border-radius:4px;background:#f8e3e5;color:#80333d;text-align:left;line-height:1.1}
-.month-panel .day .month-lesson-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;hyphens:auto;width:100%;font-size:clamp(10px,2.8vw,12px);font-weight:650;line-height:1.12;color:#80333d}
-.month-panel .day .month-lesson-time{display:block;white-space:nowrap;font-size:clamp(10px,2.65vw,12px);font-weight:500;line-height:1.15;color:#99434c;font-variant-numeric:tabular-nums}
-.month-panel .day .month-lesson.is-cancelled{background:#eae7e9}
-.month-panel .day .month-lesson.is-cancelled :is(.month-lesson-name,.month-lesson-time){color:#655e64;text-decoration:line-through}
+.month-panel .day .month-lesson{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:1px;box-sizing:border-box;width:100%;min-width:0;padding:3px;border-radius:5px;background:var(--month-card-bg);color:var(--month-card-ink);text-align:left;line-height:1.1}
+.month-panel .day .month-lesson-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;hyphens:none;width:100%;font-size:clamp(10px,2.8vw,12px);font-weight:600;line-height:1.12;color:var(--month-card-ink)}
+.month-panel .day .month-lesson-time{display:block;white-space:nowrap;font-size:clamp(10px,2.65vw,12px);font-weight:450;line-height:1.12;color:var(--month-card-time);font-variant-numeric:tabular-nums}
 .month-panel .day:focus-visible{outline-offset:-1px;border-radius:5px}
 .calendar-fold-layer .month-scroll{padding-block:10px 16px}
 @media(max-width:520px){.month-viewport{margin-inline:calc(7px - var(--page-gutter))}}
-@media(min-width:851px){.month-panel .day .month-lesson{min-height:44px;padding:5px}.month-panel .day .month-lesson-name,.month-panel .day .month-lesson-time{font-size:13px}}
 
 /* Month navigation refinements: persistent weekdays and larger reading area. */
 .month-viewport{-webkit-mask-image:none;mask-image:none;--month-fade-top:4px;--month-fade-bottom:12px}
@@ -813,14 +813,12 @@ footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transiti
 .month-viewport .month-scroll{max-height:min(540px,calc(62vh - 30px));-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent)}
 @supports(height:1dvh){.month-viewport .month-scroll{max-height:min(540px,calc(62dvh - 30px))}}
 @media(min-width:851px){.month-viewport .month-scroll{max-height:min(600px,calc(65vh - 30px))}}
-.month-panel .day .month-lesson{min-height:41px;padding:3px 2px;gap:2px}
-.month-panel .day .month-lesson-name{font-size:clamp(11px,2.9vw,12px);line-height:1.14}
-.month-panel .day .month-lesson-time{font-size:11px;line-height:1.15}
-.month-panel .day .month-lesson-choice{display:block;width:100%;color:#80333d;font-size:9px;font-weight:500;line-height:1.1;white-space:nowrap}
-.month-panel .day .month-lesson.is-choice{background:#f4e5e8}
+.month-panel .day .month-lesson-choice{display:block;width:100%;color:var(--month-card-ink);font-size:9px;font-weight:500;line-height:1.1;white-space:nowrap}
+.month-panel .day .month-lesson.is-choice{background:var(--month-choice-bg)}
 .month-panel .day .month-lesson.is-cancelled{background:#eae7e9}
+.month-panel .day .month-lesson.is-cancelled :is(.month-lesson-name,.month-lesson-time){color:#655e64;text-decoration:line-through}
 .month-panel .day .month-lesson.is-cancelled .month-lesson-choice{color:#655e64}
-@media(min-width:851px){.month-panel .day .month-lesson{padding:5px;min-height:44px}.month-panel .day .month-lesson-name,.month-panel .day .month-lesson-time{font-size:13px}.month-panel .day .month-lesson-choice{font-size:11px}}
+@media(min-width:851px){.month-panel .day .month-lesson{padding:4px;gap:2px}.month-panel .day .month-lesson-name{font-size:13px}.month-panel .day .month-lesson-time{font-size:12px}.month-panel .day .month-lesson-choice{font-size:11px}}
 .calendar-fold-layer .month-scroll{padding-block:4px 12px}
 .lesson-option.month-lesson-highlight{border-radius:9px;outline:2px solid #d7828e;outline-offset:5px;background:#fcecef}
 </style>
@@ -899,13 +897,13 @@ function updateCalendarControls(){
  $('monthPrev').hidden=!expanded;$('monthNext').hidden=!expanded;
 }
 const monthSubjectLabels=new Map([
- ['История отечественной культуры','История культуры'],
+ ['История отечественной культуры','Ист. культуры'],
  ['Логика и теория аргументации','Логика'],
- ['Музейная педагогика','Музейн. пед.'],
+ ['Музейная педагогика','Муз. пед.'],
  ['Профессиональная этика преподавателя социально-гуманитарных дисциплин','Проф. этика'],
- ['КВ Образовательное пространство столичного мегаполиса','КВ Мегаполис'],
+ ['КВ Образовательное пространство столичного мегаполиса','КВ Мегап.'],
  ['КВ Организация проектной деятельности обучающихся при изучении обществознания','КВ Проекты'],
- ['Методика обучения истории','Метод. истории'],
+ ['Методика обучения истории','Метод. ист.'],
  ['Методика обучения обществознанию','Метод. общ-ва']
 ]);
 let monthEntriesSource=null,monthEntriesByDate=new Map();
@@ -934,7 +932,7 @@ function updateMonthLessons(btn){
   const name=document.createElement('span');name.className='month-lesson-name';name.textContent=monthSubjectLabels.get(subject)||subject;
   const time=document.createElement('span');time.className='month-lesson-time';time.textContent=e.time||'—';
   card.append(name,time);
-  if(e.parallel_id){const choice=document.createElement('span');choice.className='month-lesson-choice';choice.textContent='На выбор';card.append(choice)}
+  if(e.parallel_id&&!/^КВ(?:\s|$)/i.test(name.textContent)){const choice=document.createElement('span');choice.className='month-lesson-choice';choice.textContent='На выбор';card.append(choice)}
   fragment.append(card);
  }
  if(container){
