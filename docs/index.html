@@ -786,48 +786,13 @@ footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transiti
 #lessonViewport.is-resizing{overflow:clip;overflow-clip-margin:12px}
 @supports not (overflow:clip){#lessonViewport.is-resizing{overflow:hidden}}
 @media(prefers-reduced-motion:reduce){#lessonViewport.is-resizing{overflow:visible}.calendar-section .day strong{transition:none!important}}
-
-/* Month-only lesson previews. Every scheduled entry gets its own card. */
-.month-viewport{--month-fade-top:10px;--month-fade-bottom:16px}
-.month-panel .days.month-view{column-gap:3px;row-gap:6px}
-.month-panel .month-week-row{align-items:start;padding-bottom:6px;border-bottom:1px solid var(--line)}
-.month-panel .month-week-row:last-child{border-bottom:0;padding-bottom:0}
-.month-panel .days.month-view .day{position:relative;align-self:stretch;justify-content:flex-start;gap:3px;min-width:0;min-height:44px;padding:0 0 2px}
-.month-panel .days.month-view .day strong{flex:none;width:min(100%,36px);height:36px;font-size:19px}
-.month-panel .day>i{position:absolute;top:36px;left:50%;transform:translateX(-50%);visibility:hidden!important;pointer-events:none}
-.month-panel .day{--month-card-bg:#ebe9ec;--month-card-ink:#5e5c62;--month-card-time:#747177;--month-choice-bg:#e6e3e7}
-.month-panel .day.today{--month-card-bg:#f8e3e5;--month-card-ink:#80333d;--month-card-time:#99434c;--month-choice-bg:#f4dfe3}
-.month-panel .day.active:not(.today){--month-card-bg:#e1e6ef;--month-card-ink:#2B3B5C;--month-card-time:#465674;--month-choice-bg:#dbe1ed}
-.month-panel .day .month-lessons{display:flex;flex-direction:column;align-items:stretch;gap:3px;width:100%;min-width:0}
-.month-panel .day .month-lesson{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:1px;box-sizing:border-box;width:100%;min-width:0;padding:3px;border-radius:5px;background:var(--month-card-bg);color:var(--month-card-ink);text-align:left;line-height:1.1}
-.month-panel .day .month-lesson-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;hyphens:none;width:100%;font-size:clamp(10px,2.8vw,12px);font-weight:600;line-height:1.12;color:var(--month-card-ink)}
-.month-panel .day .month-lesson-time{display:block;white-space:nowrap;font-size:clamp(10px,2.65vw,12px);font-weight:450;line-height:1.12;color:var(--month-card-time);font-variant-numeric:tabular-nums}
-.month-panel .day:focus-visible{outline-offset:-1px;border-radius:5px}
-.calendar-fold-layer .month-scroll{padding-block:10px 16px}
-@media(max-width:520px){.month-viewport{margin-inline:calc(7px - var(--page-gutter))}}
-
-/* Month navigation refinements: persistent weekdays and larger reading area. */
-.month-viewport{-webkit-mask-image:none;mask-image:none;--month-fade-top:4px;--month-fade-bottom:12px}
-.month-weekdays-fixed{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));column-gap:3px;align-items:center;padding:3px 0 6px;border-bottom:1px solid var(--line)}
-.month-weekdays-fixed .month-weekday{font-size:12px;font-weight:500;line-height:20px}
-.month-viewport .month-scroll{max-height:min(540px,calc(62vh - 30px));-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent)}
-@supports(height:1dvh){.month-viewport .month-scroll{max-height:min(540px,calc(62dvh - 30px))}}
-@media(min-width:851px){.month-viewport .month-scroll{max-height:min(600px,calc(65vh - 30px))}}
-.month-panel .day .month-lesson-choice{display:block;width:100%;color:var(--month-card-ink);font-size:9px;font-weight:500;line-height:1.1;white-space:nowrap}
-.month-panel .day .month-lesson.is-choice{background:var(--month-choice-bg)}
-.month-panel .day .month-lesson.is-cancelled{background:#eae7e9}
-.month-panel .day .month-lesson.is-cancelled :is(.month-lesson-name,.month-lesson-time){color:#655e64;text-decoration:line-through}
-.month-panel .day .month-lesson.is-cancelled .month-lesson-choice{color:#655e64}
-@media(min-width:851px){.month-panel .day .month-lesson{padding:4px;gap:2px}.month-panel .day .month-lesson-name{font-size:13px}.month-panel .day .month-lesson-time{font-size:12px}.month-panel .day .month-lesson-choice{font-size:11px}}
-.calendar-fold-layer .month-scroll{padding-block:4px 12px}
-.lesson-option.month-lesson-highlight{border-radius:9px;outline:2px solid #d7828e;outline-offset:5px;background:#fcecef}
 </style>
 </head>
 <body>
 <noscript><div><img src="https://mc.yandex.ru/watch/114487182" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
   <header><div class="eyebrow">Институт гуманитарных наук</div><h1 class="appname">Расписание</h1><div class="group">ИОЗ-231</div></header>
-  <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><button type="button" class="month-toggle" id="monthToggle" aria-label="Раскрыть календарь месяца" aria-expanded="false" aria-controls="calendarBody"><strong id="weekLabel">Загрузка…</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button><button type="button" class="month-step" id="monthPrev" aria-label="Предыдущий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7"/></svg></button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button><button type="button" class="month-step" id="monthNext" aria-label="Следующий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div></div><div class="calendar-body" id="calendarBody"><nav class="days" id="days" aria-label="Дни недели"></nav><div id="monthViewport" class="month-viewport" hidden><div class="month-weekdays-fixed" aria-hidden="true"><span class="month-weekday">Пн</span><span class="month-weekday">Вт</span><span class="month-weekday">Ср</span><span class="month-weekday">Чт</span><span class="month-weekday">Пт</span><span class="month-weekday">Сб</span><span class="month-weekday">Вс</span></div><div id="monthScroll" class="month-scroll" role="region" aria-label="Календарь по месяцам. Прокручивайте вверх и вниз" tabindex="0" hidden></div></div></div></section>
+  <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><button type="button" class="month-toggle" id="monthToggle" aria-label="Раскрыть календарь месяца" aria-expanded="false" aria-controls="calendarBody"><strong id="weekLabel">Загрузка…</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button><button type="button" class="month-step" id="monthPrev" aria-label="Предыдущий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7"/></svg></button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button><button type="button" class="month-step" id="monthNext" aria-label="Следующий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div></div><div class="calendar-body" id="calendarBody"><nav class="days" id="days" aria-label="Дни недели"></nav><div id="monthViewport" class="month-viewport" hidden><div id="monthScroll" class="month-scroll" role="region" aria-label="Календарь по месяцам. Прокручивайте вверх и вниз" tabindex="0" hidden></div></div></div></section>
   <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessonViewport"><div id="lessons" class="lessons"></div></div></section>
   <details id="reviewSection" class="more" hidden><summary id="reviewLabel">Непроверенные изменения</summary><div id="reviews"></div></details>
   <footer>
@@ -896,62 +861,12 @@ function updateCalendarControls(){
  $('prev').hidden=expanded;$('next').hidden=expanded;
  $('monthPrev').hidden=!expanded;$('monthNext').hidden=!expanded;
 }
-const monthSubjectLabels=new Map([
- ['История отечественной культуры','Ист. культуры'],
- ['Логика и теория аргументации','Логика'],
- ['Музейная педагогика','Муз. пед.'],
- ['Профессиональная этика преподавателя социально-гуманитарных дисциплин','Проф. этика'],
- ['КВ Образовательное пространство столичного мегаполиса','КВ Мегап.'],
- ['КВ Организация проектной деятельности обучающихся при изучении обществознания','КВ Проекты'],
- ['Методика обучения истории','Метод. ист.'],
- ['Методика обучения обществознанию','Метод. общ-ва']
-]);
-let monthEntriesSource=null,monthEntriesByDate=new Map();
-function monthLessonsFor(dt){
- const entries=schedule?.entries;
- if(entries!==monthEntriesSource){
-  monthEntriesSource=entries;monthEntriesByDate=new Map();
-  for(const entry of entries||[]){
-   if(!monthEntriesByDate.has(entry.date))monthEntriesByDate.set(entry.date,[]);
-   monthEntriesByDate.get(entry.date).push(entry);
-  }
-  for(const list of monthEntriesByDate.values())list.sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
- }
- return monthEntriesByDate.get(dt)||[];
-}
-function monthLessonKey(e){return String(e.id||JSON.stringify([e.date,e.time,e.end,e.subject,e.kind,e.teacher,e.room]))}
-function updateMonthLessons(btn){
- const lessons=monthLessonsFor(btn.dataset.date);
- const container=btn.querySelector('.month-lessons');
- const fragment=document.createDocumentFragment();
- for(const e of lessons){
-  const subject=String(e.subject||'Занятие').trim().replace(/\s+/g,' ')||'Занятие';
-  const card=document.createElement('span');card.className='month-lesson'+(e.parallel_id?' is-choice':'')+(e.cancelled?' is-cancelled':'');
-  card.dataset.lessonKey=monthLessonKey(e);
-  card.title=subject+' — '+(e.time||'Время уточняется')+(e.parallel_id?' (на выбор)':'')+(e.cancelled?' (отменена)':'');
-  const name=document.createElement('span');name.className='month-lesson-name';name.textContent=monthSubjectLabels.get(subject)||subject;
-  const time=document.createElement('span');time.className='month-lesson-time';time.textContent=e.time||'—';
-  card.append(name,time);
-  if(e.parallel_id&&!/^КВ(?:\s|$)/i.test(name.textContent)){const choice=document.createElement('span');choice.className='month-lesson-choice';choice.textContent='На выбор';card.append(choice)}
-  fragment.append(card);
- }
- if(container){
-  const next=document.createElement('span');next.className='month-lessons';next.append(fragment);
-  if(container.innerHTML!==next.innerHTML)container.replaceChildren(...next.childNodes);
- }
- const description=lessons.map(e=>String(e.time||'Время уточняется')+' '+String(e.subject||'Занятие')+(e.parallel_id?' (на выбор)':'')+(e.cancelled?' (отменена)':'')).join('; ');
- btn.setAttribute('aria-label',fmt.format(date(btn.dataset.date))+' '+date(btn.dataset.date).getUTCFullYear()+(description?'. '+description:''));
-}
 function makeDateButton(dt,dateSet,month=null){
  const dd=date(dt),current=dt===selected,now=todayMoscow(),btn=document.createElement('button');
  btn.type='button';btn.className='day'+(current?' active':'')+(dt===now?' today':'')+(month&&dt.slice(0,7)!==month.slice(0,7)?' outside':'');
  btn.dataset.date=dt;btn.setAttribute('aria-label',fmt.format(dd)+' '+dd.getUTCFullYear()+(dateSet.has(dt)?', есть занятия':''));btn.setAttribute('aria-pressed',String(current));if(dt===now)btn.setAttribute('aria-current','date');
  btn.innerHTML=(month?'':'<span>'+dnames[dd.getUTCDay()]+'</span>')+'<strong>'+dd.getUTCDate()+'</strong><i style="visibility:'+(dateSet.has(dt)?'visible':'hidden')+'"></i>';
- if(month){const list=document.createElement('span');list.className='month-lessons';btn.append(list);updateMonthLessons(btn)}
- btn.onclick=e=>{
-  const key=month&&e.target.closest?.('.month-lesson')?.dataset.lessonKey;
-  selectDate(dt,e.detail===0,key||null);
- };
+ btn.onclick=e=>selectDate(dt,e.detail===0);
  return btn;
 }
 function updateDateButton(btn,dateSet){
@@ -960,7 +875,6 @@ function updateDateButton(btn,dateSet){
  btn.setAttribute('aria-pressed',String(active));if(now)btn.setAttribute('aria-current','date');else btn.removeAttribute('aria-current');
  btn.setAttribute('aria-label',fmt.format(date(dt))+' '+date(dt).getUTCFullYear()+(dateSet.has(dt)?', есть занятия':''));
  btn.querySelector('i').style.visibility=dateSet.has(dt)?'visible':'hidden';
- if(btn.querySelector('.month-lessons'))updateMonthLessons(btn);
 }
 function calendarDateSet(){return new Set((schedule?.entries||[]).filter(x=>!x.cancelled).map(x=>x.date))}
 function makeMonthPanel(month,dateSet){
@@ -968,6 +882,7 @@ function makeMonthPanel(month,dateSet){
  const shown=date(month),name=capitalize(monthFmt.format(shown))+' '+shown.getUTCFullYear();
  const title=document.createElement('h3');title.className='month-panel-title';title.textContent=name;panel.append(title);
  const grid=document.createElement('div');grid.className='days month-view';grid.setAttribute('role','group');grid.setAttribute('aria-label',name);
+ for(const name of ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']){const el=document.createElement('span');el.className='month-weekday';el.textContent=name;grid.append(el)}
  const start=monday(month),total=Math.ceil(((shown.getUTCDay()+6)%7+new Date(Date.UTC(shown.getUTCFullYear(),shown.getUTCMonth()+1,0)).getUTCDate())/7)*7;
  let row;
  for(let i=0;i<total;i++){
@@ -1045,11 +960,7 @@ function renderCalendar(){
   scroller.replaceChildren();return;
  }
  if(wasOpen&&scroller.children.length&&findMonthPanel(viewMonth)){
-  const anchor=Array.from(scroller.querySelectorAll('.month-week-row')).find(row=>row.getBoundingClientRect().bottom>scroller.getBoundingClientRect().top+monthViewportInset());
-  const oldTop=anchor?.getBoundingClientRect().top;
-  scroller.querySelectorAll('.day').forEach(btn=>updateDateButton(btn,dateSet));
-  if(anchor&&Number.isFinite(oldTop))scroller.scrollTop+=anchor.getBoundingClientRect().top-oldTop;
-  return;
+  scroller.querySelectorAll('.day').forEach(btn=>updateDateButton(btn,dateSet));return;
  }
  cancelMonthMotion();
  const fragment=document.createDocumentFragment();
@@ -1157,7 +1068,7 @@ function render(){
   else if(e.changed)flag='Изменено';
   const changeIcon=e.cancelled?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7a9 9 0 0 0-15-2L2 8m0-5v5h5M4 17a9 9 0 0 0 15 2l3-3m0 5v-5h-5"/></svg>';
   const flagContent=flag?(e.change_url&&/^https:\/\/vk\.com\/wall-?\d+_\d+$/.test(e.change_url)?`<a href="${e.change_url}" class="change-badge" target="_blank" rel="noopener">${changeIcon}<span class="change-label">${h(flag)}</span><span class="change-link-arrow" aria-hidden="true">↗</span></a>`:`<span class="change-badge">${changeIcon}<span class="change-label">${h(flag)}</span></span>`):'';
-  return `<section class="lesson-option" data-lesson-key="${h(monthLessonKey(e))}"><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${kindIcon(e.kind)}${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">${uiIcons.room}Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${uiIcons.teacher}<span>${h(e.teacher)}</span></div>`:''}${flagContent}${finalBadge}</section>`;
+  return `<section class="lesson-option"><div class="subject">${h(e.subject)}</div><div class="details"><span class="chip">${kindIcon(e.kind)}${h(e.kind||'Занятие')}</span>${e.room?`<span class="chip room">${uiIcons.room}Ауд. ${h(e.room)}</span>`:''}</div>${e.teacher?`<div class="teacher">${uiIcons.teacher}<span>${h(e.teacher)}</span></div>`:''}${flagContent}${finalBadge}</section>`;
   }).join('');
   el.innerHTML=`<div><div class="time-start">${h(e.time)}</div><div class="time-end">${e.end?h(e.end):'время уточняется'}</div></div><div>${sections}</div>`;
   nextList.append(el);
@@ -1312,15 +1223,13 @@ function captureMonthFold(dt){
   const rowRect=row.getBoundingClientRect();
   if(rowRect.bottom>bounds.top&&rowRect.top<bounds.bottom){
    for(const button of row.querySelectorAll('[data-date]')){
-    const rect=button.querySelector('strong').getBoundingClientRect();
-    if(rect.bottom>bounds.top+monthViewportInset()&&rect.top<bounds.bottom-12)positions.set(button.dataset.date,{rect});
+    const rect=button.querySelector('strong').getBoundingClientRect(),dot=button.querySelector('i').getBoundingClientRect();
+    positions.set(button.dataset.date,{rect,dot});
    }
   }
  }
  const clone=viewport.cloneNode(false),copyScroller=scroller.cloneNode(false);
  for(const panel of scroller.children){const rect=panel.getBoundingClientRect();if(rect.bottom<=bounds.top||rect.top>=bounds.bottom)continue;const copy=panel.cloneNode(true);Object.assign(copy.style,{position:'absolute',top:(rect.top-bounds.top)+'px',left:(rect.left-bounds.left)+'px',width:rect.width+'px',margin:0});copyScroller.append(copy)}
- const weekdays=viewport.querySelector('.month-weekdays-fixed');
- if(weekdays)clone.append(weekdays.cloneNode(true));
  clone.append(copyScroller);
  clone.removeAttribute('id');clone.setAttribute('aria-hidden','true');clone.setAttribute('inert','');
  copyScroller.removeAttribute('id');
@@ -1328,9 +1237,7 @@ function captureMonthFold(dt){
  for(const el of clone.querySelectorAll('button,[tabindex]'))el.setAttribute('tabindex','-1');
  if(positions.size){
   const copyRow=copyScroller.querySelector('[data-date="'+dt+'"]')?.closest('.month-week-row');
-  if(copyRow)for(const button of copyRow.querySelectorAll('[data-date]')){
-   if(positions.has(button.dataset.date))button.querySelector('strong').style.visibility='hidden';
-  }
+  if(copyRow)copyRow.style.visibility='hidden';
  }
  copyScroller.style.height=bounds.height+'px';copyScroller.style.maxHeight='none';copyScroller.style.boxSizing='border-box';
  const layer=document.createElement('div');layer.className='calendar-fold-layer';layer.style.height=viewport.getBoundingClientRect().height+'px';layer.setAttribute('aria-hidden','true');layer.setAttribute('inert','');layer.append(clone);
@@ -1345,15 +1252,15 @@ function playMonthFold(fold,oldHeight,lessonsChanged,oldLessonHeight){
  const run=(el,frames,options)=>{const a=el.animate(frames,options);fold.animations.push(a);return a};
  const travel={duration,easing,fill:'both'};
  // The old calendar stays visible while its non-selected rows fade away.
- run(fold.layer,[{opacity:1},{opacity:0}],{duration:220,easing:'ease-out',fill:'both'});
+ run(fold.layer,[{opacity:1},{opacity:0}],{duration:180,easing:'ease-out',fill:'both'});
  for(const button of week.querySelectorAll('[data-date]')){
   const number=button.querySelector('strong'),dot=button.querySelector('i'),label=button.querySelector('span'),from=fold.positions.get(button.dataset.date);
   if(label)run(label,[{opacity:0},{opacity:1}],{duration:150,delay:65,easing:'ease-out',fill:'both'});
   if(from){
-   const to=number.getBoundingClientRect();
-   const dx=from.rect.left+from.rect.width/2-to.left-to.width/2,dy=from.rect.top+from.rect.height/2-to.top-to.height/2,scale=to.width?from.rect.width/to.width:1;
-   run(number,[{transform:'translate3d('+dx+'px,'+dy+'px,0) scale('+scale+')'},{transform:'translate3d(0,0,0) scale(1)'}],travel);
-   run(dot,[{opacity:0},{opacity:1}],{duration:170,delay:60,easing:'ease-out',fill:'both'});
+   const to=number.getBoundingClientRect(),toDot=dot.getBoundingClientRect();
+   const dx=from.rect.left+from.rect.width/2-to.left-to.width/2,dy=from.rect.top+from.rect.height/2-to.top-to.height/2;
+   run(number,[{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],travel);
+   run(dot,[{transform:'translate('+(from.dot.left-toDot.left)+'px,'+(from.dot.top-toDot.top)+'px)'},{transform:'translate(0,0)'}],travel);
   }else{
    run(number,[{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:160,delay:65,easing,fill:'both'});
    run(dot,[{opacity:0},{opacity:1}],{duration:160,delay:65,easing,fill:'both'});
@@ -1388,25 +1295,8 @@ function animateLessons(oldHeight){
  const finish=()=>{if(lessonHeightMotion===height){lessonHeightMotion=null;viewport.classList.remove('is-resizing')}};
  height.onfinish=finish;height.oncancel=finish;
 }
-let monthHighlightTimer=0,monthHighlightClearTimer=0;
-function clearMonthHighlight(){
- clearTimeout(monthHighlightTimer);clearTimeout(monthHighlightClearTimer);
- $('lessons').querySelectorAll('.month-lesson-highlight').forEach(el=>el.classList.remove('month-lesson-highlight'));
-}
-function highlightMonthLesson(key,dt,delay){
- monthHighlightTimer=setTimeout(()=>{
-  if(selected!==dt||expanded)return;
-  const target=Array.from($('lessons').querySelectorAll('[data-lesson-key]')).find(el=>el.dataset.lessonKey===key);
-  if(!target)return;
-  target.classList.add('month-lesson-highlight');
-  const rect=target.getBoundingClientRect(),height=window.visualViewport?.height||window.innerHeight;
-  if(rect.top<8||rect.bottom>height-8)target.scrollIntoView({block:'nearest',behavior:reducedMotion()?'auto':'smooth'});
-  monthHighlightClearTimer=setTimeout(()=>target.classList.remove('month-lesson-highlight'),1800);
- },delay);
-}
-function selectDate(dt,restoreFocus=false,lessonKey=null){
+function selectDate(dt,restoreFocus=false){
  if(dt===selected&&!expanded)return;
- clearMonthHighlight();
  const wasExpanded=expanded,changed=dt!==selected,oldLessonHeight=measureLessonHeight();
  const height=prepareCalendarAnimation(),fold=wasExpanded?captureMonthFold(dt):null;
  selected=dt;expanded=false;viewMonth=selected.slice(0,7)+'-01';saveSelectedDate();if(changed)haptic();const contentChanged=render();
@@ -1416,7 +1306,6 @@ function selectDate(dt,restoreFocus=false,lessonKey=null){
   if(changed){animateSelection();if(contentChanged)animateLessons(oldLessonHeight)}
  }
  if(restoreFocus)$('days').querySelector('[data-date="'+selected+'"]')?.focus({preventScroll:true});
- if(lessonKey)highlightMonthLesson(lessonKey,dt,reducedMotion()?0:MOTION.close+35);
 }
 function weekSettleDuration(distance,width,velocity=0){
  if(!width)return MOTION.week;
@@ -1424,7 +1313,6 @@ function weekSettleDuration(distance,width,velocity=0){
 }
 function navigateWeek(delta,drag=0,velocity=0){
  if(expanded)return;
- clearMonthHighlight();
  const days=$('days'),width=days.clientWidth,slide=width>0&&!reducedMotion()&&typeof days.animate==='function';
  const oldLessonHeight=measureLessonHeight();
  prepareCalendarAnimation();
@@ -1462,9 +1350,11 @@ function playMonthOpen(fold,oldHeight){
  const body=$('calendarBody'),viewport=$('monthViewport'),scroller=$('monthScroll');
  const chosen=findMonthPanel(viewMonth)?.querySelector('[data-date="'+selected+'"]'),row=chosen?.closest('.month-week-row');
  if(!row){animateCalendar(0,oldHeight);return}
+ const bounds=scroller.getBoundingClientRect(),rr=row.getBoundingClientRect();
+ if(rr.bottom>bounds.bottom-34||rr.top<bounds.top+24)scroller.scrollTop+=rr.top-bounds.top-monthViewportInset();
  const endHeight=body.getBoundingClientRect().height,duration=MOTION.open,options={duration,easing:MOTION.ease,fill:'both'};
  body.append(fold.layer);calendarFold=fold;
- fold.restore=()=>{viewport.style.pointerEvents=''};
+ fold.restore=()=>{row.style.visibility='';viewport.style.pointerEvents=''};
  viewport.style.pointerEvents='none';
  const run=(el,frames,opts)=>{const a=el.animate(frames,opts);fold.animations.push(a);return a};
  const targets=Array.from(row.querySelectorAll('[data-date]'));
@@ -1472,33 +1362,24 @@ function playMonthOpen(fold,oldHeight){
   const target=targets.find(el=>el.dataset.date===button.dataset.date),label=button.querySelector('span');
   if(label)run(label,[{opacity:1},{opacity:0}],{duration:120,easing:'ease-out',fill:'both'});
   if(!target){run(button,[{opacity:1},{opacity:0}],{duration:160,easing:'ease-out',fill:'both'});continue}
-  const dot=button.querySelector('i');if(dot)run(dot,[{opacity:1},{opacity:0}],{duration:120,easing:'ease-out',fill:'both'});
-  for(const selector of ['strong']){
+  for(const selector of ['strong','i']){
    const el=button.querySelector(selector),dest=target.querySelector(selector),a=el.getBoundingClientRect(),z=dest.getBoundingClientRect();
    const dx=z.left+z.width/2-a.left-a.width/2,dy=z.top+z.height/2-a.top-a.height/2,scale=a.width?z.width/a.width:1;
-   run(el,[{transform:'translate3d(0,0,0) scale(1)',opacity:1,offset:0},{opacity:1,offset:.72},{transform:'translate3d('+dx+'px,'+dy+'px,0) scale('+scale+')',opacity:0,offset:1}],options);
-    run(dest,[{opacity:0,offset:0},{opacity:0,offset:.72},{opacity:1,offset:1}],options);
+   run(el,[{transform:'translate3d(0,0,0) scale(1)'},{transform:'translate3d('+dx+'px,'+dy+'px,0) scale('+scale+')'}],options);
   }
  }
- for(const list of row.querySelectorAll('.month-lessons'))run(list,[{opacity:0,transform:'translateY(-3px)'},{opacity:1,transform:'translateY(0)'}],{duration:210,delay:45,easing:'ease-out',fill:'both'});
+ row.style.visibility='hidden';
  run(viewport,[{opacity:.05},{opacity:1}],{duration:220,easing:'ease-out',fill:'both'});
  const height=run(body,[{height:oldHeight+'px',overflow:'hidden'},{height:endHeight+'px',overflow:'hidden'}],options);height.id='calendar-height';
  height.onfinish=()=>{if(calendarFold===fold)clearCalendarFold()};
  fold.timer=setTimeout(()=>{if(calendarFold===fold)clearCalendarFold()},duration+80);
 }
-function revealSelectedMonthRow(){
- const scroller=$('monthScroll'),row=findMonthPanel(viewMonth)?.querySelector('[data-date="'+selected+'"]')?.closest('.month-week-row');
- if(!row)return;
- const bounds=scroller.getBoundingClientRect(),rr=row.getBoundingClientRect();
- if(rr.bottom>bounds.bottom-12||rr.top<bounds.top+monthViewportInset())scroller.scrollTop+=rr.top-bounds.top-monthViewportInset();
-}
 function setMonthExpanded(value){
  if(expanded===value)return;
  if(!value){selectDate(selected);return}
- clearMonthHighlight();
  const height=prepareCalendarAnimation(),fold=captureWeekOpen();
  expanded=value;viewMonth=selected.slice(0,7)+'-01';
- renderCalendar();revealSelectedMonthRow();if(fold)playMonthOpen(fold,height);else animateCalendar(0,height);
+ renderCalendar();if(fold)playMonthOpen(fold,height);else animateCalendar(0,height);
 }
 const monthButton=$('monthToggle');
 monthButton.onclick=()=>setMonthExpanded(!expanded);
