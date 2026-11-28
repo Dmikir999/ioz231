@@ -854,9 +854,10 @@ footer .verification .source-tag.bad{color:var(--danger-ink)}
 
 /* Control hierarchy: selection > contextual action > navigation > utilities > links. */
 :root{
- --action-ink:#CF1025;--action-fill:#FBE9EB;--action-hover:#F8DEE2;--action-pressed:#F4D1D7;
+ --action-ink:var(--red-dark);--action-fill:#FBE9EB;--action-hover:#F9E3E6;--action-pressed:#F6DCE0;
  --selection-fill:#E8EEF7;--selection-border:#D5DDEB;--link-ink:#365D86;
- --control-outline:#D1D1D6;--focus-ink:#2B3B5C;
+ --control-outline:#D1D1D6;--nav-outline:#C4C4CC;--focus-ink:var(--selected-date);--subject-underline:#8E8E93;
+ --selection-hover:#DEE6F1;--selection-pressed:#D5DDEB;
 }
 /* Date selection is the strongest signal; navigation surfaces remain subordinate. */
 .calendar-section .month-toggle::before{background:var(--surface);border-color:var(--control-outline);box-shadow:none}
@@ -864,13 +865,13 @@ footer .verification .source-tag.bad{color:var(--danger-ink)}
 .calendar-section .month-toggle[aria-expanded="true"] svg:last-child{color:var(--selected-date)}
 .calendar-section .month-toggle[aria-expanded="true"]::before{background:var(--selection-fill);border-color:var(--selection-border)}
 .calendar-section .week-nav :is(.icon-button,.month-step){color:var(--ink)}
-.calendar-section .week-nav :is(.icon-button,.month-step)::before{background:transparent;border-color:var(--line);box-shadow:none}
+.calendar-section .week-nav :is(.icon-button,.month-step)::before{background:transparent;border-color:var(--nav-outline);box-shadow:none}
 .calendar-section .week-nav .today-button{color:var(--action-ink);font-weight:600}
 .calendar-section .week-nav .today-button::before{background:var(--action-fill);border-color:transparent;box-shadow:none}
-/* When already on today with no active filter, the return action is quiet but still usable. */
+/* Quiet when the selected date and displayed month are already current and no subject filter is active. */
+.calendar-section .week-nav .today-button[data-return-needed="false"]{color:var(--ink);font-weight:500}
+.calendar-section .week-nav .today-button[data-return-needed="false"]::before{background:var(--surface);border-color:var(--control-outline)}
 @supports selector(:has(*)){
- .calendar-section:has(#days:not([hidden]) .day.active.today):has(#calendarSubjectFilter[hidden]) .week-nav .today-button{color:var(--ink);font-weight:500}
- .calendar-section:has(#days:not([hidden]) .day.active.today):has(#calendarSubjectFilter[hidden]) .week-nav .today-button::before{background:var(--surface);border-color:var(--line)}
  .calendar-subject-filter:has(option:checked:not([value=""])) select{color:var(--selected-date);background:var(--selection-fill);border-color:var(--selection-border)}
 }
 /* Utility actions are outlined; informational links remain recognizably links. */
@@ -878,23 +879,23 @@ footer .refresh{color:var(--ink);background:var(--surface);border-color:var(--co
 footer .refresh[aria-busy="true"]{color:var(--muted)}
 footer .footer-links a{color:var(--link-ink)}
 .more summary{color:var(--warning-ink)}
-.calendar-subject-filter select{border-color:var(--control-outline)}
+.calendar-subject-filter select{border-color:var(--control-outline);min-height:44px}
+.lesson .chip.room{font-weight:600}
+.lesson .subject.calendar-subject-link{text-decoration-line:underline;text-decoration-style:dotted;text-decoration-color:var(--subject-underline);text-decoration-thickness:1px;text-underline-offset:3px}
+.lesson.cancelled .subject.calendar-subject-link{text-decoration-line:line-through;text-decoration-style:solid;text-decoration-color:var(--muted)}
 .lesson .subject.calendar-subject-link:focus-visible{outline-color:var(--focus-ink)}
 @media(hover:hover) and (pointer:fine){
  .calendar-section .month-toggle:hover::before,.calendar-section .week-nav :is(.icon-button,.month-step):hover::before,footer .refresh:hover{background:var(--control-hover)}
- .calendar-section .month-toggle[aria-expanded="true"]:hover::before{background:#DEE6F1}
+ .calendar-section .month-toggle[aria-expanded="true"]:hover::before{background:var(--selection-hover)}
  .calendar-section .week-nav .today-button:hover::before{background:var(--action-hover)}
- .lesson .subject.calendar-subject-link:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--control-outline)}
+ .lesson:not(.cancelled) .subject.calendar-subject-link:hover{text-decoration-style:solid;text-decoration-color:var(--selected-date)}
+ .calendar-section .week-nav .today-button[data-return-needed="false"]:hover::before{background:var(--control-hover)}
 }
 .calendar-section .month-toggle:active::before,.calendar-section .week-nav :is(.icon-button,.month-step):active::before,footer .refresh:active{background:var(--control-pressed)}
-.calendar-section .month-toggle[aria-expanded="true"]:active::before{background:#D5DDEB}
+.calendar-section .month-toggle[aria-expanded="true"]:active::before{background:var(--selection-pressed)}
 .calendar-section .week-nav .today-button:active::before{background:var(--action-pressed)}
-@supports selector(:has(*)){
- @media(hover:hover) and (pointer:fine){
-  .calendar-section:has(#days:not([hidden]) .day.active.today):has(#calendarSubjectFilter[hidden]) .week-nav .today-button:hover::before{background:var(--control-hover)}
- }
- .calendar-section:has(#days:not([hidden]) .day.active.today):has(#calendarSubjectFilter[hidden]) .week-nav .today-button:active::before{background:var(--control-pressed)}
-}
+.calendar-section .week-nav .today-button[data-return-needed="false"]:active::before{background:var(--control-pressed)}
+.lesson:not(.cancelled) .subject.calendar-subject-link:active{text-decoration-style:solid;text-decoration-color:var(--selected-date)}
 .calendar-section button:focus-visible,.calendar-section select:focus-visible,footer button:focus-visible,footer a:focus-visible,.more summary:focus-visible{outline-color:var(--focus-ink)}
 </style>
 </head>
@@ -966,6 +967,9 @@ function updateCalendarControls(){
  labelEl.textContent=label.text;labelEl.classList.toggle('range-label',label.range);
  labelEl.title=label.title||label.text;
  $('today').disabled=false;
+ // Presentation only: distinguish a return action from an already-current calendar.
+ const currentDate=todayMoscow();
+ $('today').dataset.returnNeeded=String(Boolean(calendarSubject)||selected!==currentDate||(expanded&&viewMonth!==currentDate.slice(0,7)+'-01'));
  $('monthToggle').setAttribute('aria-expanded',String(expanded));
  $('monthToggle').setAttribute('aria-label',label.text+'. '+(expanded?'Свернуть календарь месяца':'Раскрыть календарь месяца'));
  $('prev').hidden=expanded;$('next').hidden=expanded;
