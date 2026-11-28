@@ -478,7 +478,7 @@ header .group{flex:0 0 auto;background:transparent;border:0;border-radius:0;box-
 @media(hover:hover) and (pointer:fine){.week-nav button:hover,.month-toggle:hover{background:#fdf5f7}}
 /* Non-interactive labels retain their semantic colors, but not button-like surfaces. */
 .lesson .chip,.lesson .chip.room{background:transparent;border:0;border-radius:0;box-shadow:none;padding:0}
-.lesson .chip.room{color:var(--red-dark)}
+.lesson .chip.room{color:#6E6E73}
 .lesson .details{gap:6px 14px}
 .lesson .teacher svg{margin-left:0}
 .verification .source-tag,.verification .source-tag.good,.verification .source-tag.warn,.verification .source-tag.bad{background:transparent;border:0;border-radius:0;box-shadow:none;padding:0}
@@ -788,7 +788,7 @@ footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transiti
 @media(prefers-reduced-motion:reduce){#lessonViewport.is-resizing{overflow:visible}.calendar-section .day strong{transition:none!important}}
 
 /* Shared compact lesson indicators in week and month views. */
-.calendar-section,.calendar-fold-layer,.calendar-open-layer{--lecture-fill:#DCE7F4;--lecture-ink:#365D86;--practice-fill:#E4E3E6;--practice-ink:#57545D}
+.calendar-section,.calendar-fold-layer,.calendar-open-layer{--lecture-fill:#CDE8D4;--lecture-ink:#28633D;--practice-fill:#F4BDB7;--practice-ink:#A0322F}
 .calendar-subject-filter{margin:0 0 8px;min-width:0}
 .calendar-subject-filter[hidden]{display:none!important}
 .calendar-subject-filter select{display:block;width:100%;min-height:36px;border:1px solid #e8dfe2;border-radius:12px;padding:6px 30px 6px 11px;font:inherit;font-size:14px;color:var(--ink);background:#fff;overflow:hidden;text-overflow:ellipsis}
@@ -799,13 +799,13 @@ footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transiti
 .calendar-section :is(#days,.week-swipe-preview) .day i.pair-indicator,.calendar-open-layer .day i.pair-indicator{margin-top:2px}
 .calendar-section .month-panel .days.month-view,.calendar-fold-layer .month-panel .days.month-view{row-gap:0}
 .month-panel .month-weekday{padding-bottom:3px}
-#monthScroll .month-week-row,.calendar-fold-layer .month-week-row{border-top:1px solid #E1DEE2}
-.calendar-section .month-panel .day,.calendar-section .month-panel .day.active,.calendar-section .month-panel .day.today:not(.active),.calendar-fold-layer .month-panel .day{min-height:55px;gap:0;padding:3px 0;justify-content:space-between}
-.calendar-section .month-panel .month-blank,.calendar-fold-layer .month-panel .month-blank{min-height:55px}
+#monthScroll .month-week-row,.calendar-fold-layer .month-week-row{border-top:1px solid #E3E3E3}
+.calendar-section .month-panel .day,.calendar-section .month-panel .day.active,.calendar-section .month-panel .day.today:not(.active),.calendar-fold-layer .month-panel .day{min-height:63px;gap:0;padding:6px 0 7px;justify-content:space-between}
+.calendar-section .month-panel .month-blank,.calendar-fold-layer .month-panel .month-blank{min-height:63px}
 .calendar-section .month-panel .day strong,.calendar-fold-layer .month-panel .day strong{width:34px;height:34px;font-size:19px}
 .calendar-section .day.filtered-empty:not(.active):not(.today) strong{color:var(--muted)}
-.lesson .chip.calendar-kind-lecture{background:transparent;color:#365D86;border-radius:0;padding:0}
-.lesson .chip.calendar-kind-practice{background:transparent;color:#57545D;border-radius:0;padding:0}
+.lesson .chip.calendar-kind-lecture{background:transparent;color:#28633D;border-radius:0;padding:0}
+.lesson .chip.calendar-kind-practice{background:transparent;color:#A0322F;border-radius:0;padding:0}
 .lesson .subject.calendar-subject-link{display:block;width:100%;text-align:left;font-family:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 .lesson .subject.calendar-subject-link:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:4px}
 </style>
@@ -906,7 +906,7 @@ function calendarCountLabel(counts){
 }
 function calendarIndicator(counts){
  if(!counts||!counts.some(Boolean))return '';
- const fills=['#DCE7F4','#E4E3E6','#E9E0EF'],inks=['#365D86','#57545D','#694C7A'];
+ const fills=['#CDE8D4','#F4BDB7','#E9E0EF'],inks=['#28633D','#A0322F','#694C7A'];
  const parts=counts.map((n,k)=>({n,k})).filter(p=>p.n);
  const width=parts.length===1?18:parts.length===2?32:34,left=(34-width)/2,seg=width/parts.length;
  const shapes=parts.map(({n,k},i)=>{
