@@ -851,6 +851,51 @@ footer,footer .footer-version-label,footer .footer-heading,footer .footer-discla
 footer .verification .source-tag.good svg{color:var(--success-ink)}
 footer .verification .source-tag.warn{color:var(--warning-ink)}
 footer .verification .source-tag.bad{color:var(--danger-ink)}
+
+/* Control hierarchy: selection > contextual action > navigation > utilities > links. */
+:root{
+ --action-ink:#CF1025;--action-fill:#FBE9EB;--action-hover:#F8DEE2;--action-pressed:#F4D1D7;
+ --selection-fill:#E8EEF7;--selection-border:#D5DDEB;--link-ink:#365D86;
+ --control-outline:#D1D1D6;--focus-ink:#2B3B5C;
+}
+/* Date selection is the strongest signal; navigation surfaces remain subordinate. */
+.calendar-section .month-toggle::before{background:var(--surface);border-color:var(--control-outline);box-shadow:none}
+.calendar-section .month-toggle[aria-expanded="true"]{color:var(--selected-date)}
+.calendar-section .month-toggle[aria-expanded="true"] svg:last-child{color:var(--selected-date)}
+.calendar-section .month-toggle[aria-expanded="true"]::before{background:var(--selection-fill);border-color:var(--selection-border)}
+.calendar-section .week-nav :is(.icon-button,.month-step){color:var(--ink)}
+.calendar-section .week-nav :is(.icon-button,.month-step)::before{background:transparent;border-color:var(--line);box-shadow:none}
+.calendar-section .week-nav .today-button{color:var(--action-ink);font-weight:600}
+.calendar-section .week-nav .today-button::before{background:var(--action-fill);border-color:transparent;box-shadow:none}
+/* When already on today with no active filter, the return action is quiet but still usable. */
+@supports selector(:has(*)){
+ .calendar-section:has(#days:not([hidden]) .day.active.today):has(#calendarSubjectFilter[hidden]) .week-nav .today-button{color:var(--ink);font-weight:500}
+ .calendar-section:has(#days:not([hidden]) .day.active.today):has(#calendarSubjectFilter[hidden]) .week-nav .today-button::before{background:var(--surface);border-color:var(--line)}
+ .calendar-subject-filter:has(option:checked:not([value=""])) select{color:var(--selected-date);background:var(--selection-fill);border-color:var(--selection-border)}
+}
+/* Utility actions are outlined; informational links remain recognizably links. */
+footer .refresh{color:var(--ink);background:var(--surface);border-color:var(--control-outline)}
+footer .refresh[aria-busy="true"]{color:var(--muted)}
+footer .footer-links a{color:var(--link-ink)}
+.more summary{color:var(--warning-ink)}
+.calendar-subject-filter select{border-color:var(--control-outline)}
+.lesson .subject.calendar-subject-link:focus-visible{outline-color:var(--focus-ink)}
+@media(hover:hover) and (pointer:fine){
+ .calendar-section .month-toggle:hover::before,.calendar-section .week-nav :is(.icon-button,.month-step):hover::before,footer .refresh:hover{background:var(--control-hover)}
+ .calendar-section .month-toggle[aria-expanded="true"]:hover::before{background:#DEE6F1}
+ .calendar-section .week-nav .today-button:hover::before{background:var(--action-hover)}
+ .lesson .subject.calendar-subject-link:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--control-outline)}
+}
+.calendar-section .month-toggle:active::before,.calendar-section .week-nav :is(.icon-button,.month-step):active::before,footer .refresh:active{background:var(--control-pressed)}
+.calendar-section .month-toggle[aria-expanded="true"]:active::before{background:#D5DDEB}
+.calendar-section .week-nav .today-button:active::before{background:var(--action-pressed)}
+@supports selector(:has(*)){
+ @media(hover:hover) and (pointer:fine){
+  .calendar-section:has(#days:not([hidden]) .day.active.today):has(#calendarSubjectFilter[hidden]) .week-nav .today-button:hover::before{background:var(--control-hover)}
+ }
+ .calendar-section:has(#days:not([hidden]) .day.active.today):has(#calendarSubjectFilter[hidden]) .week-nav .today-button:active::before{background:var(--control-pressed)}
+}
+.calendar-section button:focus-visible,.calendar-section select:focus-visible,footer button:focus-visible,footer a:focus-visible,.more summary:focus-visible{outline-color:var(--focus-ink)}
 </style>
 </head>
 <body>
