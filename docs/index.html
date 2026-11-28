@@ -871,9 +871,7 @@ footer .verification .source-tag.bad{color:var(--danger-ink)}
 /* Quiet when the selected date and displayed month are already current and no subject filter is active. */
 .calendar-section .week-nav .today-button[data-return-needed="false"]{color:var(--ink);font-weight:500}
 .calendar-section .week-nav .today-button[data-return-needed="false"]::before{background:var(--surface);border-color:var(--control-outline)}
-@supports selector(:has(*)){
- .calendar-subject-filter:has(option:checked:not([value=""])) select{color:var(--selected-date);background:var(--selection-fill);border-color:var(--selection-border)}
-}
+.calendar-subject-filter[data-active="true"] select{color:var(--selected-date);background:var(--selection-fill);border-color:var(--selection-border)}
 /* Utility actions are outlined; informational links remain recognizably links. */
 footer .refresh{color:var(--ink);background:var(--surface);border-color:var(--control-outline)}
 footer .refresh[aria-busy="true"]{color:var(--muted)}
@@ -881,21 +879,21 @@ footer .footer-links a{color:var(--link-ink)}
 .more summary{color:var(--warning-ink)}
 .calendar-subject-filter select{border-color:var(--control-outline);min-height:44px}
 .lesson .chip.room{font-weight:600}
-.lesson .subject.calendar-subject-link{text-decoration-line:underline;text-decoration-style:dotted;text-decoration-color:var(--subject-underline);text-decoration-thickness:1px;text-underline-offset:3px}
+.lesson .subject.calendar-subject-link{text-decoration:none}
 .lesson.cancelled .subject.calendar-subject-link{text-decoration-line:line-through;text-decoration-style:solid;text-decoration-color:var(--muted)}
 .lesson .subject.calendar-subject-link:focus-visible{outline-color:var(--focus-ink)}
 @media(hover:hover) and (pointer:fine){
  .calendar-section .month-toggle:hover::before,.calendar-section .week-nav :is(.icon-button,.month-step):hover::before,footer .refresh:hover{background:var(--control-hover)}
  .calendar-section .month-toggle[aria-expanded="true"]:hover::before{background:var(--selection-hover)}
  .calendar-section .week-nav .today-button:hover::before{background:var(--action-hover)}
- .lesson:not(.cancelled) .subject.calendar-subject-link:hover{text-decoration-style:solid;text-decoration-color:var(--selected-date)}
+ .lesson:not(.cancelled) .subject.calendar-subject-link:hover{text-decoration:underline;text-decoration-color:var(--control-outline);text-underline-offset:3px}
  .calendar-section .week-nav .today-button[data-return-needed="false"]:hover::before{background:var(--control-hover)}
 }
 .calendar-section .month-toggle:active::before,.calendar-section .week-nav :is(.icon-button,.month-step):active::before,footer .refresh:active{background:var(--control-pressed)}
 .calendar-section .month-toggle[aria-expanded="true"]:active::before{background:var(--selection-pressed)}
 .calendar-section .week-nav .today-button:active::before{background:var(--action-pressed)}
 .calendar-section .week-nav .today-button[data-return-needed="false"]:active::before{background:var(--control-pressed)}
-.lesson:not(.cancelled) .subject.calendar-subject-link:active{text-decoration-style:solid;text-decoration-color:var(--selected-date)}
+.lesson:not(.cancelled) .subject.calendar-subject-link:active{color:var(--selected-date)}
 .calendar-section button:focus-visible,.calendar-section select:focus-visible,footer button:focus-visible,footer a:focus-visible,.more summary:focus-visible{outline-color:var(--focus-ink)}
 
 /* Typography and proportion system. No color, markup or interaction changes. */
@@ -984,13 +982,19 @@ footer .footer-links .source-arrow{margin-top:calc((var(--type-support)*1.5 - 12
  header{flex-wrap:wrap;gap:4px 12px}
  .section-top{flex-wrap:wrap;gap:4px 12px}
 }
+
+/* Calendar and subject filter: keep the native select and existing layout. */
+.calendar-subject-filter{position:relative}
+.calendar-subject-filter select{border-radius:999px;padding-inline:34px 30px;min-height:44px}
+.calendar-subject-filter .filter-icon{position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);pointer-events:none;z-index:1}
+.calendar-subject-filter[data-active="true"] .filter-icon{color:var(--selected-date)}
 </style>
 </head>
 <body>
 <noscript><div><img src="https://mc.yandex.ru/watch/114487182" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <main class="app-shell"><aside class="sidebar"><div class="sidebar-brand">ИНСТИТУТ<br>ГУМАНИТАРНЫХ<br>НАУК</div><nav aria-label="Разделы сайта"><a class="nav-link active" href="./index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3m-3 3h3m3-3h2"/></svg>Расписание</a><a class="nav-link" data-source-link href="https://cloud.mail.ru/public/TKBt/bHWaZqMQA" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V5a1.5 1.5 0 0 1 1-1.5Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></svg>Материалы</a></nav></aside><div class="page-content">
   <header><div class="eyebrow">Институт гуманитарных наук</div><h1 class="appname">Расписание</h1><div class="group">ИОЗ-231</div></header>
-  <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><button type="button" class="month-toggle" id="monthToggle" aria-label="Раскрыть календарь месяца" aria-expanded="false" aria-controls="calendarBody"><strong id="weekLabel">Загрузка…</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button><button type="button" class="month-step" id="monthPrev" aria-label="Предыдущий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7"/></svg></button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button><button type="button" class="month-step" id="monthNext" aria-label="Следующий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div></div><div class="calendar-subject-filter" id="calendarSubjectFilter" hidden><select id="calendarSubject" aria-label="Предмет в календаре"><option value="">Все предметы</option></select></div><div class="calendar-body" id="calendarBody"><nav class="days" id="days" aria-label="Дни недели"></nav><div id="monthViewport" class="month-viewport" hidden><div id="monthScroll" class="month-scroll" role="region" aria-label="Календарь по месяцам. Прокручивайте вверх и вниз" tabindex="0" hidden></div></div></div></section>
+  <section class="calendar-section" aria-label="Выбор даты"><div class="controls"><button type="button" class="month-toggle" id="monthToggle" aria-label="Раскрыть календарь месяца" aria-expanded="false" aria-controls="calendarBody"><strong id="weekLabel">Загрузка…</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="week-nav"><button id="prev" class="icon-button" aria-label="Предыдущая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button><button type="button" class="month-step" id="monthPrev" aria-label="Предыдущий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 15 7-7 7 7"/></svg></button><button id="today" class="today-button">Сегодня</button><button id="next" class="icon-button" aria-label="Следующая неделя"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button><button type="button" class="month-step" id="monthNext" aria-label="Следующий месяц" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div></div><div class="calendar-subject-filter" id="calendarSubjectFilter" data-active="false" hidden><svg class="filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 6h16M7 12h10M10 18h4"/></svg><select id="calendarSubject" aria-label="Фильтр по предмету в календаре и расписании"><option value="">Все предметы</option></select></div><div class="calendar-body" id="calendarBody"><nav class="days" id="days" aria-label="Дни недели"></nav><div id="monthViewport" class="month-viewport" hidden><div id="monthScroll" class="month-scroll" role="region" aria-label="Календарь по месяцам. Прокручивайте вверх и вниз" tabindex="0" hidden></div></div></div></section>
   <section class="schedule-section" aria-live="polite"><div class="section-top"><h2 id="dateTitle">Занятия</h2><small id="count"></small></div><div id="banner"></div><div id="lessonViewport"><div id="lessons" class="lessons"></div></div></section>
   <details id="reviewSection" class="more" hidden><summary id="reviewLabel">Непроверенные изменения</summary><div id="reviews"></div></details>
   <footer>
@@ -1056,7 +1060,7 @@ function updateCalendarControls(){
  $('today').disabled=false;
  // Presentation only: distinguish a return action from an already-current calendar.
  const currentDate=todayMoscow();
- $('today').dataset.returnNeeded=String(Boolean(calendarSubject)||selected!==currentDate||(expanded&&viewMonth!==currentDate.slice(0,7)+'-01'));
+ $('today').dataset.returnNeeded=String(selected!==currentDate||(expanded&&viewMonth!==currentDate.slice(0,7)+'-01'));
  $('monthToggle').setAttribute('aria-expanded',String(expanded));
  $('monthToggle').setAttribute('aria-label',label.text+'. '+(expanded?'Свернуть календарь месяца':'Раскрыть календарь месяца'));
  $('prev').hidden=expanded;$('next').hidden=expanded;
@@ -1110,20 +1114,16 @@ function refreshCalendarSubject(){
   select.dataset.options=fingerprint;
  }
  select.value=calendarSubject;
- $('calendarSubjectFilter').hidden=!expanded&&!calendarSubject;
+ select.title=options.get(calendarSubject)||'Все предметы';
+ const filter=$('calendarSubjectFilter');
+ filter.dataset.active=String(Boolean(calendarSubject));
+ filter.hidden=!expanded&&!calendarSubject;
 }
 function chooseCalendarSubject(value,fromCard=false){
- const oldMonth=viewMonth;
+ // A subject changes the visible lessons, never the selected date or browsed month.
  calendarSubject=value;
- if(fromCard&&!expanded){setMonthExpanded(true);render();return}
- if(value&&!fromCard){
-  const entries=calendarEntries(schedule?.entries||[],value).filter(e=>!e.cancelled&&e.date).sort((a,b)=>a.date.localeCompare(b.date)||String(a.time).localeCompare(String(b.time)));
-  const now=todayMoscow(),sameMonth=entries.filter(e=>e.date.slice(0,7)===(expanded?viewMonth:selected).slice(0,7));
-  const target=sameMonth.find(e=>e.date>=now)||sameMonth[0]||entries.find(e=>e.date>=now)||entries[entries.length-1];
-  if(target){selected=target.date;viewMonth=selected.slice(0,7)+'-01';saveSelectedDate()}
- }
+ if(fromCard&&!expanded)setMonthExpanded(true);
  render();
- if(expanded&&oldMonth!==viewMonth)scrollToMonth(viewMonth);
 }
 $('calendarSubject').addEventListener('change',e=>chooseCalendarSubject(e.target.value));
 function makeDateButton(dt,dateSet,month=null){
@@ -1264,6 +1264,13 @@ for(const event of ['touchend','touchcancel'])$('monthScroll').addEventListener(
 for(const event of ['wheel','pointerdown'])$('monthScroll').addEventListener(event,()=>{cancelMonthMotion()},{passive:true});
 window.addEventListener('resize',()=>{if(expanded)syncMonthFromScroll()},{passive:true});
 
+function emptyScheduleCopy(data,day,start,end,subject){
+ if(!data||data.status==='unavailable'||!Array.isArray(data.entries))return {title:'Расписание недоступно',msg:'Проверьте подключение к интернету и обновите страницу.'};
+ if((start&&day<start)||(end&&day>end))return {title:'Расписание недоступно',msg:'Эта дата за пределами загруженного семестра.'};
+ if(data.periods?.length&&!data.periods.some(([a,b])=>a<=day&&day<=b))return {title:'Перерыв в занятиях',msg:'Согласно учебному календарю, в этот день занятий нет.'};
+ if(subject)return {title:'Нет занятий по предмету',msg:'Выберите другую дату или «Все предметы».'};
+ return {title:'Нет занятий',msg:'На этот день занятий нет.'};
+}
 function render(){
  if (/^https:\/\/cloud\.mail\.ru\/public\/[\w-]+\/[\w-]+$/.test(schedule?.source)) {
   document.querySelectorAll('[data-source-link]').forEach(link=>{link.href=schedule.source});
@@ -1294,7 +1301,8 @@ function render(){
    if(key)groups.set(key,variants);
   }
  }
- $('count').textContent=cards.length?`${cards.length} ${plural(cards.length)}`:'';
+ const activeCount=(buildCalendarCounts(lessons).get(selected)||[]).reduce((total,n)=>total+n,0);
+ $('count').textContent=cards.length?`${activeCount} ${plural(activeCount)}`:'';
  let banner='';
  if(!schedule||schedule.status==='unavailable'){
   banner='<div class="alert danger"><strong>Не удалось загрузить расписание</strong>Проверь интернет и обнови страницу.</div>';
@@ -1311,13 +1319,9 @@ function render(){
  $('banner').innerHTML=banner;
  const list=$('lessons'),nextList=document.createElement('div');
  if(!lessons.length){
-  let msg='На выбранную дату пар нет в исходной таблице.';
-  if(!schedule?.entries?.length)msg='Данные ещё не загружены.';
-  else if(selected<semesterStart||selected>semesterEnd)msg='Эта дата за пределами загруженного семестра.';
-  else if(schedule.periods && !schedule.periods.some(([a,b])=>a<=selected && selected<=b))msg='Перерыв в занятиях по учебному календарю.';
-  else if(calendarSubject)msg='На выбранную дату нет занятий по этому предмету.';
+  const {title,msg}=emptyScheduleCopy(schedule,selected,semesterStart,semesterEnd,calendarSubject);
   const empty=document.createElement('div');empty.className='empty';
-  empty.innerHTML=`<div class="symbol" aria-hidden="true">☕</div><strong>Пар не найдено</strong><p>${h(msg)}</p>`;nextList.append(empty);
+  empty.innerHTML=`<div class="symbol" aria-hidden="true">☕</div><strong>${h(title)}</strong><p>${h(msg)}</p>`;nextList.append(empty);
  }else for(const variants of cards){
   const e=variants[0];
   const el=document.createElement('article');
@@ -1600,7 +1604,7 @@ function navigateMonth(delta){
 }
 $('prev').onclick=()=>navigateWeek(-1);
 $('next').onclick=()=>navigateWeek(1);
-$('today').onclick=()=>{if(calendarSubject){calendarSubject='';if(selected===todayMoscow()&&!expanded){render();return}}selectDate(todayMoscow())};
+$('today').onclick=()=>selectDate(todayMoscow());
 $('monthPrev').onclick=()=>navigateMonth(-1);
 $('monthNext').onclick=()=>navigateMonth(1);
 function captureWeekOpen(){
