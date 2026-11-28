@@ -991,10 +991,11 @@ header .calendar-subject-filter{display:contents;color:var(--ink)}
 header .calendar-subject-picker{grid-column:3;grid-row:1;position:relative;display:grid;place-items:center;width:44px;height:44px;min-width:44px;margin:0;padding:0;border-radius:50%;background:#EAEAEA;color:var(--ink);cursor:pointer;transition:background-color .16s ease}
 header .calendar-subject-picker .filter-icon{position:static;transform:none;width:22px;height:22px;pointer-events:none}
 header .calendar-subject-filter select{position:absolute;inset:0;width:100%;height:100%;min-height:44px;max-width:100%;margin:0;padding:0;opacity:0;cursor:pointer;font-size:16px}
-header .calendar-subject-picker:focus-within{outline:2px solid var(--focus-ink);outline-offset:2px}
+header .calendar-subject-picker:focus-within{outline:none;box-shadow:none}
+@media(hover:hover) and (pointer:fine){header .calendar-subject-picker:has(select:focus-visible){outline:2px solid var(--focus-ink);outline-offset:2px}}
 header .calendar-subject-filter[data-active="true"] .calendar-subject-picker{background:var(--action-fill);color:var(--action-ink)}
 header .calendar-subject-summary{grid-column:1/-1;grid-row:2;display:none;align-items:center;justify-content:flex-end;gap:4px;min-width:0;color:var(--action-ink)}
-header .calendar-subject-filter[data-active="true"] .calendar-subject-summary{display:flex}
+header .calendar-subject-filter[data-active="true"] .calendar-subject-summary{display:none}
 header .calendar-subject-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:550;line-height:1.3}
 header .calendar-subject-reset{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;color:inherit;box-shadow:none}
 header .calendar-subject-reset[hidden]{display:none!important}
