@@ -786,6 +786,25 @@ footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transiti
 #lessonViewport.is-resizing{overflow:clip;overflow-clip-margin:12px}
 @supports not (overflow:clip){#lessonViewport.is-resizing{overflow:hidden}}
 @media(prefers-reduced-motion:reduce){#lessonViewport.is-resizing{overflow:visible}.calendar-section .day strong{transition:none!important}}
+
+/* Month-only lesson previews. Every scheduled entry gets its own card. */
+.month-viewport{--month-fade-top:10px;--month-fade-bottom:16px}
+.month-panel .days.month-view{column-gap:3px;row-gap:6px}
+.month-panel .month-week-row{align-items:start;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.month-panel .month-week-row:last-child{border-bottom:0;padding-bottom:0}
+.month-panel .days.month-view .day{position:relative;align-self:stretch;justify-content:flex-start;gap:3px;min-width:0;min-height:44px;padding:0 0 2px}
+.month-panel .days.month-view .day strong{flex:none;width:min(100%,36px);height:36px;font-size:19px}
+.month-panel .day>i{position:absolute;top:36px;left:50%;transform:translateX(-50%);visibility:hidden!important;pointer-events:none}
+.month-panel .day .month-lessons{display:flex;flex-direction:column;align-items:stretch;gap:3px;width:100%;min-width:0}
+.month-panel .day .month-lesson{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:2px;box-sizing:border-box;width:100%;min-width:0;min-height:39px;padding:3px;border-radius:4px;background:#f8e3e5;color:#80333d;text-align:left;line-height:1.1}
+.month-panel .day .month-lesson-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;hyphens:auto;width:100%;font-size:clamp(10px,2.8vw,12px);font-weight:650;line-height:1.12;color:#80333d}
+.month-panel .day .month-lesson-time{display:block;white-space:nowrap;font-size:clamp(10px,2.65vw,12px);font-weight:500;line-height:1.15;color:#99434c;font-variant-numeric:tabular-nums}
+.month-panel .day .month-lesson.is-cancelled{background:#eae7e9}
+.month-panel .day .month-lesson.is-cancelled :is(.month-lesson-name,.month-lesson-time){color:#655e64;text-decoration:line-through}
+.month-panel .day:focus-visible{outline-offset:-1px;border-radius:5px}
+.calendar-fold-layer .month-scroll{padding-block:10px 16px}
+@media(max-width:520px){.month-viewport{margin-inline:calc(7px - var(--page-gutter))}}
+@media(min-width:851px){.month-panel .day .month-lesson{min-height:44px;padding:5px}.month-panel .day .month-lesson-name,.month-panel .day .month-lesson-time{font-size:13px}}
 </style>
 </head>
 <body>
@@ -861,11 +880,54 @@ function updateCalendarControls(){
  $('prev').hidden=expanded;$('next').hidden=expanded;
  $('monthPrev').hidden=!expanded;$('monthNext').hidden=!expanded;
 }
+const monthSubjectLabels=new Map([
+ ['История отечественной культуры','История культуры'],
+ ['Логика и теория аргументации','Логика'],
+ ['Музейная педагогика','Музейная педагогика'],
+ ['Профессиональная этика преподавателя социально-гуманитарных дисциплин','Проф. этика'],
+ ['КВ Образовательное пространство столичного мегаполиса','КВ Мегаполис'],
+ ['КВ Организация проектной деятельности обучающихся при изучении обществознания','КВ Проекты'],
+ ['Методика обучения истории','Методика истории'],
+ ['Методика обучения обществознанию','Методика общ-ва']
+]);
+let monthEntriesSource=null,monthEntriesByDate=new Map();
+function monthLessonsFor(dt){
+ const entries=schedule?.entries;
+ if(entries!==monthEntriesSource){
+  monthEntriesSource=entries;monthEntriesByDate=new Map();
+  for(const entry of entries||[]){
+   if(!monthEntriesByDate.has(entry.date))monthEntriesByDate.set(entry.date,[]);
+   monthEntriesByDate.get(entry.date).push(entry);
+  }
+  for(const list of monthEntriesByDate.values())list.sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+ }
+ return monthEntriesByDate.get(dt)||[];
+}
+function updateMonthLessons(btn){
+ const lessons=monthLessonsFor(btn.dataset.date);
+ const container=btn.querySelector('.month-lessons');
+ const fragment=document.createDocumentFragment();
+ for(const e of lessons){
+  const subject=String(e.subject||'Занятие').trim().replace(/\s+/g,' ')||'Занятие';
+  const card=document.createElement('span');card.className='month-lesson'+(e.cancelled?' is-cancelled':'');
+  card.title=subject+' — '+(e.time||'Время уточняется')+(e.cancelled?' (отменена)':'');
+  const name=document.createElement('span');name.className='month-lesson-name';name.textContent=monthSubjectLabels.get(subject)||subject;
+  const time=document.createElement('span');time.className='month-lesson-time';time.textContent=e.time||'—';
+  card.append(name,time);fragment.append(card);
+ }
+ if(container){
+  const next=document.createElement('span');next.className='month-lessons';next.append(fragment);
+  if(container.innerHTML!==next.innerHTML)container.replaceChildren(...next.childNodes);
+ }
+ const description=lessons.map(e=>String(e.time||'Время уточняется')+' '+String(e.subject||'Занятие')+(e.cancelled?' (отменена)':'')).join('; ');
+ btn.setAttribute('aria-label',fmt.format(date(btn.dataset.date))+' '+date(btn.dataset.date).getUTCFullYear()+(description?'. '+description:''));
+}
 function makeDateButton(dt,dateSet,month=null){
  const dd=date(dt),current=dt===selected,now=todayMoscow(),btn=document.createElement('button');
  btn.type='button';btn.className='day'+(current?' active':'')+(dt===now?' today':'')+(month&&dt.slice(0,7)!==month.slice(0,7)?' outside':'');
  btn.dataset.date=dt;btn.setAttribute('aria-label',fmt.format(dd)+' '+dd.getUTCFullYear()+(dateSet.has(dt)?', есть занятия':''));btn.setAttribute('aria-pressed',String(current));if(dt===now)btn.setAttribute('aria-current','date');
  btn.innerHTML=(month?'':'<span>'+dnames[dd.getUTCDay()]+'</span>')+'<strong>'+dd.getUTCDate()+'</strong><i style="visibility:'+(dateSet.has(dt)?'visible':'hidden')+'"></i>';
+ if(month){const list=document.createElement('span');list.className='month-lessons';btn.append(list);updateMonthLessons(btn)}
  btn.onclick=e=>selectDate(dt,e.detail===0);
  return btn;
 }
@@ -875,6 +937,7 @@ function updateDateButton(btn,dateSet){
  btn.setAttribute('aria-pressed',String(active));if(now)btn.setAttribute('aria-current','date');else btn.removeAttribute('aria-current');
  btn.setAttribute('aria-label',fmt.format(date(dt))+' '+date(dt).getUTCFullYear()+(dateSet.has(dt)?', есть занятия':''));
  btn.querySelector('i').style.visibility=dateSet.has(dt)?'visible':'hidden';
+ if(btn.querySelector('.month-lessons'))updateMonthLessons(btn);
 }
 function calendarDateSet(){return new Set((schedule?.entries||[]).filter(x=>!x.cancelled).map(x=>x.date))}
 function makeMonthPanel(month,dateSet){
@@ -960,7 +1023,11 @@ function renderCalendar(){
   scroller.replaceChildren();return;
  }
  if(wasOpen&&scroller.children.length&&findMonthPanel(viewMonth)){
-  scroller.querySelectorAll('.day').forEach(btn=>updateDateButton(btn,dateSet));return;
+  const anchor=Array.from(scroller.querySelectorAll('.month-week-row')).find(row=>row.getBoundingClientRect().bottom>scroller.getBoundingClientRect().top+monthViewportInset());
+  const oldTop=anchor?.getBoundingClientRect().top;
+  scroller.querySelectorAll('.day').forEach(btn=>updateDateButton(btn,dateSet));
+  if(anchor&&Number.isFinite(oldTop))scroller.scrollTop+=anchor.getBoundingClientRect().top-oldTop;
+  return;
  }
  cancelMonthMotion();
  const fragment=document.createDocumentFragment();
@@ -1257,10 +1324,10 @@ function playMonthFold(fold,oldHeight,lessonsChanged,oldLessonHeight){
   const number=button.querySelector('strong'),dot=button.querySelector('i'),label=button.querySelector('span'),from=fold.positions.get(button.dataset.date);
   if(label)run(label,[{opacity:0},{opacity:1}],{duration:150,delay:65,easing:'ease-out',fill:'both'});
   if(from){
-   const to=number.getBoundingClientRect(),toDot=dot.getBoundingClientRect();
+   const to=number.getBoundingClientRect();
    const dx=from.rect.left+from.rect.width/2-to.left-to.width/2,dy=from.rect.top+from.rect.height/2-to.top-to.height/2;
    run(number,[{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],travel);
-   run(dot,[{transform:'translate('+(from.dot.left-toDot.left)+'px,'+(from.dot.top-toDot.top)+'px)'},{transform:'translate(0,0)'}],travel);
+   run(dot,[{opacity:0},{opacity:1}],{duration:170,delay:60,easing:'ease-out',fill:'both'});
   }else{
    run(number,[{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:160,delay:65,easing,fill:'both'});
    run(dot,[{opacity:0},{opacity:1}],{duration:160,delay:65,easing,fill:'both'});
@@ -1351,7 +1418,7 @@ function playMonthOpen(fold,oldHeight){
  const chosen=findMonthPanel(viewMonth)?.querySelector('[data-date="'+selected+'"]'),row=chosen?.closest('.month-week-row');
  if(!row){animateCalendar(0,oldHeight);return}
  const bounds=scroller.getBoundingClientRect(),rr=row.getBoundingClientRect();
- if(rr.bottom>bounds.bottom-34||rr.top<bounds.top+24)scroller.scrollTop+=rr.top-bounds.top-monthViewportInset();
+ if(rr.bottom>bounds.bottom-16||rr.top<bounds.top+monthViewportInset())scroller.scrollTop+=rr.top-bounds.top-monthViewportInset();
  const endHeight=body.getBoundingClientRect().height,duration=MOTION.open,options={duration,easing:MOTION.ease,fill:'both'};
  body.append(fold.layer);calendarFold=fold;
  fold.restore=()=>{row.style.visibility='';viewport.style.pointerEvents=''};
@@ -1362,7 +1429,8 @@ function playMonthOpen(fold,oldHeight){
   const target=targets.find(el=>el.dataset.date===button.dataset.date),label=button.querySelector('span');
   if(label)run(label,[{opacity:1},{opacity:0}],{duration:120,easing:'ease-out',fill:'both'});
   if(!target){run(button,[{opacity:1},{opacity:0}],{duration:160,easing:'ease-out',fill:'both'});continue}
-  for(const selector of ['strong','i']){
+  const dot=button.querySelector('i');if(dot)run(dot,[{opacity:1},{opacity:0}],{duration:120,easing:'ease-out',fill:'both'});
+  for(const selector of ['strong']){
    const el=button.querySelector(selector),dest=target.querySelector(selector),a=el.getBoundingClientRect(),z=dest.getBoundingClientRect();
    const dx=z.left+z.width/2-a.left-a.width/2,dy=z.top+z.height/2-a.top-a.height/2,scale=a.width?z.width/a.width:1;
    run(el,[{transform:'translate3d(0,0,0) scale(1)'},{transform:'translate3d('+dx+'px,'+dy+'px,0) scale('+scale+')'}],options);
