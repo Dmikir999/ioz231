@@ -6,8 +6,8 @@
   "start_url": "./index.html",
   "scope": "./",
   "lang": "ru",
-  "theme_color": "#fffdfd",
-  "background_color": "#fffdfd",
+  "theme_color": "#F7F7F7",
+  "background_color": "#F7F7F7",
   "icons": [
     {
       "src": "./icon-192.png?v=raspi-sanie-20261110",

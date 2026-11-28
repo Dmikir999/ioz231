@@ -15,7 +15,7 @@
 </script>
 <!-- /Yandex.Metrika counter -->
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#faf7f8">
+<meta name="theme-color" content="#F7F7F7">
 <meta name="description" content="Расписание ИОЗ-231: подтверждённые занятия, изменения и честный статус источников.">
 <title>Расписание ИОЗ-231 · МГПУ</title>
 <link rel="manifest" href="./manifest.webmanifest?v=raspi-sanie-20261110">
@@ -251,9 +251,18 @@ header .group{background:#ffe5e8;border-radius:14px;font-weight:700}
 
 
 /* Calendar reference design: circular dates, unboxed navigation and soft agenda cards. */
-:root{--red:#cf1025;--red-dark:#c20b20;--ink:#111114;--muted:#666368;--line:#e8e3e7;background:#faf8f9}
-html,body{background:#faf8f9;color:var(--ink)}
-main.app-shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(6,auto);align-content:start;background:radial-gradient(ellipse at 100% 17%,rgba(248,233,238,.38) 0%,rgba(248,233,238,.16) 22%,transparent 46%),linear-gradient(160deg,#fcfafb 0%,#f6f4f6 100%);min-height:100vh;min-height:100dvh;padding:calc(env(safe-area-inset-top,0px) + 10px) env(safe-area-inset-right,0px) calc(14px + env(safe-area-inset-bottom,0px)) env(safe-area-inset-left,0px)}
+:root{
+ --red:#CF1025;--red-dark:#C20B20;--ink:#1C1C1E;--muted:#6E6E73;--line:#E3E3E7;
+ --app-bg:#F7F7F7;--surface:#FFFFFF;--inactive:#8E8E93;--selected-date:#2B3B5C;
+ --control-hover:#F2F2F4;--control-pressed:#E5E5EA;
+ --lecture-fill:#CDE8D4;--lecture-ink:#28633D;--practice-fill:#F8D9D8;--practice-ink:#A32B35;
+ --other-fill:#E5E5EA;--other-ink:#56565C;
+ --warning-fill:#FFF1D9;--warning-ink:#805B20;--info-fill:#E8EEF7;--info-ink:#365D86;
+ --danger-fill:#FCE8E7;--danger-ink:#8B1D27;--success-ink:#28633D;
+ background:var(--app-bg)
+}
+html,body{background:var(--app-bg);color:var(--ink)}
+main.app-shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(6,auto);align-content:start;background:var(--app-bg);min-height:100vh;min-height:100dvh;padding:calc(env(safe-area-inset-top,0px) + 10px) env(safe-area-inset-right,0px) calc(14px + env(safe-area-inset-bottom,0px)) env(safe-area-inset-left,0px)}
 main.app-shell:before,main.app-shell:after{display:none;content:none}
 .calendar-section,.schedule-section,header,.more,footer,.verification{grid-column:1;width:100%;max-width:960px;justify-self:center;padding-left:24px;padding-right:24px}
 .calendar-section{grid-row:1;position:relative}
@@ -372,8 +381,8 @@ footer{grid-row:6;margin-top:16px}
 
 
 /* Header above calendar; continuous safe-area background and inline month grid. */
-:root,html,body{background:#faf7f8}
-main.app-shell{background:linear-gradient(to bottom,#faf7f8 0,transparent calc(env(safe-area-inset-top,0px) + 70px)),radial-gradient(ellipse at 100% 17%,rgba(248,233,238,.38) 0%,rgba(248,233,238,.16) 22%,transparent 46%),linear-gradient(160deg,#fcfafb 0%,#f6f4f6 100%);padding-top:calc(env(safe-area-inset-top,0px) + 7px)}
+:root,html,body{background:var(--app-bg)}
+main.app-shell{background:var(--app-bg);padding-top:calc(env(safe-area-inset-top,0px) + 7px)}
 header{grid-row:1;padding-top:0;padding-bottom:12px}
 header .appname{font-size:20px}
 header .group{font-size:14px;padding:7px 13px}
@@ -788,7 +797,6 @@ footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transiti
 @media(prefers-reduced-motion:reduce){#lessonViewport.is-resizing{overflow:visible}.calendar-section .day strong{transition:none!important}}
 
 /* Shared compact lesson indicators in week and month views. */
-.calendar-section,.calendar-fold-layer,.calendar-open-layer{--lecture-fill:#CDE8D4;--lecture-ink:#28633D;--practice-fill:#F4BDB7;--practice-ink:#A0322F}
 .calendar-subject-filter{margin:0 0 8px;min-width:0}
 .calendar-subject-filter[hidden]{display:none!important}
 .calendar-subject-filter select{display:block;width:100%;min-height:36px;border:1px solid #e8dfe2;border-radius:12px;padding:6px 30px 6px 11px;font:inherit;font-size:14px;color:var(--ink);background:#fff;overflow:hidden;text-overflow:ellipsis}
@@ -804,10 +812,45 @@ footer .footer-links a:active,.lesson a.change-badge:active{opacity:.65;transiti
 .calendar-section .month-panel .month-blank,.calendar-fold-layer .month-panel .month-blank{min-height:63px}
 .calendar-section .month-panel .day strong,.calendar-fold-layer .month-panel .day strong{width:34px;height:34px;font-size:19px}
 .calendar-section .day.filtered-empty:not(.active):not(.today) strong{color:var(--muted)}
-.lesson .chip.calendar-kind-lecture{background:transparent;color:#28633D;border-radius:0;padding:0}
-.lesson .chip.calendar-kind-practice{background:transparent;color:#A0322F;border-radius:0;padding:0}
+.lesson .chip.calendar-kind-lecture{background:transparent;color:var(--lecture-ink);border-radius:0;padding:0}
+.lesson .chip.calendar-kind-practice{background:transparent;color:var(--practice-ink);border-radius:0;padding:0}
 .lesson .subject.calendar-subject-link{display:block;width:100%;text-align:left;font-family:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 .lesson .subject.calendar-subject-link:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:4px}
+
+/* Approved neutral color system. Geometry, layout and motion remain unchanged. */
+:root{--control-fill:var(--surface)}
+main.app-shell:before{border-color:transparent}
+.sidebar{background:var(--surface);border-color:var(--line)}
+.lesson{background:var(--surface);border-color:var(--surface);box-shadow:0 5px 14px #1C1C1E12,0 1px 3px #1C1C1E08}
+.lesson>div:first-child{border-color:var(--line)}
+.lesson .time-start{color:var(--ink)}
+.lesson .time-end,.lesson .teacher,.lesson .chip.room{color:var(--muted)}
+.lesson .chip:not(.room):not(.calendar-kind-lecture):not(.calendar-kind-practice){color:var(--other-ink)}
+.lesson.cancelled{background:var(--surface);opacity:1}
+.lesson.cancelled .subject,.lesson.cancelled .time-start{color:var(--muted)}
+.cancelled .subject{text-decoration-color:var(--muted)}
+.lesson .change-badge,.alert{background:var(--warning-fill);color:var(--warning-ink)}
+.lesson.cancelled .change-badge,.alert.danger{background:var(--danger-fill);color:var(--danger-ink)}
+.lesson .final-semester-badge{background:var(--info-fill);color:var(--info-ink)}
+.empty,.review{background:var(--surface);border-color:var(--line)}
+.empty .symbol{background:var(--control-hover);color:var(--muted)}
+.empty p,.review,.review time{color:var(--muted)}
+.review strong{color:var(--warning-ink)}
+.month-toggle::before,.week-nav button::before,.month-picker,.month-picker select,.month-picker input,.calendar-subject-filter select,footer .refresh,footer .source-info,footer{border-color:var(--line)}
+.calendar-section .month-toggle svg,.calendar-section .month-toggle svg:last-child{color:var(--muted)}
+.calendar-section .week-nav button{color:var(--ink)}
+.month-toggle:active::before,.week-nav button:active::before,footer .refresh:active{background:var(--control-pressed)}
+@media(hover:hover) and (pointer:fine){.month-toggle:hover::before,.week-nav button:hover::before,footer .refresh:hover{background:var(--control-hover)}}
+.calendar-handle span{background:var(--inactive)}
+.calendar-handle:active span{background:var(--muted)}
+.month-panel{border-color:var(--line)}
+#monthScroll .month-week-row,.calendar-fold-layer .month-week-row{border-color:var(--line)}
+.calendar-section .day.active:not(.today) strong,.calendar-fold-layer .day.active:not(.today) strong,.calendar-open-layer .day.active:not(.today) strong{background:var(--selected-date)}
+.calendar-section :is(#days,.week-swipe-preview) .day:nth-child(n+6):not(.active):not(.today) strong,.calendar-open-layer .day:nth-child(n+6):not(.active):not(.today) strong,.month-week-row>.day:nth-child(n+6):not(.active):not(.today) strong{color:var(--muted)}
+footer,footer .footer-version-label,footer .footer-heading,footer .footer-disclaimer,footer .verification .source-tag,footer .verification .source-tag.good{color:var(--muted)}
+footer .verification .source-tag.good svg{color:var(--success-ink)}
+footer .verification .source-tag.warn{color:var(--warning-ink)}
+footer .verification .source-tag.bad{color:var(--danger-ink)}
 </style>
 </head>
 <body>
@@ -906,7 +949,7 @@ function calendarCountLabel(counts){
 }
 function calendarIndicator(counts){
  if(!counts||!counts.some(Boolean))return '';
- const fills=['#CDE8D4','#F4BDB7','#E9E0EF'],inks=['#28633D','#A0322F','#694C7A'];
+ const fills=['var(--lecture-fill)','var(--practice-fill)','var(--other-fill)'],inks=['var(--lecture-ink)','var(--practice-ink)','var(--other-ink)'];
  const parts=counts.map((n,k)=>({n,k})).filter(p=>p.n);
  const width=parts.length===1?18:parts.length===2?32:34,left=(34-width)/2,seg=width/parts.length;
  const shapes=parts.map(({n,k},i)=>{
