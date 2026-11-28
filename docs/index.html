@@ -897,6 +897,93 @@ footer .footer-links a{color:var(--link-ink)}
 .calendar-section .week-nav .today-button[data-return-needed="false"]:active::before{background:var(--control-pressed)}
 .lesson:not(.cancelled) .subject.calendar-subject-link:active{text-decoration-style:solid;text-decoration-color:var(--selected-date)}
 .calendar-section button:focus-visible,.calendar-section select:focus-visible,footer button:focus-visible,footer a:focus-visible,.more summary:focus-visible{outline-color:var(--focus-ink)}
+
+/* Typography and proportion system. No color, markup or interaction changes. */
+:root{
+ --weight-regular:400;--weight-medium:500;--weight-semibold:600;--weight-bold:700;
+ --type-app:1.75rem;--type-date:1.625rem;--type-week-number:1.375rem;
+ --type-month-number:1.1875rem;--type-month-control:1rem;--type-today:.9375rem;
+ --type-start:1.25rem;--type-end:.875rem;--type-subject:1.0625rem;
+ --type-meta:.8125rem;--type-notice:.75rem;--type-support:.8125rem;
+ --type-group:.9375rem;--type-weekday:.8125rem;
+ --lh-heading:1.15;--lh-subject:1.35;--lh-time:1.2;--lh-meta:1.3;--lh-teacher:1.4;--lh-notice:1.4;--lh-support:1.5;
+ --week-date-diameter:40px;--month-date-diameter:34px;--month-cell-min:60px;
+ --lesson-radius:20px;--lesson-time-column:64px;--lesson-column-gap:12px;
+ --control-hit:44px;
+}
+header .appname{font-size:var(--type-app);font-weight:var(--weight-bold);line-height:var(--lh-heading);letter-spacing:-.025em;flex:0 1 auto;min-width:0;overflow-wrap:anywhere}
+header .group{font-size:var(--type-group);font-weight:var(--weight-regular);line-height:1.3}
+.section-top h2{font-size:var(--type-date);font-weight:var(--weight-bold);line-height:var(--lh-heading);letter-spacing:-.025em;min-width:0;overflow-wrap:anywhere}
+.section-top small{font-size:var(--type-meta);font-weight:var(--weight-regular);line-height:var(--lh-meta)}
+.calendar-section .month-toggle strong{font-size:var(--type-month-control);font-weight:var(--weight-semibold);line-height:1.25;letter-spacing:-.015em}
+.calendar-section .month-toggle .range-label{font-size:.875rem;letter-spacing:-.02em}
+.calendar-section .week-nav .today-button{font-size:var(--type-today);line-height:1.25}
+.calendar-section .month-toggle,.calendar-section .week-nav :is(.icon-button,.month-step,.today-button){min-height:var(--control-hit)}
+.calendar-section .week-nav :is(.icon-button,.month-step){min-width:var(--control-hit)}
+.calendar-subject-filter select{font-size:1rem;line-height:1.3;min-height:var(--control-hit)}
+.calendar-section :is(#days,.week-swipe-preview) .day strong,.calendar-open-layer .day strong{
+ width:min(100%,var(--week-date-diameter));height:auto;aspect-ratio:1;
+ font-size:var(--type-week-number);font-weight:var(--weight-semibold);letter-spacing:-.02em;
+}
+.calendar-section :is(#days,.week-swipe-preview) .day span,.calendar-open-layer .day span,
+.month-panel .month-weekday{font-size:var(--type-weekday);font-weight:var(--weight-regular);line-height:1.3}
+.month-panel-title{font-size:.9375rem;font-weight:var(--weight-semibold);line-height:1.3}
+.calendar-section .month-panel .day,.calendar-section .month-panel .day.active,
+.calendar-section .month-panel .day.today:not(.active),.calendar-fold-layer .month-panel .day{
+ min-height:var(--month-cell-min);padding:5px 0 7px;
+}
+.calendar-section .month-panel .month-blank,.calendar-fold-layer .month-panel .month-blank{min-height:var(--month-cell-min)}
+.calendar-section .month-panel .day strong,.calendar-fold-layer .month-panel .day strong{
+ width:min(100%,var(--month-date-diameter));height:var(--month-date-diameter);
+ font-size:var(--type-month-number);font-weight:var(--weight-semibold);letter-spacing:-.02em;
+}
+.pair-indicator svg text[font-size="9.5"]{font-size:10px}
+.lesson{grid-template-columns:var(--lesson-time-column) minmax(0,1fr);column-gap:var(--lesson-column-gap);border-radius:var(--lesson-radius)}
+.lesson .time-start{font-size:var(--type-start);font-weight:var(--weight-semibold);line-height:var(--lh-time);letter-spacing:-.02em}
+.lesson .time-end{font-size:var(--type-end);font-weight:var(--weight-regular);line-height:var(--lh-time)}
+.lesson .subject{font-size:var(--type-subject);font-weight:var(--weight-semibold);line-height:var(--lh-subject);letter-spacing:-.01em}
+.lesson .chip,.lesson .chip.room{font-size:var(--type-meta);font-weight:var(--weight-medium);line-height:var(--lh-meta)}
+.lesson .teacher{font-size:var(--type-meta);font-weight:var(--weight-regular);line-height:var(--lh-teacher)}
+.lesson .change-badge,.lesson .final-semester-badge{font-size:var(--type-notice);font-weight:var(--weight-medium);line-height:var(--lh-notice)}
+.lesson .change-badge .change-link-arrow{font-size:inherit}
+.alert,.empty p,.review{font-size:.875rem;line-height:var(--lh-support)}
+.alert strong,.empty strong,.review strong,.more summary{font-weight:var(--weight-semibold)}
+.empty strong{font-size:1.0625rem;line-height:var(--lh-subject)}
+.review time{font-size:.75rem}
+.more summary{font-size:.875rem;line-height:var(--lh-notice)}
+footer,footer .verification .source-tag,footer .footer-disclaimer,footer .footer-links a{font-size:var(--type-support);line-height:var(--lh-support)}
+footer .footer-heading{font-size:var(--type-support);font-weight:var(--weight-semibold);line-height:var(--lh-support)}
+footer .footer-version-label{font-size:.75rem;line-height:var(--lh-support)}
+footer #updated{font-size:.875rem;font-weight:var(--weight-semibold);line-height:var(--lh-teacher)}
+footer .refresh{font-size:.875rem;font-weight:var(--weight-medium);line-height:1.25}
+footer .verification .source-tag svg{margin-top:calc((var(--type-support)*1.5 - 15px)/2)}
+footer .footer-links .source-arrow{margin-top:calc((var(--type-support)*1.5 - 12px)/2)}
+@media(max-width:360px){
+ :root{--type-app:1.5rem;--type-date:1.5rem;--type-group:.875rem;
+ --type-week-number:1.25rem;--type-month-control:.875rem;--type-today:.8125rem;
+ --type-start:1.125rem;--type-subject:1rem;--week-date-diameter:36px;
+ --lesson-time-column:60px;--lesson-column-gap:12px;}
+ .calendar-section .month-toggle .range-label{font-size:.75rem}
+}
+@media(min-width:521px) and (max-width:850px){
+ :root{--type-app:1.875rem;--type-date:1.75rem;--type-start:1.375rem;--type-subject:1.125rem;
+ --type-meta:.875rem;--type-end:.9375rem;--week-date-diameter:44px;--lesson-time-column:78px;--lesson-column-gap:16px}
+}
+@media(min-width:851px){
+ :root{--type-app:2.125rem;--type-date:2rem;--type-group:1rem;--type-week-number:1.625rem;
+ --type-weekday:.9375rem;--type-month-number:1.1875rem;--type-month-control:1.125rem;--type-today:1.0625rem;
+ --type-start:1.5rem;--type-end:1rem;--type-subject:1.25rem;--type-meta:.9375rem;--type-notice:.875rem;
+ --type-support:.875rem;--week-date-diameter:50px;--lesson-radius:24px;--lesson-time-column:112px;--lesson-column-gap:24px;}
+ .calendar-section .month-toggle .range-label{font-size:1rem}
+ .lesson .chip svg,.lesson .teacher svg,.lesson .change-badge svg,.lesson .final-semester-badge svg{width:18px;height:18px;flex-basis:18px}
+}
+/* Let text scale with browser preferences; keep narrow layouts usable when space is scarce. */
+@media(max-width:340px){
+ .calendar-section .controls{flex-wrap:wrap}
+ .calendar-section .month-toggle{max-width:100%}
+ header{flex-wrap:wrap;gap:4px 12px}
+ .section-top{flex-wrap:wrap;gap:4px 12px}
+}
 </style>
 </head>
 <body>
@@ -1662,7 +1749,7 @@ function resetPull(settle=true){
 }
 const initialAppScript=document.currentScript?.textContent||'';
 const initialAppStyle=document.querySelector('head style')?.textContent||'';
-const initialInstallScript=document.querySelector('script[src*="mgpu-install.js"]')?.getAttribute('src')||'./mgpu-install.js?v=16';
+const initialInstallScript=document.querySelector('script[src*="mgpu-install.js"]')?.getAttribute('src')||'./mgpu-install.js?v=17';
 async function hasNewInterface(){
  if(navigator.onLine===false)return false;
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),2200);
@@ -1749,5 +1836,5 @@ if(cachedSchedule){schedule=cachedSchedule;render()}
 load();
 
 </script>
-<script src="./mgpu-install.js?v=16" defer></script>
+<script src="./mgpu-install.js?v=17" defer></script>
 </body></html>
